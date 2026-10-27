@@ -1,0 +1,2464 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>스마트 학급편성 시스템</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='48' fill='%2310b981'/><text x='50' y='65' font-size='48' font-weight='bold' text-anchor='middle' fill='white' font-family='sans-serif'>반</text></svg>">
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- React & ReactDOM -->
+  <script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js"></script>
+  <!-- Babel for inline JSX -->
+  <script src="https://cdn.jsdelivr.net/npm/@babel/standalone/babel.min.js"></script>
+  <!-- SheetJS with Style (xlsx-js-style for Cell Colors in downloaded Excel) -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+  <script>
+    if (window.XLSX) {
+      window.XLSXStyle = window.XLSX;
+    }
+  </script>
+  <!-- Canvas Confetti -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700;800&family=Noto+Sans+KR:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Pretendard', 'Noto Sans KR', 'sans-serif'],
+          },
+          colors: {
+            mint: {
+              50: '#F0FDF9',
+              100: '#CCFBF1',
+              200: '#99F6E4',
+              300: '#5EEAD4',
+              400: '#2DD4BF',
+              500: '#14B8A6',
+              600: '#0D9488',
+              700: '#0F766E',
+              800: '#115E59',
+              900: '#134E4A',
+            },
+            sage: {
+              50: '#F4F7F5',
+              100: '#E4EBE6',
+              200: '#CCD8D0',
+              300: '#B0C2B5',
+              400: '#8FA896',
+              500: '#718E7A',
+              600: '#58715F',
+              700: '#46594C',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      background-color: #F8FAFC;
+      color: #1E293B;
+      font-family: 'Pretendard', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    /* 3D 물리적 입체 버튼 */
+    .btn-3d {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.08s ease-in-out;
+    }
+
+    .btn-3d-mint {
+      background: linear-gradient(180deg, #10B981 0%, #059669 100%);
+      color: #ffffff;
+      border-bottom: 4px solid #047857;
+      box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.2), 0 2px 4px -2px rgba(16, 185, 129, 0.2);
+    }
+    .btn-3d-mint:hover {
+      filter: brightness(1.06);
+    }
+    .btn-3d-mint:active {
+      transform: translateY(3px);
+      border-bottom-width: 1px;
+      margin-bottom: 3px;
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .btn-3d-teal {
+      background: linear-gradient(180deg, #14B8A6 0%, #0D9488 100%);
+      color: #ffffff;
+      border-bottom: 4px solid #0F766E;
+      box-shadow: 0 4px 6px -1px rgba(20, 184, 166, 0.2);
+    }
+    .btn-3d-teal:hover {
+      filter: brightness(1.06);
+    }
+    .btn-3d-teal:active {
+      transform: translateY(3px);
+      border-bottom-width: 1px;
+      margin-bottom: 3px;
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .btn-3d-sage {
+      background: linear-gradient(180deg, #FFFFFF 0%, #F0FDF4 100%);
+      color: #166534;
+      border: 1px solid #BBF7D0;
+      border-bottom: 4px solid #86EFAC;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+    }
+    .btn-3d-sage:hover {
+      background: #DCFCE7;
+    }
+    .btn-3d-sage:active {
+      transform: translateY(3px);
+      border-bottom-width: 1px;
+      margin-bottom: 3px;
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06);
+    }
+
+    .btn-3d-white {
+      background: #FFFFFF;
+      color: #334155;
+      border: 1px solid #E2E8F0;
+      border-bottom: 4px solid #CBD5E1;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
+    }
+    .btn-3d-white:hover {
+      background: #F8FAFC;
+    }
+    .btn-3d-white:active {
+      transform: translateY(3px);
+      border-bottom-width: 1px;
+      margin-bottom: 3px;
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.08);
+    }
+
+    .card-soft {
+      background: #FFFFFF;
+      border: 1px solid #E6F4EA;
+      border-radius: 1rem;
+      box-shadow: 0 10px 25px -5px rgba(22, 101, 52, 0.05), 0 8px 10px -6px rgba(22, 101, 52, 0.03);
+    }
+
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #F1F5F9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #CBD5E1;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94A3B8;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-800 antialiased selection:bg-emerald-200 selection:text-emerald-900">
+  <div id="root">
+    <div style="min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: -apple-system, BlinkMacSystemFont, 'Pretendard', sans-serif; color: #334155; background: #F8FAFC;">
+      <div style="background: white; padding: 36px 44px; border-radius: 24px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05); text-align: center; border: 1px solid #E2E8F0; max-width: 440px;">
+        <div style="font-size: 38px; margin-bottom: 12px;">🌿</div>
+        <h2 style="font-size: 19px; font-weight: 800; color: #0F766E; margin-bottom: 8px;">스마트 학급편성 시스템</h2>
+        <p style="font-size: 13px; color: #64748B; margin-bottom: 20px;">시스템 화면을 준비하고 있습니다. 잠시만 기다려주세요...</p>
+        <div style="width: 36px; height: 36px; border: 3px solid #CCFBF1; border-top-color: #0D9488; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto;"></div>
+        <div id="global-error-display" style="display:none; margin-top:20px; padding:16px 20px; background:#FEE2E2; border:1px solid #F87171; border-radius:16px; color:#991B1B; font-size:13px; text-align:left;">
+          <strong>⚠️ 스크립트 실행 오류가 감지되었습니다:</strong>
+          <div id="global-error-message" style="margin-top:6px; font-family:monospace; word-break:break-all;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    window.addEventListener('error', function(event) {
+      console.error('Global script error:', event);
+      var errBox = document.getElementById('global-error-display');
+      if (errBox) {
+        errBox.style.display = 'block';
+        var msgEl = document.getElementById('global-error-message');
+        if (msgEl) {
+          msgEl.textContent = (event.message || '알 수 없는 스크립트 오류') + ' (' + (event.filename || '') + ':' + (event.lineno || '') + ')';
+        }
+      }
+    });
+  </script>
+
+  <script type="text/babel">
+    const { useState, useEffect, useMemo, useRef } = React;
+
+    const UPLOAD_STANDARD_HEADERS = ['반', '번호', '이름', '성별', '국어', '수학', '합계', '석차', '비고'];
+    const RESULT_STANDARD_HEADERS = ['반', '번호', '이름', '성별', '석차', '진급반', '번호', '비고'];
+
+    const COMPOUND_SURNAMES = ['남궁', '제갈', '황보', '독고', '사공', '선우', '서문', '동방', '망절', '무본'];
+
+    function parseKoreanName(fullName) {
+      if (!fullName) return { surname: '', firstName: '' };
+      const clean = String(fullName).replace(/[\s\-_.]/g, '').trim();
+      if (clean.length === 0) return { surname: '', firstName: '' };
+      if (clean.length === 1) return { surname: '', firstName: clean };
+
+      if (clean.length >= 3) {
+        const twoChars = clean.substring(0, 2);
+        if (COMPOUND_SURNAMES.includes(twoChars)) {
+          return { surname: twoChars, firstName: clean.substring(2) };
+        }
+      }
+
+      return {
+        surname: clean.substring(0, 1),
+        firstName: clean.substring(1)
+      };
+    }
+
+    const SPECIAL_KEYWORDS = ['특수', '특수반', '특수아동', '특수교육', '도움반', '장애', '특수학급'];
+
+    function parseSeparationRequests(rawRemarks) {
+      if (!rawRemarks) return [];
+      const str = String(rawRemarks).trim();
+      if (!str) return [];
+
+      const targets = [];
+      const regexParen = /분리(?:요청)?\s*[\(\[\{]\s*([가-힣a-zA-Z0-9]+)\s*[\)\]\}]/g;
+      let match;
+      while ((match = regexParen.exec(str)) !== null) {
+        const name = match[1].trim();
+        if (name && !targets.includes(name)) targets.push(name);
+      }
+
+      const regexColon = /분리(?:요청)?\s*[:\-\s]\s*([가-힣a-zA-Z0-9]+)/g;
+      while ((match = regexColon.exec(str)) !== null) {
+        const name = match[1].trim();
+        if (name && !['요청', '대상', '자', '학생'].includes(name) && !targets.includes(name)) {
+          targets.push(name);
+        }
+      }
+      return targets;
+    }
+
+    function parseRemarks(rawRemarks) {
+      if (!rawRemarks) return { tags: [], isSpecialChild: false, separateFromNames: [] };
+      const str = String(rawRemarks).trim();
+      if (!str) return { tags: [], isSpecialChild: false, separateFromNames: [] };
+
+      const separateFromNames = parseSeparationRequests(str);
+      const rawTokens = str.split(/[,;/|\n\r]+/).map(t => t.trim()).filter(Boolean);
+      const tags = [];
+      let isSpecialChild = false;
+
+      for (const token of rawTokens) {
+        if (token.includes('분리')) {
+          if (!tags.includes(token)) tags.push(token);
+          continue;
+        }
+
+        const subTokens = token.split(/\s+/).filter(Boolean);
+        for (const sub of subTokens) {
+          const cleanSub = sub.replace(/[()\[\]{}]/g, '').trim();
+          if (!cleanSub) continue;
+          if (SPECIAL_KEYWORDS.some(kw => cleanSub.includes(kw))) {
+            isSpecialChild = true;
+          }
+          if (!tags.includes(cleanSub)) {
+            tags.push(cleanSub);
+          }
+        }
+      }
+      return { tags, isSpecialChild, separateFromNames };
+    }
+
+    // ==========================================
+    // 비고 특이사항별 웹 UI 색상 및 엑셀 다운로드 Hex RGB 매핑
+    // ==========================================
+    const TAG_COLOR_PALETTE = {
+      '생활지도': { badgeBg: 'bg-rose-100', text: 'text-rose-800', border: 'border-rose-300', cellBg: 'bg-rose-50/70', hexBg: 'FFD1D5', hexText: '9F1239' },
+      '특수아동': { badgeBg: 'bg-blue-100', text: 'text-blue-800', border: 'border-blue-300', cellBg: 'bg-blue-50/70', hexBg: 'BFDBFE', hexText: '1E40AF' },
+      '특수반': { badgeBg: 'bg-blue-100', text: 'text-blue-800', border: 'border-blue-300', cellBg: 'bg-blue-50/70', hexBg: 'BFDBFE', hexText: '1E40AF' },
+      '특수': { badgeBg: 'bg-blue-100', text: 'text-blue-800', border: 'border-blue-300', cellBg: 'bg-blue-50/70', hexBg: 'BFDBFE', hexText: '1E40AF' },
+      '다문화': { badgeBg: 'bg-amber-100', text: 'text-amber-800', border: 'border-amber-300', cellBg: 'bg-amber-50/70', hexBg: 'FEF08A', hexText: '854D0E' },
+      '학습부진': { badgeBg: 'bg-orange-100', text: 'text-orange-800', border: 'border-orange-300', cellBg: 'bg-orange-50/70', hexBg: 'FED7AA', hexText: '9A3412' },
+      '운동부': { badgeBg: 'bg-emerald-100', text: 'text-emerald-800', border: 'border-emerald-300', cellBg: 'bg-emerald-50/70', hexBg: 'BBF7D0', hexText: '166534' },
+      '분리요청': { badgeBg: 'bg-purple-100', text: 'text-purple-800', border: 'border-purple-300', cellBg: 'bg-purple-50/70', hexBg: 'E9D5FF', hexText: '6B21A8' }
+    };
+
+    const DYNAMIC_PALETTES = [
+      { badgeBg: 'bg-teal-100', text: 'text-teal-800', border: 'border-teal-300', cellBg: 'bg-teal-50/60', hexBg: 'CCFBF1', hexText: '115E59' },
+      { badgeBg: 'bg-indigo-100', text: 'text-indigo-800', border: 'border-indigo-300', cellBg: 'bg-indigo-50/60', hexBg: 'E0E7FF', hexText: '3730A3' },
+      { badgeBg: 'bg-pink-100', text: 'text-pink-800', border: 'border-pink-300', cellBg: 'bg-pink-50/60', hexBg: 'FCE7F3', hexText: '9D174D' },
+      { badgeBg: 'bg-cyan-100', text: 'text-cyan-800', border: 'border-cyan-300', cellBg: 'bg-cyan-50/60', hexBg: 'CFFAFE', hexText: '155E75' },
+      { badgeBg: 'bg-lime-100', text: 'text-lime-800', border: 'border-lime-300', cellBg: 'bg-lime-50/60', hexBg: 'ECFCCB', hexText: '3F6212' }
+    ];
+
+    function getTagStyle(tag) {
+      const clean = String(tag || '').replace(/[\s\(\)\[\]\{\}:]/g, '');
+      if (clean.includes('생활지도')) return TAG_COLOR_PALETTE['생활지도'];
+      if (clean.includes('특수')) return TAG_COLOR_PALETTE['특수아동'];
+      if (clean.includes('다문화')) return TAG_COLOR_PALETTE['다문화'];
+      if (clean.includes('학습부진')) return TAG_COLOR_PALETTE['학습부진'];
+      if (clean.includes('운동부')) return TAG_COLOR_PALETTE['운동부'];
+      if (clean.includes('분리')) return TAG_COLOR_PALETTE['분리요청'];
+
+      let hash = 0;
+      for (let i = 0; i < tag.length; i++) {
+        hash = (hash << 5) - hash + tag.charCodeAt(i);
+        hash |= 0;
+      }
+      return DYNAMIC_PALETTES[Math.abs(hash) % DYNAMIC_PALETTES.length];
+    }
+
+    function getRemarksCellBg(tags) {
+      if (!tags || tags.length === 0) return '';
+      for (const t of tags) {
+        if (t.includes('생활지도')) return 'bg-rose-50/70';
+        if (t.includes('분리')) return 'bg-purple-50/70';
+        if (t.includes('특수')) return 'bg-blue-50/70';
+        if (t.includes('다문화')) return 'bg-amber-50/70';
+        if (t.includes('학습부진')) return 'bg-orange-50/70';
+      }
+      return getTagStyle(tags[0]).cellBg;
+    }
+
+    // 엑셀 내보내기용 색상 탐색
+    function getExcelColorForRemarks(remarks) {
+      if (!remarks) return null;
+      const str = String(remarks).trim();
+      if (!str || str === '-' || str === '없음' || str === '해당없음') return null;
+
+      if (str.includes('생활지도')) return { bgRgb: 'FFD1D5', textRgb: '9F1239' }; // 빨강 (Rose/Red)
+      if (str.includes('특수')) return { bgRgb: 'BFDBFE', textRgb: '1E40AF' };     // 파랑 (Sky Blue)
+      if (str.includes('다문화')) return { bgRgb: 'FEF08A', textRgb: '854D0E' };   // 노랑 (Amber/Yellow)
+      if (str.includes('학습부진')) return { bgRgb: 'FED7AA', textRgb: '9A3412' }; // 주황 (Orange)
+      if (str.includes('운동부')) return { bgRgb: 'BBF7D0', textRgb: '166534' };   // 초록 (Emerald/Green)
+      if (str.includes('분리')) return { bgRgb: 'E9D5FF', textRgb: '6B21A8' };     // 보라 (Purple/Violet)
+      if (str.includes('영재') || str.includes('우수')) return { bgRgb: 'E0E7FF', textRgb: '3730A3' }; // 인디고
+      if (str.includes('건강') || str.includes('보건') || str.includes('질환')) return { bgRgb: 'FCE7F3', textRgb: '9D174D' }; // 핑크
+
+      return { bgRgb: 'CCFBF1', textRgb: '115E59' }; // 청록/민트
+    }
+
+    // 워크시트에 셀 배경색 및 서식 입히기 함수
+    function applyExcelStylesToWorksheet(worksheet, headerRowIdx = 0) {
+      const xlsxLib = window.XLSXStyle || window.XLSX;
+      if (!worksheet || !worksheet['!ref']) return;
+
+      const range = xlsxLib.utils.decode_range(worksheet['!ref']);
+
+      // 1. 헤더 행 분석: 비고 컬럼, 진급반 컬럼, 새번호 컬럼 등 동적 탐색
+      let remarksColIdx = -1;
+      let targetClassColIdx = -1;
+      let newNumberColIdx = -1;
+      let isStatsSheet = false;
+      const headerNames = [];
+
+      for (let C = range.s.c; C <= range.e.c; C++) {
+        const addr = xlsxLib.utils.encode_cell({ r: headerRowIdx, c: C });
+        const cell = worksheet[addr];
+        const val = cell ? String(cell.v || '').trim() : '';
+        headerNames[C] = val;
+
+        if (val.includes('비고')) {
+          remarksColIdx = C;
+        }
+        if (val === '진급반') {
+          targetClassColIdx = C;
+        }
+        if (val === '번호' && C > 2) {
+          newNumberColIdx = C;
+        }
+        if (val.includes('실제 학생 수') || val.includes('통계') || val.includes('가중 학생 수')) {
+          isStatsSheet = true;
+        }
+      }
+
+      // 2. 열 너비 자동 최적화
+      const cols = [];
+      for (let C = range.s.c; C <= range.e.c; C++) {
+        const headerName = headerNames[C] || '';
+        if (isStatsSheet) {
+          if (headerName.includes('가중')) cols.push({ wch: 22 });
+          else if (headerName.includes('성비') || headerName.includes('충돌') || headerName.includes('위반')) cols.push({ wch: 16 });
+          else cols.push({ wch: 14 });
+        } else {
+          if (C === remarksColIdx) cols.push({ wch: 34 });
+          else if (headerName === '이름') cols.push({ wch: 14 });
+          else if (headerName === '진급반') cols.push({ wch: 12 });
+          else if (headerName === '번호') cols.push({ wch: 9 });
+          else if (headerName === '성별' || headerName === '반') cols.push({ wch: 9 });
+          else cols.push({ wch: 11 });
+        }
+      }
+      worksheet['!cols'] = cols;
+
+      const thinBorder = {
+        top: { style: 'thin', color: { rgb: 'CBD5E1' } },
+        bottom: { style: 'thin', color: { rgb: 'CBD5E1' } },
+        left: { style: 'thin', color: { rgb: 'CBD5E1' } },
+        right: { style: 'thin', color: { rgb: 'CBD5E1' } }
+      };
+
+      for (let R = range.s.r; R <= range.e.r; R++) {
+        for (let C = range.s.c; C <= range.e.c; C++) {
+          const cellAddress = xlsxLib.utils.encode_cell({ r: R, c: C });
+          const cell = worksheet[cellAddress];
+          if (!cell) continue;
+
+          // 타이틀 행 (헤더 이전 상단 안내 영역)
+          if (R < headerRowIdx) {
+            if (R === 0 && cell.v) {
+              cell.s = {
+                font: { name: '맑은 고딕', sz: 13, bold: true, color: { rgb: '166534' } },
+                alignment: { vertical: 'center', horizontal: 'left' }
+              };
+            } else if (R === 1 && cell.v) {
+              cell.s = {
+                font: { name: '맑은 고딕', sz: 9.5, italic: true, color: { rgb: '475569' } },
+                alignment: { vertical: 'center', horizontal: 'left' }
+              };
+            }
+            continue;
+          }
+
+          // 헤더 행 스타일
+          if (R === headerRowIdx) {
+            cell.s = {
+              fill: {
+                patternType: 'solid',
+                fgColor: { rgb: isStatsSheet ? 'E2E8F0' : 'DCFCE7' } // 통계는 슬레이트, 학생은 산뜻한 세이지 그린
+              },
+              font: {
+                name: '맑은 고딕',
+                sz: 10,
+                bold: true,
+                color: { rgb: isStatsSheet ? '1E293B' : '166534' }
+              },
+              alignment: {
+                vertical: 'center',
+                horizontal: 'center'
+              },
+              border: {
+                top: { style: 'medium', color: { rgb: isStatsSheet ? '94A3B8' : '86EFAC' } },
+                bottom: { style: 'medium', color: { rgb: isStatsSheet ? '94A3B8' : '86EFAC' } },
+                left: { style: 'thin', color: { rgb: 'CBD5E1' } },
+                right: { style: 'thin', color: { rgb: 'CBD5E1' } }
+              }
+            };
+          } 
+          // 데이터 행 스타일
+          else if (R > headerRowIdx) {
+            // 통계 시트일 때
+            if (isStatsSheet) {
+              const valStr = String(cell.v || '');
+              const isWarning = (valStr.includes('충돌') || valStr.includes('위반')) && !valStr.startsWith('0');
+              const isSafe = valStr.includes('0건') || valStr.includes('안전');
+
+              cell.s = {
+                fill: isWarning ? { patternType: 'solid', fgColor: { rgb: 'FEE2E2' } } : undefined,
+                font: {
+                  name: '맑은 고딕',
+                  sz: 10,
+                  bold: isWarning || isSafe || C === 0,
+                  color: { rgb: isWarning ? '991B1B' : (isSafe ? '166534' : '1E293B') }
+                },
+                alignment: {
+                  vertical: 'center',
+                  horizontal: 'center'
+                },
+                border: thinBorder
+              };
+            } 
+            // 학생 명단 시트일 때
+            else {
+              const isCenter = (C !== remarksColIdx);
+              let cellStyle = {
+                font: {
+                  name: '맑은 고딕',
+                  sz: 10,
+                  color: { rgb: '1E293B' }
+                },
+                alignment: {
+                  vertical: 'center',
+                  horizontal: isCenter ? 'center' : 'left'
+                },
+                border: thinBorder
+              };
+
+              // ★ 비고 컬럼 특이사항별 배경색 칠하기!
+              if (C === remarksColIdx && cell.v) {
+                const colorInfo = getExcelColorForRemarks(cell.v);
+                if (colorInfo) {
+                  cellStyle.fill = {
+                    patternType: 'solid',
+                    fgColor: { rgb: colorInfo.bgRgb } // 생활지도: FFD1D5(빨강), 특수: BFDBFE(파랑), 다문화: FEF08A(노랑) 등
+                  };
+                  cellStyle.font = {
+                    name: '맑은 고딕',
+                    sz: 10,
+                    bold: true,
+                    color: { rgb: colorInfo.textRgb }
+                  };
+                  cellStyle.border = {
+                    top: { style: 'thin', color: { rgb: colorInfo.textRgb } },
+                    bottom: { style: 'thin', color: { rgb: colorInfo.textRgb } },
+                    left: { style: 'thin', color: { rgb: colorInfo.textRgb } },
+                    right: { style: 'thin', color: { rgb: colorInfo.textRgb } }
+                  };
+                }
+              }
+
+              // 진급반 컬럼 강조
+              if (C === targetClassColIdx) {
+                cellStyle.fill = {
+                  patternType: 'solid',
+                  fgColor: { rgb: 'F0FDF4' }
+                };
+                cellStyle.font = {
+                  name: '맑은 고딕',
+                  sz: 10,
+                  bold: true,
+                  color: { rgb: '065F46' }
+                };
+              }
+
+              // 새 번호 컬럼 강조
+              if (C === newNumberColIdx) {
+                cellStyle.fill = {
+                  patternType: 'solid',
+                  fgColor: { rgb: 'F0FDF4' }
+                };
+                cellStyle.font = {
+                  name: '맑은 고딕',
+                  sz: 10,
+                  bold: true,
+                  color: { rgb: '047857' }
+                };
+              }
+
+              cell.s = cellStyle;
+            }
+          }
+        }
+      }
+    }
+
+    function findNameCollisions(students) {
+      const map = new Map();
+      for (const s of students) {
+        if (!s.firstName) continue;
+        const list = map.get(s.firstName) || [];
+        list.push(s);
+        map.set(s.firstName, list);
+      }
+
+      const collisions = [];
+      for (const [firstName, list] of map.entries()) {
+        if (list.length > 1) {
+          collisions.push({
+            firstName,
+            count: list.length,
+            studentIds: list.map(s => s.id),
+            studentNames: list.map(s => s.name)
+          });
+        }
+      }
+      return collisions;
+    }
+
+    function buildSeparationPairs(students) {
+      const pairs = [];
+      const pairSet = new Set();
+
+      for (const s of students) {
+        if (!s.separateFromNames || !s.separateFromNames.length) continue;
+        for (const targetName of s.separateFromNames) {
+          const targets = students.filter(other => other.id !== s.id && other.name === targetName);
+          for (const target of targets) {
+            const key = [s.id, target.id].sort().join('___');
+            if (!pairSet.has(key)) {
+              pairSet.add(key);
+              pairs.push({
+                idA: s.id,
+                idB: target.id,
+                nameA: s.name,
+                nameB: target.name
+              });
+            }
+          }
+        }
+      }
+      return pairs;
+    }
+
+    function findSeparationViolations(students, separationPairs) {
+      const idMap = new Map(students.map(s => [s.id, s]));
+      const violations = [];
+      for (const pair of separationPairs) {
+        const sA = idMap.get(pair.idA);
+        const sB = idMap.get(pair.idB);
+        if (sA && sB) {
+          violations.push({ studentA: sA, studentB: sB });
+        }
+      }
+      return violations;
+    }
+
+    function preprocessStudents(records, scoreType) {
+      const parsed = records.map((r, idx) => {
+        const rawName = String(r.name || '').trim();
+        const { surname, firstName } = parseKoreanName(rawName);
+        const gStr = String(r.gender || '').trim().toLowerCase();
+        const gender = (gStr === '남' || gStr === '남자' || gStr === 'm' || gStr === 'male') ? '남' : '여';
+
+        const prevClass = String(r.prevClass || '1반').trim();
+        const prevNumber = parseInt(String(r.prevNumber || idx + 1), 10) || (idx + 1);
+
+        const kor = parseFloat(String(r.koreanScore || '0')) || 0;
+        const math = parseFloat(String(r.mathScore || '0')) || 0;
+        let total = parseFloat(String(r.totalScore || '0')) || 0;
+        if (total === 0 && (kor > 0 || math > 0)) total = kor + math;
+
+        const rank = parseInt(String(r.rank || '0'), 10) || 0;
+        const rawRemarks = String(r.remarks || '');
+        const { tags, isSpecialChild, separateFromNames } = parseRemarks(rawRemarks);
+
+        return {
+          id: r.id || `std_${idx + 1}_${Math.random().toString(36).substring(2, 7)}`,
+          originalId: String(idx + 1),
+          prevClass,
+          prevNumber,
+          name: rawName,
+          surname,
+          firstName,
+          gender,
+          koreanScore: kor,
+          mathScore: math,
+          totalScore: total,
+          rank,
+          score: total > 0 ? total : (rank > 0 ? -rank : 0),
+          rawRemarks,
+          tags,
+          isSpecialChild,
+          separateFromNames,
+          assignedClass: String(r.targetClass || '').trim() || undefined
+        };
+      });
+
+      const needRank = parsed.some(s => s.rank === 0);
+      if (needRank) {
+        const sorted = [...parsed].sort((a, b) => b.totalScore - a.totalScore);
+        sorted.forEach((s, i) => {
+          if (s.rank === 0) s.rank = i + 1;
+        });
+      }
+
+      return parsed.map(s => ({
+        ...s,
+        rankScore: scoreType === 'score' ? -s.totalScore : s.rank
+      }));
+    }
+
+    function assignClassNumbers(students, mode = 'name_all') {
+      // 1. 남녀 구분 없이 전체 이름순(가나다순)으로 1번부터 부여 (기본 및 표준 모드)
+      if (mode === 'name_all' || mode === 'integrated' || !mode) {
+        const sorted = [...students].sort((a, b) => a.name.localeCompare(b.name, 'ko'));
+        sorted.forEach((s, idx) => {
+          s.assignedNumber = idx + 1;
+        });
+        return sorted;
+      }
+
+      // 2. 남녀 분리 연속번호 (선택 시 지원: 남 1번~ / 여 21번~)
+      if (mode === 'continuous') {
+        const boys = students.filter(s => s.gender === '남').sort((a, b) => a.name.localeCompare(b.name, 'ko'));
+        const girls = students.filter(s => s.gender === '여').sort((a, b) => a.name.localeCompare(b.name, 'ko'));
+
+        boys.forEach((s, idx) => { s.assignedNumber = idx + 1; });
+        const girlStart = Math.max(21, boys.length + 1);
+        girls.forEach((s, idx) => { s.assignedNumber = girlStart + idx; });
+        return [...boys, ...girls].sort((a, b) => (a.assignedNumber || 0) - (b.assignedNumber || 0));
+      }
+
+      // 2-2. 남녀 분리 연속번호 (선택 시 지원: 여 1번~ / 남 21번~)
+      if (mode === 'continuous_female') {
+        const boys = students.filter(s => s.gender === '남').sort((a, b) => a.name.localeCompare(b.name, 'ko'));
+        const girls = students.filter(s => s.gender === '여').sort((a, b) => a.name.localeCompare(b.name, 'ko'));
+
+        girls.forEach((s, idx) => { s.assignedNumber = idx + 1; });
+        const boyStart = Math.max(21, girls.length + 1);
+        boys.forEach((s, idx) => { s.assignedNumber = boyStart + idx; });
+        return [...girls, ...boys].sort((a, b) => (a.assignedNumber || 0) - (b.assignedNumber || 0));
+      }
+
+      // 3. 남녀 분리 각각 1번부터 (선택 시 지원: 남 1번~, 여 1번~)
+      const boys = students.filter(s => s.gender === '남').sort((a, b) => a.name.localeCompare(b.name, 'ko'));
+      const girls = students.filter(s => s.gender === '여').sort((a, b) => a.name.localeCompare(b.name, 'ko'));
+
+      boys.forEach((s, idx) => { s.assignedNumber = idx + 1; });
+      girls.forEach((s, idx) => { s.assignedNumber = idx + 1; });
+      return [...boys, ...girls].sort((a, b) => (a.assignedNumber || 0) - (b.assignedNumber || 0));
+    }
+
+    function initialSnakeDraft(students, newClassNames, prevClassNames) {
+      const K = newClassNames.length;
+      if (K === 0) return new Map();
+
+      const assignment = new Map();
+      newClassNames.forEach(name => assignment.set(name, []));
+
+      // 학생들에게 실제로 존재하는 기존 반 목록
+      const actualPrevClasses = Array.from(new Set(students.map(s => s.prevClass || '기본반')));
+      const orderedPrevClasses = [
+        ...(prevClassNames || []).filter(c => actualPrevClasses.includes(c)),
+        ...actualPrevClasses.filter(c => !(prevClassNames || []).includes(c))
+      ];
+
+      const grouped = new Map();
+      students.forEach(s => {
+        const pCls = s.prevClass || '기본반';
+        const key = `${pCls}___${s.gender}`;
+        if (!grouped.has(key)) grouped.set(key, []);
+        grouped.get(key).push(s);
+      });
+
+      for (const [_, list] of grouped.entries()) {
+        list.sort((a, b) => a.rankScore - b.rankScore);
+      }
+
+      orderedPrevClasses.forEach((prevCls, cIdx) => {
+        ['남', '여'].forEach(gender => {
+          const key = `${prevCls}___${gender}`;
+          const groupStudents = grouped.get(key) || [];
+          if (groupStudents.length === 0) return;
+
+          const baseOffset = (cIdx + (gender === '남' ? 0 : 1)) % K;
+
+          groupStudents.forEach((student, rankIdx) => {
+            const round = Math.floor(rankIdx / K);
+            const step = rankIdx % K;
+            const targetSlot = (round % 2 === 0)
+              ? (baseOffset + step) % K
+              : (baseOffset + (K - 1 - step)) % K;
+
+            const targetClassName = newClassNames[targetSlot];
+            student.assignedClass = targetClassName;
+            assignment.get(targetClassName).push(student);
+          });
+        });
+      });
+
+      // 안전장치: 혹시라도 배정에서 누락된 학생이 있다면 인원이 가장 적은 반에 배정
+      const assignedIds = new Set();
+      for (const list of assignment.values()) {
+        for (const s of list) assignedIds.add(s.id);
+      }
+      for (const s of students) {
+        if (!assignedIds.has(s.id)) {
+          let minClass = newClassNames[0];
+          let minLen = assignment.get(minClass).length;
+          for (const c of newClassNames) {
+            if (assignment.get(c).length < minLen) {
+              minLen = assignment.get(c).length;
+              minClass = c;
+            }
+          }
+          s.assignedClass = minClass;
+          assignment.get(minClass).push(s);
+          assignedIds.add(s.id);
+        }
+      }
+
+      return assignment;
+    }
+
+    function evaluateAssignmentCost(assignment, targetWeighted, targetMale, targetFemale, allTags, separationPairs) {
+      let nameCollisionCost = 0;
+      let separationViolationCost = 0;
+      let weightedCost = 0;
+      let genderCost = 0;
+      let tagCost = 0;
+      let scoreCost = 0;
+      let collisionCount = 0;
+      let separationViolationCount = 0;
+
+      const classList = Array.from(assignment.values());
+      const classAvgRanks = [];
+
+      for (const students of classList) {
+        const collisions = findNameCollisions(students);
+        for (const c of collisions) {
+          const pairs = (c.count * (c.count - 1)) / 2;
+          nameCollisionCost += pairs * 500000;
+          collisionCount += pairs;
+        }
+
+        const sepViolations = findSeparationViolations(students, separationPairs);
+        if (sepViolations.length > 0) {
+          separationViolationCost += sepViolations.length * 1000000;
+          separationViolationCount += sepViolations.length;
+        }
+
+        const specialCount = students.filter(s => s.isSpecialChild).length;
+        const weightedCount = students.length + specialCount;
+        weightedCost += Math.pow(weightedCount - targetWeighted, 2) * 20000;
+
+        const maleCount = students.filter(s => s.gender === '남').length;
+        const femaleCount = students.length - maleCount;
+        genderCost += Math.pow(maleCount - targetMale, 2) * 6000;
+        genderCost += Math.pow(femaleCount - targetFemale, 2) * 6000;
+
+        const totalR = students.reduce((acc, s) => acc + (s.rank || 0), 0);
+        classAvgRanks.push(students.length > 0 ? totalR / students.length : 0);
+      }
+
+      for (const tag of allTags) {
+        const counts = classList.map(stds => stds.filter(s => s.tags.includes(tag)).length);
+        const mean = counts.reduce((a, b) => a + b, 0) / counts.length;
+        const variance = counts.reduce((acc, c) => acc + Math.pow(c - mean, 2), 0) / counts.length;
+        tagCost += variance * 2500;
+      }
+
+      if (classAvgRanks.length > 1) {
+        const meanRank = classAvgRanks.reduce((a, b) => a + b, 0) / classAvgRanks.length;
+        const rankVar = classAvgRanks.reduce((acc, s) => acc + Math.pow(s - meanRank, 2), 0) / classAvgRanks.length;
+        scoreCost = rankVar * 400;
+      }
+
+      return {
+        totalCost: nameCollisionCost + separationViolationCost + weightedCost + genderCost + tagCost + scoreCost,
+        collisionCount,
+        separationViolationCount,
+        nameCollisionCost,
+        separationViolationCost,
+        weightedCost
+      };
+    }
+
+    function resolveSeparationViolationsDirectly(assignment, newClassNames, separationPairs) {
+      let anyImprovement = false;
+      for (let i = 0; i < newClassNames.length; i++) {
+        const cNameA = newClassNames[i];
+        const listA = assignment.get(cNameA);
+        const violations = findSeparationViolations(listA, separationPairs);
+
+        for (const v of violations) {
+          const targetStudent = v.studentA;
+          let swapped = false;
+
+          for (let j = 0; j < newClassNames.length; j++) {
+            if (i === j) continue;
+            const cNameB = newClassNames[j];
+            const listB = assignment.get(cNameB);
+
+            const hasConflictInB = separationPairs.some(p =>
+              (p.idA === targetStudent.id && listB.some(s => s.id === p.idB)) ||
+              (p.idB === targetStudent.id && listB.some(s => s.id === p.idA))
+            );
+            if (hasConflictInB) continue;
+
+            const candidateIndex = listB.findIndex(sB => {
+              if (sB.gender !== targetStudent.gender) return false;
+              const sBConflictInA = separationPairs.some(p =>
+                (p.idA === sB.id && listA.some(s => s.id !== targetStudent.id && s.id === p.idB)) ||
+                (p.idB === sB.id && listA.some(s => s.id !== targetStudent.id && s.id === p.idA))
+              );
+              if (sBConflictInA) return false;
+
+              const nameConflictInA = listA.some(sA => sA.id !== targetStudent.id && sA.firstName === sB.firstName);
+              const nameConflictInB = listB.some(sB2 => sB2.id !== sB.id && sB2.firstName === targetStudent.firstName);
+              return !nameConflictInA && !nameConflictInB;
+            });
+
+            if (candidateIndex !== -1) {
+              const partnerStudent = listB[candidateIndex];
+              const idxInA = listA.findIndex(s => s.id === targetStudent.id);
+
+              listA[idxInA] = partnerStudent;
+              listB[candidateIndex] = targetStudent;
+              partnerStudent.assignedClass = cNameA;
+              targetStudent.assignedClass = cNameB;
+
+              swapped = true;
+              anyImprovement = true;
+              break;
+            }
+          }
+          if (swapped) break;
+        }
+      }
+      return anyImprovement;
+    }
+
+    function resolveNameCollisionsDirectly(assignment, newClassNames) {
+      let anyImprovement = false;
+      for (let i = 0; i < newClassNames.length; i++) {
+        const cNameA = newClassNames[i];
+        const listA = assignment.get(cNameA);
+        const collisions = findNameCollisions(listA);
+
+        for (const collision of collisions) {
+          const conflictStudent = listA.find(s => s.firstName === collision.firstName);
+          if (!conflictStudent) continue;
+
+          let swapped = false;
+          for (let j = 0; j < newClassNames.length; j++) {
+            if (i === j) continue;
+            const cNameB = newClassNames[j];
+            const listB = assignment.get(cNameB);
+
+            if (listB.some(s => s.firstName === conflictStudent.firstName)) continue;
+
+            const candidateIndex = listB.findIndex(sB => {
+              if (sB.gender !== conflictStudent.gender) return false;
+              return !listA.some(sA => sA.id !== conflictStudent.id && sA.firstName === sB.firstName);
+            });
+
+            if (candidateIndex !== -1) {
+              const partnerStudent = listB[candidateIndex];
+              const idxInA = listA.findIndex(s => s.id === conflictStudent.id);
+              listA[idxInA] = partnerStudent;
+              listB[candidateIndex] = conflictStudent;
+              partnerStudent.assignedClass = cNameA;
+              conflictStudent.assignedClass = cNameB;
+              swapped = true;
+              anyImprovement = true;
+              break;
+            }
+          }
+          if (swapped) break;
+        }
+      }
+      return anyImprovement;
+    }
+
+    function balanceWeightedCapacities(assignment, newClassNames) {
+      let changed = false;
+      const getWeighted = (cName) => {
+        const list = assignment.get(cName);
+        const special = list.filter(s => s.isSpecialChild).length;
+        return list.length + special;
+      };
+
+      for (let step = 0; step < 10; step++) {
+        let maxClass = newClassNames[0];
+        let minClass = newClassNames[0];
+        let maxW = getWeighted(maxClass);
+        let minW = getWeighted(minClass);
+
+        for (const c of newClassNames) {
+          const w = getWeighted(c);
+          if (w > maxW) { maxW = w; maxClass = c; }
+          if (w < minW) { minW = w; minClass = c; }
+        }
+
+        if (maxW - minW <= 1) break;
+
+        const listMax = assignment.get(maxClass);
+        const listMin = assignment.get(minClass);
+
+        const candidateIdx = listMax.findIndex(s => {
+          if (s.isSpecialChild) return false;
+          return !listMin.some(m => m.firstName === s.firstName);
+        });
+
+        if (candidateIdx !== -1) {
+          const student = listMax.splice(candidateIdx, 1)[0];
+          student.assignedClass = minClass;
+          listMin.push(student);
+          changed = true;
+        } else {
+          break;
+        }
+      }
+      return changed;
+    }
+
+    function runAssignmentOptimization(students, newClassNames, prevClassNames, numberingMode = 'name_all') {
+      const startTime = performance.now();
+      const K = newClassNames.length;
+      if (K === 0) {
+        return {
+          classes: {},
+          overallStats: {
+            totalStudents: 0,
+            classCount: 0,
+            avgClassSize: 0,
+            totalCollisions: 0,
+            totalSeparationViolations: 0,
+            totalSpecialChildren: 0,
+            executionTimeMs: 0
+          },
+          warnings: []
+        };
+      }
+
+      const maxIterations = 1500;
+      const initialTemp = 100.0;
+      const coolingRate = 0.995;
+      const maxRestarts = 2;
+
+      const separationPairs = buildSeparationPairs(students);
+
+      const totalSpecial = students.filter(s => s.isSpecialChild).length;
+      const totalWeighted = students.length + totalSpecial;
+      const targetWeighted = totalWeighted / K;
+
+      const totalMale = students.filter(s => s.gender === '남').length;
+      const totalFemale = students.length - totalMale;
+      const targetMale = totalMale / K;
+      const targetFemale = totalFemale / K;
+
+      const allTags = Array.from(new Set(students.flatMap(s => s.tags)));
+
+      let globalBestAssignment = null;
+      let globalLowestCost = Infinity;
+      let totalIterationsDone = 0;
+
+      // K >= 2 일 때만 교환 시뮬레이티드 어닐링 수행
+      if (K >= 2) {
+        for (let restart = 0; restart < maxRestarts; restart++) {
+          let currentAssignment = initialSnakeDraft(students, newClassNames, prevClassNames);
+
+          if (restart > 0) {
+            for (let p = 0; p < 20; p++) {
+              const c1 = newClassNames[Math.floor(Math.random() * K)];
+              let c2 = newClassNames[Math.floor(Math.random() * K)];
+              let pickA = 0;
+              while (c1 === c2 && pickA < 10) {
+                c2 = newClassNames[Math.floor(Math.random() * K)];
+                pickA++;
+              }
+              if (c1 === c2) continue;
+              const l1 = currentAssignment.get(c1);
+              const l2 = currentAssignment.get(c2);
+              if (!l1.length || !l2.length) continue;
+              const s1 = l1[Math.floor(Math.random() * l1.length)];
+              const s2Candidates = l2.filter(s => s.gender === s1.gender);
+              if (s2Candidates.length > 0) {
+                const s2 = s2Candidates[Math.floor(Math.random() * s2Candidates.length)];
+                const i1 = l1.indexOf(s1);
+                const i2 = l2.indexOf(s2);
+                l1[i1] = s2;
+                l2[i2] = s1;
+                s1.assignedClass = c2;
+                s2.assignedClass = c1;
+              }
+            }
+          }
+
+          for (let c = 0; c < 5; c++) {
+            resolveNameCollisionsDirectly(currentAssignment, newClassNames);
+            resolveSeparationViolationsDirectly(currentAssignment, newClassNames, separationPairs);
+          }
+
+          balanceWeightedCapacities(currentAssignment, newClassNames);
+
+          let currentCostObj = evaluateAssignmentCost(currentAssignment, targetWeighted, targetMale, targetFemale, allTags, separationPairs);
+          let localBestCost = currentCostObj.totalCost;
+          let localBestAssignment = new Map();
+          for (const [k, v] of currentAssignment.entries()) {
+            localBestAssignment.set(k, [...v]);
+          }
+
+          let temp = initialTemp;
+
+          for (let iter = 0; iter < maxIterations; iter++) {
+            totalIterationsDone++;
+
+            const c1Name = newClassNames[Math.floor(Math.random() * K)];
+            let c2Name = newClassNames[Math.floor(Math.random() * K)];
+            let pickAtt = 0;
+            while (c1Name === c2Name && pickAtt < 10) {
+              c2Name = newClassNames[Math.floor(Math.random() * K)];
+              pickAtt++;
+            }
+            if (c1Name === c2Name) continue;
+
+            const list1 = currentAssignment.get(c1Name);
+            const list2 = currentAssignment.get(c2Name);
+            if (!list1.length || !list2.length) continue;
+
+            let s1;
+            const sepV1 = findSeparationViolations(list1, separationPairs);
+            const collisions1 = findNameCollisions(list1);
+
+            if (sepV1.length > 0 && Math.random() < 0.8) {
+              s1 = sepV1[0].studentA;
+            } else if (collisions1.length > 0 && Math.random() < 0.8) {
+              const conflictFirst = collisions1[0].firstName;
+              s1 = list1.find(s => s.firstName === conflictFirst) || list1[Math.floor(Math.random() * list1.length)];
+            } else {
+              s1 = list1[Math.floor(Math.random() * list1.length)];
+            }
+
+            const sameGender = Math.random() < 0.9;
+            let s2Candidates = sameGender ? list2.filter(s => s.gender === s1.gender) : list2;
+            if (s2Candidates.length === 0) s2Candidates = list2;
+
+            const s2 = s2Candidates[Math.floor(Math.random() * s2Candidates.length)];
+
+            const idx1 = list1.indexOf(s1);
+            const idx2 = list2.indexOf(s2);
+            list1[idx1] = s2;
+            list2[idx2] = s1;
+            s1.assignedClass = c2Name;
+            s2.assignedClass = c1Name;
+
+            const newCostObj = evaluateAssignmentCost(currentAssignment, targetWeighted, targetMale, targetFemale, allTags, separationPairs);
+            const delta = newCostObj.totalCost - currentCostObj.totalCost;
+
+            let accept = false;
+            if (delta <= 0) {
+              accept = true;
+            } else {
+              const prob = Math.exp(-delta / Math.max(temp, 0.0001));
+              if (Math.random() < prob) accept = true;
+            }
+
+            if (accept) {
+              currentCostObj = newCostObj;
+              if (currentCostObj.totalCost < localBestCost) {
+                localBestCost = currentCostObj.totalCost;
+                localBestAssignment.clear();
+                for (const [k, v] of currentAssignment.entries()) {
+                  localBestAssignment.set(k, [...v]);
+                }
+                if (currentCostObj.collisionCount === 0 && currentCostObj.separationViolationCount === 0 && currentCostObj.weightedCost === 0) {
+                  temp *= 0.99;
+                }
+              }
+            } else {
+              list1[idx1] = s1;
+              list2[idx2] = s2;
+              s1.assignedClass = c1Name;
+              s2.assignedClass = c2Name;
+            }
+
+            temp *= coolingRate;
+
+            if (iter % 400 === 0) {
+              if (currentCostObj.separationViolationCount > 0) {
+                resolveSeparationViolationsDirectly(currentAssignment, newClassNames, separationPairs);
+              }
+              if (currentCostObj.collisionCount > 0) {
+                resolveNameCollisionsDirectly(currentAssignment, newClassNames);
+              }
+            }
+          }
+
+          if (localBestCost < globalLowestCost) {
+            globalLowestCost = localBestCost;
+            globalBestAssignment = localBestAssignment;
+
+            const checkCollisions = evaluateAssignmentCost(localBestAssignment, targetWeighted, targetMale, targetFemale, allTags, separationPairs);
+            if (checkCollisions.collisionCount === 0 && checkCollisions.separationViolationCount === 0) break;
+          }
+        }
+      }
+
+      const bestAssignment = globalBestAssignment || initialSnakeDraft(students, newClassNames, prevClassNames);
+
+      const classesSummary = {};
+      let totalCollisions = 0;
+      let totalSeparationViolations = 0;
+      const warnings = [];
+
+      for (const className of newClassNames) {
+        const rawList = bestAssignment.get(className) || [];
+        for (const s of rawList) s.assignedClass = className;
+
+        const list = assignClassNumbers(rawList, numberingMode);
+
+        let maleCount = 0;
+        let femaleCount = 0;
+        let specialCount = 0;
+        let totalScore = 0;
+        let totalRank = 0;
+        const tagCounts = {};
+        const prevClassCounts = {};
+
+        for (const s of list) {
+          if (s.gender === '남') maleCount++;
+          else femaleCount++;
+          if (s.isSpecialChild) specialCount++;
+          totalScore += s.totalScore || s.score;
+          totalRank += s.rank || 0;
+          prevClassCounts[s.prevClass] = (prevClassCounts[s.prevClass] || 0) + 1;
+          for (const tag of s.tags) {
+            tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+          }
+        }
+
+        const weightedCount = list.length + specialCount;
+        const avgScore = list.length > 0 ? Number((totalScore / list.length).toFixed(2)) : 0;
+        const avgRank = list.length > 0 ? Number((totalRank / list.length).toFixed(1)) : 0;
+        const collisionsRaw = findNameCollisions(list);
+        const nameCollisions = collisionsRaw.map(c => ({
+          firstName: c.firstName,
+          students: list.filter(s => c.studentIds.includes(s.id))
+        }));
+
+        const separationViolations = findSeparationViolations(list, separationPairs);
+
+        for (const col of nameCollisions) {
+          totalCollisions += (col.students.length * (col.students.length - 1)) / 2;
+          warnings.push(`[${className}] 동일 이름 충돌: '${col.firstName}' (${col.students.map(s => s.name).join(', ')})`);
+        }
+
+        for (const sep of separationViolations) {
+          totalSeparationViolations++;
+          warnings.push(`[${className}] 분리 요청 위반: '${sep.studentA.name}' ↔ '${sep.studentB.name}' 동반 배정`);
+        }
+
+        classesSummary[className] = {
+          className,
+          students: list,
+          maleCount,
+          femaleCount,
+          specialCount,
+          totalStudents: list.length,
+          weightedCount,
+          avgScore,
+          avgRank,
+          tagCounts,
+          prevClassCounts,
+          nameCollisions,
+          separationViolations
+        };
+      }
+
+      const allSummaries = Object.values(classesSummary);
+      const avgScores = allSummaries.map(c => c.avgScore);
+      const meanAvgScore = avgScores.length > 0 ? avgScores.reduce((a, b) => a + b, 0) / avgScores.length : 0;
+      const scoreVariance = avgScores.length > 0 ? avgScores.reduce((acc, s) => acc + Math.pow(s - meanAvgScore, 2), 0) / avgScores.length : 0;
+      const scoreStdDev = Number(Math.sqrt(scoreVariance).toFixed(2));
+      const elapsedMs = Number((performance.now() - startTime).toFixed(1));
+
+      return {
+        classes: classesSummary,
+        overallStats: {
+          totalStudents: students.length,
+          totalWeighted,
+          maleCount: totalMale,
+          femaleCount: totalFemale,
+          specialCount: totalSpecial,
+          scoreStdDev,
+          avgScoreAcrossClasses: Number(meanAvgScore.toFixed(2)),
+          totalCollisions,
+          totalSeparationViolations,
+          totalSeparationRequests: separationPairs.length,
+          iterations: totalIterationsDone,
+          elapsedMs,
+          resolvedStatus: (totalCollisions === 0 && totalSeparationViolations === 0) ? 'PERFECT' : 'SATISFIED_WITH_WARNING',
+          warnings
+        }
+      };
+    }
+
+    function downloadSampleExcel() {
+      const xlsxLib = window.XLSXStyle || window.XLSX;
+      if (!xlsxLib) return;
+
+      const wb = xlsxLib.utils.book_new();
+
+      const sampleDataSheet1 = [
+        UPLOAD_STANDARD_HEADERS,
+        ['1반', 1, '김민준', '남', 95, 98, 193, 1, '생활지도, 분리요청 (이민준)'],
+        ['1반', 2, '박서아', '여', 92, 94, 186, 3, '다문화'],
+        ['1반', 3, '남궁민', '남', 96, 92, 188, 2, ''],
+        ['1반', 4, '조시우', '남', 78, 80, 158, 8, ''],
+        ['1반', 5, '장예은', '여', 90, 88, 178, 5, '']
+      ];
+
+      const sampleDataSheet2 = [
+        UPLOAD_STANDARD_HEADERS,
+        ['2반', 1, '이민준', '남', 94, 95, 189, 2, '분리요청 (김민준)'],
+        ['2반', 2, '최지우', '여', 88, 90, 178, 4, '특수아동'],
+        ['2반', 3, '윤서준', '남', 85, 84, 169, 6, '생활지도'],
+        ['2반', 4, '한지민', '여', 88, 87, 175, 5, '다문화'],
+        ['2반', 5, '배준', '남', 75, 78, 153, 9, '학습부진']
+      ];
+
+      const ws1 = xlsxLib.utils.aoa_to_sheet(sampleDataSheet1);
+      const ws2 = xlsxLib.utils.aoa_to_sheet(sampleDataSheet2);
+
+      applyExcelStylesToWorksheet(ws1, 0);
+      applyExcelStylesToWorksheet(ws2, 0);
+
+      xlsxLib.utils.book_append_sheet(wb, ws1, '1반');
+      xlsxLib.utils.book_append_sheet(wb, ws2, '2반');
+      xlsxLib.writeFile(wb, '학급편성_표준업로드양식(9개항목_시트별기존반).xlsx');
+    }
+
+    function generateMockData() {
+      const firstNamesBoys = ['민준', '서준', '도윤', '예준', '시우', '하준', '주원', '지호', '지후', '준서', '준우', '도현', '건우', '선우', '민재', '현우'];
+      const firstNamesGirls = ['서아', '하윤', '서윤', '지우', '서연', '하은', '지유', '수아', '아린', '지아', '예은', '채원', '유나', '소율', '수빈', '유진'];
+      const surnames = ['김', '이', '박', '최', '정', '강', '조', '윤', '장', '임', '남궁', '제갈', '황보'];
+
+      const records = [];
+      let seq = 1;
+
+      for (let c = 1; c <= 4; c++) {
+        const prevClass = `${c}반`;
+        for (let num = 1; num <= 20; num++) {
+          const isBoy = num % 2 === 1;
+          const gender = isBoy ? '남' : '여';
+          const surname = surnames[Math.floor(Math.random() * surnames.length)];
+          const fList = isBoy ? firstNamesBoys : firstNamesGirls;
+          const firstName = fList[Math.floor(Math.random() * 8)];
+          let name = `${surname}${firstName}`;
+
+          if (seq === 1) name = '김민준';
+          if (seq === 21) name = '이민준';
+          if (seq === 15) name = '조시우';
+          if (seq === 35) name = '강도윤';
+
+          const kor = Math.floor(Math.random() * 45) + 55;
+          const math = Math.floor(Math.random() * 45) + 55;
+          const total = kor + math;
+
+          let remark = '';
+          if (seq === 1) remark = '생활지도, 분리요청 (이민준)';
+          else if (seq === 21) remark = '분리요청 (김민준)';
+          else if (seq === 15) remark = '운동부';
+          else if (seq === 35) remark = '학습부진, 분리요청 (조시우)';
+          else if (seq === 7 || seq === 47) remark = '특수아동';
+          else if (seq === 11 || seq === 51) remark = '다문화';
+          else if (seq === 25 || seq === 65) remark = '생활지도';
+          else if (seq === 19 || seq === 39) remark = '학습부진';
+
+          records.push({
+            id: `mock_${seq++}`,
+            prevClass,
+            prevNumber: num,
+            name,
+            gender,
+            koreanScore: kor,
+            mathScore: math,
+            totalScore: total,
+            rank: 0,
+            targetClass: '',
+            remarks: remark
+          });
+        }
+      }
+
+      const sorted = [...records].sort((a, b) => b.totalScore - a.totalScore);
+      sorted.forEach((item, idx) => {
+        item.rank = idx + 1;
+      });
+
+      return records;
+    }
+
+    // ★ 엑셀 다운로드 실행: 셀 배경색(빨강, 파랑, 노랑, 주황 등)을 완벽하게 적용하여 저장!
+    function exportToExcel(result, filename) {
+      const xlsxLib = window.XLSXStyle || window.XLSX;
+      if (!xlsxLib) {
+        alert('엑셀 라이브러리를 불러올 수 없습니다.');
+        return;
+      }
+      const wb = xlsxLib.utils.book_new();
+
+      // 1. 전체 통합 시트
+      const allRows = [RESULT_STANDARD_HEADERS];
+      const classes = Object.values(result.classes);
+
+      for (const cls of classes) {
+        const sorted = [...cls.students].sort((a, b) => (a.assignedNumber || 0) - (b.assignedNumber || 0));
+        for (const s of sorted) {
+          allRows.push([
+            s.prevClass,
+            s.prevNumber,
+            s.name,
+            s.gender,
+            s.rank || '',
+            cls.className,
+            s.assignedNumber,
+            s.rawRemarks
+          ]);
+        }
+      }
+      const wsAll = xlsxLib.utils.aoa_to_sheet(allRows);
+      applyExcelStylesToWorksheet(wsAll, 0);
+      xlsxLib.utils.book_append_sheet(wb, wsAll, '전체배정결과');
+
+      // 2. 반별 분리 시트
+      for (const cls of classes) {
+        const classRows = [
+          [`[${cls.className}] 학급 편성 명단`],
+          [`총원: ${cls.totalStudents}명 | 가중 정원: ${cls.weightedCount}명 | 남: ${cls.maleCount}명 | 여: ${cls.femaleCount}명 | 특수: ${cls.specialCount}명 | 평균 석차: ${cls.avgRank}등`],
+          [],
+          RESULT_STANDARD_HEADERS
+        ];
+
+        const sorted = [...cls.students].sort((a, b) => (a.assignedNumber || 0) - (b.assignedNumber || 0));
+        sorted.forEach(s => {
+          classRows.push([
+            s.prevClass,
+            s.prevNumber,
+            s.name,
+            s.gender,
+            s.rank || '',
+            cls.className,
+            s.assignedNumber,
+            s.rawRemarks
+          ]);
+        });
+
+        classRows.push([]);
+        classRows.push(['-- 비고 항목 집계 --']);
+        for (const [tag, count] of Object.entries(cls.tagCounts)) {
+          classRows.push([tag, `${count}명`]);
+        }
+
+        const wsClass = xlsxLib.utils.aoa_to_sheet(classRows);
+        applyExcelStylesToWorksheet(wsClass, 3);
+        const safeSheetName = cls.className.replace(/[:\\/?*\[\]]/g, '_').substring(0, 30);
+        xlsxLib.utils.book_append_sheet(wb, wsClass, safeSheetName);
+      }
+
+      // 3. 통계 비교 시트
+      const statsRows = [
+        ['진급반', '실제 학생 수', '가중 학생 수(특수2명)', '남학생 수', '여학생 수', '남녀 성비(남:여)', '특수아동 수', '평균 석차', '평균 총점', '동일이름 충돌', '분리요청 위반']
+      ];
+      for (const cls of classes) {
+        const ratio = cls.femaleCount > 0 ? (cls.maleCount / cls.femaleCount).toFixed(2) + ' : 1' : `${cls.maleCount} : 0`;
+        statsRows.push([
+          cls.className,
+          cls.totalStudents,
+          cls.weightedCount,
+          cls.maleCount,
+          cls.femaleCount,
+          ratio,
+          cls.specialCount,
+          cls.avgRank,
+          cls.avgScore,
+          cls.nameCollisions.length === 0 ? '0건 (안전)' : `${cls.nameCollisions.length}건 충돌`,
+          cls.separationViolations.length === 0 ? '0건 (안전)' : `${cls.separationViolations.length}건 위반`
+        ]);
+      }
+      const wsStats = xlsxLib.utils.aoa_to_sheet(statsRows);
+      applyExcelStylesToWorksheet(wsStats, 0);
+      xlsxLib.utils.book_append_sheet(wb, wsStats, '학급별통계비교');
+
+      const now = new Date();
+      const dateStr = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}`;
+      xlsxLib.writeFile(wb, filename || `학급편성_배정결과_${dateStr}.xlsx`);
+    }
+
+    const KOREAN_ALPHABET_CLASSES = ['가반', '나반', '다반', '라반', '마반', '바반', '사반', '아반', '자반', '차반', '카반', '타반', '파반', '하반'];
+
+    function App() {
+      const [currentStep, setCurrentStep] = useState(1);
+      const [rawRecords, setRawRecords] = useState([]);
+      const [fileName, setFileName] = useState('');
+      const [sheetSummaryList, setSheetSummaryList] = useState([]);
+      const [scoreType, setScoreType] = useState('rank');
+      const [numberingMode, setNumberingMode] = useState('name_all');
+      const [isDragging, setIsDragging] = useState(false);
+
+      const [prevClassCount, setPrevClassCount] = useState(4);
+      const [prevClassNames, setPrevClassNames] = useState(['1반', '2반', '3반', '4반']);
+      const [newClassCount, setNewClassCount] = useState(4);
+      const [newClassNames, setNewClassNames] = useState(['가반', '나반', '다반', '라반']);
+
+      const [isOptimizing, setIsOptimizing] = useState(false);
+      const [assignmentResult, setAssignmentResult] = useState(null);
+      const [activeResultTab, setActiveResultTab] = useState('');
+      const [searchTerm, setSearchTerm] = useState('');
+      const [genderFilter, setGenderFilter] = useState('전체');
+
+      const fileInputRef = useRef(null);
+
+      useEffect(() => {
+        const preventDefault = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+        };
+        window.addEventListener('dragover', preventDefault, false);
+        window.addEventListener('drop', preventDefault, false);
+        return () => {
+          window.removeEventListener('dragover', preventDefault);
+          window.removeEventListener('drop', preventDefault);
+        };
+      }, []);
+
+      const handlePrevCountChange = (valStr) => {
+        const val = Math.max(1, Math.min(20, parseInt(valStr) || 1));
+        setPrevClassCount(val);
+        setPrevClassNames(prev => {
+          const arr = [...prev];
+          while (arr.length < val) arr.push(`${arr.length + 1}반`);
+          return arr.slice(0, val);
+        });
+      };
+
+      const handleNewCountChange = (valStr) => {
+        const val = Math.max(1, Math.min(20, parseInt(valStr) || 1));
+        setNewClassCount(val);
+        setNewClassNames(prev => {
+          const arr = [...prev];
+          while (arr.length < val) {
+            const idx = arr.length;
+            const defName = idx < KOREAN_ALPHABET_CLASSES.length ? KOREAN_ALPHABET_CLASSES[idx] : `${idx + 1}반`;
+            arr.push(defName);
+          }
+          return arr.slice(0, val);
+        });
+      };
+
+      const processUploadedFile = (file) => {
+        if (!file) return;
+        setFileName(file.name);
+
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+          try {
+            const data = new Uint8Array(evt.target.result);
+            const xlsxLib = window.XLSXStyle || window.XLSX;
+            const workbook = xlsxLib.read(data, { type: 'array' });
+
+            if (!workbook.SheetNames || !workbook.SheetNames.length) {
+              alert('엑셀 파일에 시트가 존재하지 않습니다.');
+              return;
+            }
+
+            const norm = (s) => String(s || '').toLowerCase().replace(/[\s\-_]/g, '');
+            const findIdx = (headers, syns) => {
+              for (const syn of syns) {
+                const idx = headers.findIndex(h => norm(h) === norm(syn));
+                if (idx !== -1) return idx;
+              }
+              for (const syn of syns) {
+                const idx = headers.findIndex(h => norm(h).includes(norm(syn)));
+                if (idx !== -1) return idx;
+              }
+              return -1;
+            };
+
+            const allRecords = [];
+            const uniquePrevClasses = new Set();
+            const sheetSummaries = [];
+
+            for (const sheetName of workbook.SheetNames) {
+              const worksheet = workbook.Sheets[sheetName];
+              if (!worksheet) continue;
+
+              const jsonRows = xlsxLib.utils.sheet_to_json(worksheet, { header: 1 });
+              if (!jsonRows || jsonRows.length < 2) continue;
+
+              let headerRowIdx = -1;
+              for (let r = 0; r < Math.min(jsonRows.length, 6); r++) {
+                const row = jsonRows[r];
+                if (Array.isArray(row)) {
+                  const rowStr = row.map(c => norm(String(c || ''))).join(' ');
+                  if (rowStr.includes('이름') || rowStr.includes('성명') || rowStr.includes('학생명') || (rowStr.includes('반') && rowStr.includes('성별'))) {
+                    headerRowIdx = r;
+                    break;
+                  }
+                }
+              }
+
+              if (headerRowIdx === -1) headerRowIdx = 0;
+
+              const headers = (jsonRows[headerRowIdx] || []).map(h => String(h || '').trim());
+
+              const pIdx = findIdx(headers, ['반', '기존반', '현재반', '학급', '소속반']);
+              const nIdx = findIdx(headers, ['번호', '학번', '출석번호']);
+              const nameIdx = findIdx(headers, ['이름', '성명', '학생명']);
+              const gIdx = findIdx(headers, ['성별', '성', '남녀']);
+              const korIdx = findIdx(headers, ['국어']);
+              const mathIdx = findIdx(headers, ['수학']);
+              const totIdx = findIdx(headers, ['합계', '총점']);
+              const rankIdx = findIdx(headers, ['석차', '등수']);
+              const targetIdx = findIdx(headers, ['진급반', '새반']);
+              const remIdx = findIdx(headers, ['비고', '특이사항', '메모']);
+
+              if (nameIdx === -1) continue;
+
+              let countInSheet = 0;
+
+              for (let r = headerRowIdx + 1; r < jsonRows.length; r++) {
+                const row = jsonRows[r];
+                if (!row || !Array.isArray(row) || row.length === 0) continue;
+
+                const name = String(row[nameIdx] || '').trim();
+                if (!name) continue;
+
+                let prevClass = pIdx !== -1 ? String(row[pIdx] || '').trim() : '';
+                if (!prevClass) prevClass = sheetName;
+
+                const prevNumber = nIdx !== -1 ? (parseInt(String(row[nIdx]), 10) || (countInSheet + 1)) : (countInSheet + 1);
+                const gender = gIdx !== -1 ? String(row[gIdx] || '남').trim() : '남';
+                const kor = korIdx !== -1 ? (parseFloat(String(row[korIdx])) || 0) : 0;
+                const math = mathIdx !== -1 ? (parseFloat(String(row[mathIdx])) || 0) : 0;
+                const total = totIdx !== -1 ? (parseFloat(String(row[totIdx])) || (kor + math)) : (kor + math);
+                const rank = rankIdx !== -1 ? (parseInt(String(row[rankIdx]), 10) || 0) : 0;
+                const targetClass = targetIdx !== -1 ? String(row[targetIdx] || '').trim() : '';
+                const remarks = remIdx !== -1 ? String(row[remIdx] || '').trim() : '';
+
+                uniquePrevClasses.add(prevClass);
+                countInSheet++;
+
+                allRecords.push({
+                  id: `row_${sheetName}_${r}`,
+                  prevClass,
+                  prevNumber,
+                  name,
+                  gender,
+                  koreanScore: kor,
+                  mathScore: math,
+                  totalScore: total,
+                  rank,
+                  targetClass,
+                  remarks
+                });
+              }
+
+              if (countInSheet > 0) {
+                sheetSummaries.push({ sheetName, count: countInSheet });
+              }
+            }
+
+            if (!allRecords.length) {
+              alert('유효한 학생 데이터를 찾을 수 없습니다.');
+              return;
+            }
+
+            setRawRecords(allRecords);
+            setSheetSummaryList(sheetSummaries);
+
+            if (uniquePrevClasses.size > 0) {
+              const list = Array.from(uniquePrevClasses);
+              // 1반, 2반, 3반... 순으로 정렬
+              list.sort((a, b) => {
+                const numA = parseInt(a.replace(/[^0-9]/g, ''), 10) || 0;
+                const numB = parseInt(b.replace(/[^0-9]/g, ''), 10) || 0;
+                return numA !== numB ? numA - numB : a.localeCompare(b, 'ko');
+              });
+              setPrevClassCount(list.length);
+              setPrevClassNames(list);
+              setNewClassCount(list.length);
+              // 진급반은 가반, 나반, 다반, 라반... 순으로 자동 구성
+              setNewClassNames(list.map((_, i) => i < KOREAN_ALPHABET_CLASSES.length ? KOREAN_ALPHABET_CLASSES[i] : `${i + 1}반`));
+            }
+            setCurrentStep(2);
+          } catch (err) {
+            alert('파일 읽기 오류: ' + err.message);
+          }
+        };
+        reader.readAsArrayBuffer(file);
+      };
+
+      const handleDragEnter = (e) => { e.preventDefault(); e.stopPropagation(); setIsDragging(true); };
+      const handleDragOver = (e) => { e.preventDefault(); e.stopPropagation(); setIsDragging(true); };
+      const handleDragLeave = (e) => {
+        e.preventDefault(); e.stopPropagation();
+        if (e.currentTarget.contains(e.relatedTarget)) return;
+        setIsDragging(false);
+      };
+      const handleDrop = (e) => {
+        e.preventDefault(); e.stopPropagation();
+        setIsDragging(false);
+        const files = e.dataTransfer && e.dataTransfer.files;
+        if (files && files.length > 0) processUploadedFile(files[0]);
+      };
+
+      const handleLoadMockData = () => {
+        const mock = generateMockData();
+        setRawRecords(mock);
+        setFileName('2026학년도_학생명단_표준양식(특이사항_분리요청_80명).xlsx');
+        setSheetSummaryList([
+          { sheetName: '1반', count: 20 },
+          { sheetName: '2반', count: 20 },
+          { sheetName: '3반', count: 20 },
+          { sheetName: '4반', count: 20 }
+        ]);
+        setPrevClassCount(4);
+        setPrevClassNames(['1반', '2반', '3반', '4반']);
+        setNewClassCount(4);
+        setNewClassNames(['가반', '나반', '다반', '라반']);
+        setCurrentStep(2);
+      };
+
+      const handleStartOptimization = () => {
+        if (!rawRecords.length) { alert('학생 데이터를 먼저 업로드해주세요.'); return; }
+        if (!newClassNames.length) { alert('최소 1개 이상의 새로운 반이 필요합니다.'); return; }
+
+        setIsOptimizing(true);
+        setTimeout(() => {
+          try {
+            const preprocessed = preprocessStudents(rawRecords, scoreType);
+            const result = runAssignmentOptimization(preprocessed, newClassNames, prevClassNames, numberingMode);
+            setAssignmentResult(result);
+            setActiveResultTab(newClassNames[0]);
+            setCurrentStep(3);
+
+            if (typeof confetti === 'function' && result.overallStats.totalCollisions === 0 && result.overallStats.totalSeparationViolations === 0) {
+              confetti({ particleCount: 90, spread: 70, origin: { y: 0.6 } });
+            }
+          } catch (err) {
+            alert('배정 오류: ' + err.message);
+          } finally {
+            setIsOptimizing(false);
+          }
+        }, 100);
+      };
+
+      const handleMoveStudent = (studentId, fromClassName, toClassName) => {
+        if (!assignmentResult || fromClassName === toClassName) return;
+
+        setAssignmentResult(prev => {
+          const separationPairs = buildSeparationPairs(rawRecords.map(r => ({
+            ...r,
+            id: r.id,
+            separateFromNames: parseSeparationRequests(r.remarks)
+          })));
+
+          const newClasses = { ...prev.classes };
+          const fromStudents = [...newClasses[fromClassName].students];
+          const toStudents = [...newClasses[toClassName].students];
+
+          const studentIdx = fromStudents.findIndex(s => s.id === studentId);
+          if (studentIdx === -1) return prev;
+
+          const student = { ...fromStudents[studentIdx], assignedClass: toClassName };
+          fromStudents.splice(studentIdx, 1);
+          toStudents.push(student);
+
+          const recompute = (cName, list) => {
+            const numbered = assignClassNumbers(list, numberingMode);
+            let mCount = 0, fCount = 0, sCount = 0, tScore = 0, tRank = 0;
+            const tCounts = {}, pCounts = {};
+
+            for (const s of numbered) {
+              if (s.gender === '남') mCount++; else fCount++;
+              if (s.isSpecialChild) sCount++;
+              tScore += s.totalScore || s.score;
+              tRank += s.rank || 0;
+              pCounts[s.prevClass] = (pCounts[s.prevClass] || 0) + 1;
+              for (const t of s.tags) tCounts[t] = (tCounts[t] || 0) + 1;
+            }
+
+            const colRaw = findNameCollisions(numbered);
+            const sepRaw = findSeparationViolations(numbered, separationPairs);
+
+            return {
+              className: cName,
+              students: numbered,
+              maleCount: mCount,
+              femaleCount: fCount,
+              specialCount: sCount,
+              totalStudents: numbered.length,
+              weightedCount: numbered.length + sCount,
+              avgScore: numbered.length > 0 ? Number((tScore / numbered.length).toFixed(2)) : 0,
+              avgRank: numbered.length > 0 ? Number((tRank / numbered.length).toFixed(1)) : 0,
+              tagCounts: tCounts,
+              prevClassCounts: pCounts,
+              nameCollisions: colRaw.map(c => ({
+                firstName: c.firstName,
+                students: numbered.filter(s => c.studentIds.includes(s.id))
+              })),
+              separationViolations: sepRaw
+            };
+          };
+
+          newClasses[fromClassName] = recompute(fromClassName, fromStudents);
+          newClasses[toClassName] = recompute(toClassName, toStudents);
+
+          let totalCollisions = 0;
+          let totalSeparationViolations = 0;
+          const warnings = [];
+
+          for (const c of Object.values(newClasses)) {
+            for (const col of c.nameCollisions) {
+              totalCollisions += (col.students.length * (col.students.length - 1)) / 2;
+              warnings.push(`[${c.className}] 동일 이름 충돌: '${col.firstName}' (${col.students.map(s => s.name).join(', ')})`);
+            }
+            for (const sep of c.separationViolations) {
+              totalSeparationViolations++;
+              warnings.push(`[${c.className}] 분리 요청 위반: '${sep.studentA.name}' ↔ '${sep.studentB.name}'`);
+            }
+          }
+
+          return {
+            ...prev,
+            classes: newClasses,
+            overallStats: {
+              ...prev.overallStats,
+              totalCollisions,
+              totalSeparationViolations,
+              resolvedStatus: (totalCollisions === 0 && totalSeparationViolations === 0) ? 'PERFECT' : 'SATISFIED_WITH_WARNING',
+              warnings
+            }
+          };
+        });
+      };
+
+      return (
+        <div className="min-h-screen flex flex-col bg-slate-50">
+          <header className="bg-white/95 backdrop-blur-md border-b border-emerald-100 sticky top-0 z-50 shadow-sm">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-white shadow-md shadow-emerald-200">
+                  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                  </svg>
+                </div>
+                <div>
+                  <div className="flex items-center space-x-2">
+                    <h1 className="text-2xl font-bold tracking-tight text-slate-800">
+                      <span className="text-emerald-600 font-extrabold">스마트 학급편성 시스템</span>
+                    </h1>
+                    <span className="px-2.5 py-0.5 text-xs font-semibold bg-emerald-100 text-emerald-800 rounded-full border border-emerald-200">
+                      엑셀 셀 색상 저장 지원
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 font-medium">
+                    엑셀 파일 다운로드 시 비고란 특이사항별 배경색(빨강, 파랑, 노랑 등) 자동 적용 & 분리요청 완벽 배제
+                  </p>
+                </div>
+              </div>
+
+              <div className="hidden md:flex items-center space-x-2 text-sm font-semibold">
+                <button
+                  onClick={() => setCurrentStep(1)}
+                  className={`px-3.5 py-1.5 rounded-xl transition-all ${currentStep === 1 ? 'bg-emerald-100 text-emerald-800 font-bold border border-emerald-300' : 'text-slate-500 hover:text-slate-800'}`}
+                >
+                  1. 표준 양식 업로드
+                </button>
+                <span className="text-slate-300">→</span>
+                <button
+                  onClick={() => rawRecords.length > 0 && setCurrentStep(2)}
+                  className={`px-3.5 py-1.5 rounded-xl transition-all ${currentStep === 2 ? 'bg-emerald-100 text-emerald-800 font-bold border border-emerald-300' : 'text-slate-500 hover:text-slate-800'} ${rawRecords.length === 0 ? 'opacity-40 cursor-not-allowed' : ''}`}
+                >
+                  2. 반 & 번호 설정
+                </button>
+                <span className="text-slate-300">→</span>
+                <button
+                  onClick={() => assignmentResult && setCurrentStep(3)}
+                  className={`px-3.5 py-1.5 rounded-xl transition-all ${currentStep === 3 ? 'bg-emerald-100 text-emerald-800 font-bold border border-emerald-300' : 'text-slate-500 hover:text-slate-800'} ${!assignmentResult ? 'opacity-40 cursor-not-allowed' : ''}`}
+                >
+                  3. 배정 결과 & 다운로드
+                </button>
+              </div>
+            </div>
+          </header>
+
+          <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            {/* STEP 1 */}
+            {currentStep === 1 && (
+              <div className="space-y-8">
+                <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-emerald-50 via-teal-50 to-green-50 border border-emerald-200 p-8 shadow-sm">
+                  <div className="w-full">
+                    <div className="text-center max-w-4xl mx-auto">
+                      <span className="inline-flex items-center px-3.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 mb-3 border border-emerald-300">
+                        ★ 엑셀 파일 저장 시 비고란 셀 배경색 자동 반영!
+                      </span>
+                      <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-800 tracking-tight mb-2">
+                        엑셀 다운로드 시에도 <span className="text-emerald-600 underline">특이사항별 셀 배경색</span>이 저장됩니다
+                      </h2>
+                      <p className="text-xs sm:text-sm text-slate-600 mb-5 leading-relaxed max-w-3xl mx-auto">
+                        웹 화면뿐만 아니라 <strong>다운로드된 엑셀(.xlsx) 파일</strong>에서도 
+                        <span className="bg-rose-100 text-rose-800 px-1.5 py-0.5 rounded font-bold mx-1">생활지도(빨강)</span>, 
+                        <span className="bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded font-bold mx-1">특수아동(파랑)</span>, 
+                        <span className="bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded font-bold mx-1">다문화(노랑)</span>, 
+                        <span className="bg-orange-100 text-orange-800 px-1.5 py-0.5 rounded font-bold mx-1">학습부진(주황)</span>, 
+                        <span className="bg-purple-100 text-purple-800 px-1.5 py-0.5 rounded font-bold mx-1">분리요청(보라)</span> 등
+                        배경색이 실제 엑셀 셀에 칠해져 저장되어, 인쇄나 열람 시 특이사항 학생을 한눈에 식별할 수 있습니다.
+                      </p>
+                      <div className="flex flex-wrap items-center justify-center gap-4 pt-1">
+                        <button
+                          onClick={handleLoadMockData}
+                          className="btn-3d btn-3d-white px-6 py-3 rounded-xl text-sm sm:text-base font-bold border border-slate-300 text-slate-700 hover:text-emerald-700 shadow-sm"
+                        >
+                          ⚡ 예시 데이터 불러오기 (80명)
+                        </button>
+                        <button
+                          onClick={downloadSampleExcel}
+                          className="btn-3d btn-3d-mint px-6 py-3 rounded-xl text-sm sm:text-base font-bold shadow-md shadow-emerald-200"
+                        >
+                          📥 표준 엑셀 양식 다운로드 (.xlsx)
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="card-soft p-8">
+                  <div
+                    onDragEnter={handleDragEnter}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                    onClick={() => fileInputRef.current?.click()}
+                    className={`flex flex-col items-center justify-center w-full h-64 border-2 border-dashed rounded-3xl cursor-pointer transition-all duration-200 ${
+                      isDragging
+                        ? 'bg-emerald-100/90 border-emerald-600 scale-[1.01] shadow-2xl ring-4 ring-emerald-300'
+                        : 'bg-emerald-50/40 border-emerald-300 hover:bg-emerald-50/80 hover:border-emerald-400'
+                    }`}
+                  >
+                    <div className="flex flex-col items-center justify-center p-6 text-center pointer-events-none">
+                      <div className={`w-16 h-16 mb-4 rounded-2xl bg-white border shadow-sm flex items-center justify-center transition-all ${isDragging ? 'border-emerald-500 scale-125 text-emerald-600' : 'border-emerald-200 text-emerald-600'}`}>
+                        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                        </svg>
+                      </div>
+                      <p className="text-base font-bold text-slate-700 mb-1">
+                        {isDragging ? (
+                          <span className="text-emerald-700 font-extrabold text-lg">파일을 여기에 놓아주세요!</span>
+                        ) : (
+                          <>파일을 <span className="text-emerald-600 underline">여기로 드래그 앤 드롭</span>하거나 클릭하여 선택</>
+                        )}
+                      </p>
+                      <p className="text-xs text-slate-500">[{UPLOAD_STANDARD_HEADERS.join(", ")}] 컬럼 · 모든 시트 자동 추출</p>
+                      {fileName && (
+                        <div className="mt-4 px-4 py-2 bg-emerald-100 border border-emerald-300 rounded-2xl text-emerald-900 text-xs font-extrabold flex items-center space-x-2">
+                          <span>✓ {fileName}</span>
+                          <span className="bg-emerald-600 text-white px-2 py-0.5 rounded-full text-[10px]">
+                            총 {rawRecords.length}명 로드됨
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      className="hidden"
+                      accept=".xlsx, .xls, .csv"
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files[0]) {
+                          processUploadedFile(e.target.files[0]);
+                        }
+                      }}
+                    />
+                  </div>
+
+                  {sheetSummaryList.length > 0 && (
+                    <div className="mt-4 p-4 rounded-2xl bg-emerald-50/50 border border-emerald-200">
+                      <span className="text-xs font-bold text-emerald-900 block mb-2">
+                        📑 취합된 시트 목록 ({sheetSummaryList.length}개 시트):
+                      </span>
+                      <div className="flex flex-wrap gap-2">
+                        {sheetSummaryList.map((s, idx) => (
+                          <span key={idx} className="px-3 py-1 bg-white border border-emerald-300 rounded-xl text-xs font-bold text-slate-700">
+                            [{s.sheetName}]: <span className="text-emerald-700">{s.count}명</span>
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 배정 성적 기준 & 진급반 번호 부여 방식 설정 메뉴 */}
+                  <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* 배정 성적 기준 */}
+                    <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-sm flex flex-col justify-between">
+                      <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-xl">🎯</span>
+                          <h3 className="text-base sm:text-lg font-bold text-slate-800">
+                            배정 성적 기준
+                          </h3>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 h-full items-stretch">
+                        <button
+                          type="button"
+                          onClick={() => setScoreType('rank')}
+                          className={`py-4 px-4 rounded-xl text-base font-bold transition-all text-center flex flex-col items-center justify-center gap-1 ${
+                            scoreType === 'rank'
+                              ? 'btn-3d btn-3d-mint shadow-md ring-2 ring-emerald-300'
+                              : 'btn-3d btn-3d-white border border-slate-300 text-slate-700 hover:text-emerald-700'
+                          }`}
+                        >
+                          <span className="text-base font-extrabold">석차 기준</span>
+                          <span className="text-xs font-medium opacity-85">(1등이 우수)</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setScoreType('score')}
+                          className={`py-4 px-4 rounded-xl text-base font-bold transition-all text-center flex flex-col items-center justify-center gap-1 ${
+                            scoreType === 'score'
+                              ? 'btn-3d btn-3d-mint shadow-md ring-2 ring-emerald-300'
+                              : 'btn-3d btn-3d-white border border-slate-300 text-slate-700 hover:text-emerald-700'
+                          }`}
+                        >
+                          <span className="text-base font-extrabold">합계 점수 기준</span>
+                          <span className="text-xs font-medium opacity-85">(총점 높은 순)</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* 진급반 번호 부여 방식 */}
+                    <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-sm flex flex-col justify-between">
+                      <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-xl">🏷️</span>
+                          <h3 className="text-base sm:text-lg font-bold text-slate-800">
+                            진급반 번호 부여 방식
+                          </h3>
+                        </div>
+                        <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full">
+                          새 학급 번호 규칙
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+                        <button
+                          type="button"
+                          onClick={() => setNumberingMode('name_all')}
+                          className={`py-3 px-3 rounded-xl text-xs sm:text-sm font-bold transition-all text-center flex items-center justify-center ${
+                            numberingMode === 'name_all'
+                              ? 'btn-3d btn-3d-mint shadow-md ring-2 ring-emerald-300'
+                              : 'btn-3d btn-3d-white border border-slate-300 text-slate-700 hover:text-emerald-700'
+                          }`}
+                        >
+                          🌿 남녀 무관 이름순 (1~N번)
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setNumberingMode('separate')}
+                          className={`py-3 px-3 rounded-xl text-xs sm:text-sm font-bold transition-all text-center flex items-center justify-center ${
+                            numberingMode === 'separate'
+                              ? 'btn-3d btn-3d-mint shadow-md ring-2 ring-emerald-300'
+                              : 'btn-3d btn-3d-white border border-slate-300 text-slate-700 hover:text-emerald-700'
+                          }`}
+                        >
+                          남 1번~ / 여 1번~ (각각)
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setNumberingMode('continuous')}
+                          className={`py-3 px-3 rounded-xl text-xs sm:text-sm font-bold transition-all text-center flex items-center justify-center ${
+                            numberingMode === 'continuous'
+                              ? 'btn-3d btn-3d-mint shadow-md ring-2 ring-emerald-300'
+                              : 'btn-3d btn-3d-white border border-slate-300 text-slate-700 hover:text-emerald-700'
+                          }`}
+                        >
+                          남 1번~ / 여 21번~
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setNumberingMode('continuous_female')}
+                          className={`py-3 px-3 rounded-xl text-xs sm:text-sm font-bold transition-all text-center flex items-center justify-center ${
+                            numberingMode === 'continuous_female'
+                              ? 'btn-3d btn-3d-mint shadow-md ring-2 ring-emerald-300'
+                              : 'btn-3d btn-3d-white border border-slate-300 text-slate-700 hover:text-emerald-700'
+                          }`}
+                        >
+                          여 1번~ / 남 21번~
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {rawRecords.length > 0 && (
+                  <div className="card-soft p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <h4 className="text-base font-bold text-slate-800">취합된 학생 데이터 미리보기 ({rawRecords.length}명)</h4>
+                      <button onClick={() => setCurrentStep(2)} className="btn-3d btn-3d-mint px-5 py-2 rounded-xl text-xs font-bold">
+                        반 및 규칙 설정하기 →
+                      </button>
+                    </div>
+                    <div className="overflow-x-auto max-h-72 border border-slate-200 rounded-2xl">
+                      <table className="w-full text-left text-xs font-mono">
+                        <thead className="bg-slate-100 text-slate-700 font-bold sticky top-0">
+                          <tr>
+                            {UPLOAD_STANDARD_HEADERS.map((h) => (
+                              <th key={h} className="py-2.5 px-3">{h}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 bg-white">
+                          {rawRecords.slice(0, 20).map((r, i) => {
+                            const { tags } = parseRemarks(r.remarks);
+                            const cellBg = getRemarksCellBg(tags);
+                            return (
+                              <tr key={i} className="hover:bg-emerald-50/40">
+                                <td className="py-2 px-3">{r.prevClass}</td>
+                                <td className="py-2 px-3">{r.prevNumber}</td>
+                                <td className="py-2 px-3 font-bold">{r.name}</td>
+                                <td className="py-2 px-3">{r.gender}</td>
+                                <td className="py-2 px-3 text-right">{r.koreanScore}</td>
+                                <td className="py-2 px-3 text-right">{r.mathScore}</td>
+                                <td className="py-2 px-3 text-right font-bold text-emerald-700">{r.totalScore}</td>
+                                <td className="py-2 px-3 text-center">{r.rank}등</td>
+                                <td className={`py-2 px-3 ${cellBg}`}>
+                                  {tags.length > 0 ? (
+                                    <div className="flex flex-wrap gap-1">
+                                      {tags.map((t, idx) => {
+                                        const style = getTagStyle(t);
+                                        return (
+                                          <span key={idx} className={`px-2 py-0.5 rounded text-[10px] font-bold border ${style.badgeBg} ${style.text} ${style.border}`}>
+                                            {t}
+                                          </span>
+                                        );
+                                      })}
+                                    </div>
+                                  ) : "-"}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* STEP 2 */}
+            {currentStep === 2 && (
+              <div className="space-y-8">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-2xl font-extrabold text-slate-800">반 편성 및 번호 배정 상세</h2>
+                    <p className="text-xs text-slate-500">기존 반 수와 새로 진급할 반 수 및 명칭을 설정하세요.</p>
+                  </div>
+                  <div className="flex space-x-3">
+                    <button
+                      onClick={() => setCurrentStep(1)}
+                      className="btn-3d btn-3d-white px-4 py-2 rounded-xl text-xs font-bold"
+                    >
+                      ← 명단 다시 올리기
+                    </button>
+                    <button
+                      onClick={handleStartOptimization}
+                      disabled={isOptimizing}
+                      className="btn-3d btn-3d-mint px-6 py-2.5 rounded-xl text-sm font-extrabold shadow-lg shadow-emerald-200"
+                    >
+                      {isOptimizing ? '배정 연산 중...' : '스마트 학급 배정 실행하기'}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="card-soft p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-base font-bold text-slate-800">기존 반 명칭 (현재 반)</h3>
+                      <div className="flex items-center space-x-2">
+                        <button onClick={() => handlePrevCountChange(prevClassCount - 1)} className="w-8 h-8 rounded-lg bg-slate-100 font-bold border">-</button>
+                        <span className="font-extrabold text-emerald-700 px-2">{prevClassCount}개 반</span>
+                        <button onClick={() => handlePrevCountChange(prevClassCount + 1)} className="w-8 h-8 rounded-lg bg-slate-100 font-bold border">+</button>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      {prevClassNames.map((name, idx) => (
+                        <input
+                          key={idx}
+                          type="text"
+                          value={name}
+                          onChange={(e) => {
+                            const arr = [...prevClassNames];
+                            arr[idx] = e.target.value;
+                            setPrevClassNames(arr);
+                          }}
+                          className="w-full px-3 py-2 text-xs font-medium rounded-xl border border-slate-200"
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="card-soft p-6 border-emerald-300 bg-emerald-50/20">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-base font-bold text-slate-800">새로 만들어질 진급반</h3>
+                      <div className="flex items-center space-x-2">
+                        <button onClick={() => handleNewCountChange(newClassCount - 1)} className="w-8 h-8 rounded-lg bg-white font-bold border border-emerald-300">-</button>
+                        <span className="font-extrabold text-emerald-700 px-2">{newClassCount}개 반</span>
+                        <button onClick={() => handleNewCountChange(newClassCount + 1)} className="w-8 h-8 rounded-lg bg-white font-bold border border-emerald-300">+</button>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      {newClassNames.map((name, idx) => (
+                        <input
+                          key={idx}
+                          type="text"
+                          value={name}
+                          onChange={(e) => {
+                            const arr = [...newClassNames];
+                            arr[idx] = e.target.value;
+                            setNewClassNames(arr);
+                          }}
+                          className="w-full px-3 py-2 text-xs font-bold rounded-xl border border-emerald-300 bg-white"
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="card-soft p-5 bg-white">
+                  <span className="text-xs font-bold text-slate-700 block mb-3">🎨 엑셀 저장 시에도 셀 배경색이 그대로 유지됩니다:</span>
+                  <div className="flex flex-wrap gap-2 text-xs">
+                    <span className="px-3 py-1 rounded-xl bg-rose-100 text-rose-800 border border-rose-300 font-bold">
+                      ● 생활지도 (빨강 셀 배경)
+                    </span>
+                    <span className="px-3 py-1 rounded-xl bg-blue-100 text-blue-800 border border-blue-300 font-bold">
+                      ● 특수아동 (파랑 셀 배경)
+                    </span>
+                    <span className="px-3 py-1 rounded-xl bg-amber-100 text-amber-800 border border-amber-300 font-bold">
+                      ● 다문화 (노랑 셀 배경)
+                    </span>
+                    <span className="px-3 py-1 rounded-xl bg-orange-100 text-orange-800 border border-orange-300 font-bold">
+                      ● 학습부진 (주황 셀 배경)
+                    </span>
+                    <span className="px-3 py-1 rounded-xl bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold">
+                      ● 운동부 (초록 셀 배경)
+                    </span>
+                    <span className="px-3 py-1 rounded-xl bg-purple-100 text-purple-800 border border-purple-300 font-bold">
+                      ● 분리요청 (보라 셀 배경 & 다른 반 배정)
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 3 */}
+            {currentStep === 3 && assignmentResult && (
+              <div className="space-y-8">
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
+                  <div className="card-soft p-4 text-center">
+                    <span className="text-xs text-slate-500 font-semibold block">총 학생 수</span>
+                    <span className="text-2xl font-extrabold text-slate-800">{assignmentResult.overallStats.totalStudents}명</span>
+                  </div>
+                  <div className="card-soft p-4 text-center bg-purple-50/30 border-purple-200">
+                    <span className="text-xs text-purple-700 font-semibold block">가중 정원 (특수 2명)</span>
+                    <span className="text-2xl font-extrabold text-purple-900">{assignmentResult.overallStats.totalWeighted}명</span>
+                  </div>
+                  <div className="card-soft p-4 text-center">
+                    <span className="text-xs text-slate-500 font-semibold block">성적 표준편차</span>
+                    <span className="text-2xl font-extrabold text-emerald-600">±{assignmentResult.overallStats.scoreStdDev}점</span>
+                  </div>
+                  <div className="card-soft p-4 text-center">
+                    <span className="text-xs text-slate-500 font-semibold block">동일이름 충돌</span>
+                    <span className={`text-2xl font-extrabold ${assignmentResult.overallStats.totalCollisions === 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                      {assignmentResult.overallStats.totalCollisions === 0 ? '0건 (안전)' : `${assignmentResult.overallStats.totalCollisions}건`}
+                    </span>
+                  </div>
+                  <div className="card-soft p-4 text-center border-purple-300 bg-purple-50/40">
+                    <span className="text-xs text-purple-700 font-semibold block">분리 요청 준수</span>
+                    <span className="text-2xl font-extrabold text-purple-900 block">
+                      {assignmentResult.overallStats.totalSeparationViolations === 0 ? '완벽 분리' : `${assignmentResult.overallStats.totalSeparationViolations}건 위반`}
+                    </span>
+                    <span className="text-[10px] text-purple-600 font-bold">
+                      (총 {assignmentResult.overallStats.totalSeparationRequests}쌍 요청 감지)
+                    </span>
+                  </div>
+                </div>
+
+                {/* 다운로드 바 */}
+                <div className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-2xl bg-white border border-slate-200">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-xs font-bold text-slate-700">배정 결과 파일 저장:</span>
+                    <button
+                      onClick={() => exportToExcel(assignmentResult)}
+                      className="btn-3d btn-3d-mint px-5 py-2.5 rounded-xl text-xs font-bold shadow-md shadow-emerald-200 flex items-center"
+                    >
+                      <span className="mr-1.5">📥</span> 특이사항 컬러가 칠해진 전체 엑셀 다운로드 (.xlsx)
+                    </button>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      onClick={() => setCurrentStep(1)}
+                      className="btn-3d btn-3d-white px-4 py-2 rounded-xl text-xs font-bold flex items-center border border-slate-300 text-slate-700 hover:text-emerald-700"
+                    >
+                      <span className="mr-1">🏠</span> 첫 화면으로 돌아가기
+                    </button>
+                    <button
+                      onClick={() => setCurrentStep(2)}
+                      className="btn-3d btn-3d-white px-4 py-2 rounded-xl text-xs font-bold"
+                    >
+                      반 설정 수정
+                    </button>
+                    <button
+                      onClick={handleStartOptimization}
+                      className="btn-3d btn-3d-sage px-4 py-2 rounded-xl text-xs font-bold"
+                    >
+                      다시 배정하기
+                    </button>
+                  </div>
+                </div>
+
+                {/* 반별 탭 상세 테이블 */}
+                <div className="card-soft p-6">
+                  <div className="flex flex-wrap items-center justify-between border-b border-slate-200 pb-4 mb-6 gap-4">
+                    <div className="flex flex-wrap gap-2">
+                      {newClassNames.map((name) => {
+                        const clsData = assignmentResult.classes[name];
+                        const isActive = activeResultTab === name;
+                        const hasSepViolation = clsData && clsData.separationViolations && clsData.separationViolations.length > 0;
+                        return (
+                          <button
+                            key={name}
+                            onClick={() => setActiveResultTab(name)}
+                            className={`btn-3d px-5 py-2.5 rounded-2xl text-xs font-bold transition-all ${
+                              isActive ? 'btn-3d-mint text-white' : 'btn-3d-sage text-slate-700'
+                            }`}
+                          >
+                            <span>진급 {name} ({clsData ? clsData.totalStudents : 0}명)</span>
+                            {hasSepViolation && <span className="ml-1 w-2 h-2 rounded-full bg-rose-500"></span>}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <select
+                        value={genderFilter}
+                        onChange={(e) => setGenderFilter(e.target.value)}
+                        className="px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-semibold bg-white"
+                      >
+                        <option value="전체">성별: 전체</option>
+                        <option value="남">남학생만</option>
+                        <option value="여">여학생만</option>
+                      </select>
+                      <input
+                        type="text"
+                        placeholder="이름/비고 검색..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-medium bg-white w-40"
+                      />
+                    </div>
+                  </div>
+
+                  {assignmentResult.classes[activeResultTab] && (() => {
+                    const activeClass = assignmentResult.classes[activeResultTab];
+                    const filtered = activeClass.students
+                      .filter(s => {
+                        if (genderFilter !== '전체' && s.gender !== genderFilter) return false;
+                        if (searchTerm) {
+                          const term = searchTerm.toLowerCase();
+                          return s.name.toLowerCase().includes(term) || s.rawRemarks.toLowerCase().includes(term);
+                        }
+                        return true;
+                      })
+                      .sort((a, b) => (a.assignedNumber || 0) - (b.assignedNumber || 0));
+
+                    return (
+                      <div>
+                        <div className="flex flex-wrap items-center justify-between mb-4 bg-emerald-50/50 p-4 rounded-2xl border border-emerald-100 text-xs">
+                          <div className="flex flex-wrap items-center gap-4">
+                            <span className="font-extrabold text-slate-800 text-sm">[{activeResultTab}] 배정 명단</span>
+                            <span>총원: {activeClass.totalStudents}명</span>
+                            <span className="text-purple-700 font-bold">가중 정원: {activeClass.weightedCount}명</span>
+                            <span className="text-blue-600 font-bold">남 {activeClass.maleCount}명</span>
+                            <span className="text-pink-600 font-bold">여 {activeClass.femaleCount}명</span>
+                            <span className="text-emerald-700 font-bold">평균 석차: {activeClass.avgRank}등</span>
+                          </div>
+                          <span className="text-[11px] text-emerald-800 font-bold">
+                            ✓ 엑셀 저장 시 비고란에 동일한 색상이 채워집니다.
+                          </span>
+                        </div>
+
+                        <div className="overflow-x-auto border border-slate-200 rounded-2xl">
+                          <table className="w-full text-left text-xs font-mono">
+                            <thead className="bg-slate-100 text-slate-700 font-bold uppercase border-b border-slate-200">
+                              <tr>
+                                <th className="py-2.5 px-3 bg-slate-200/50">반 (기존)</th>
+                                <th className="py-2.5 px-3 bg-slate-200/50">번호 (기존)</th>
+                                <th className="py-2.5 px-3">이름</th>
+                                <th className="py-2.5 px-3">성별</th>
+                                <th className="py-2.5 px-3 text-center">석차</th>
+                                <th className="py-2.5 px-3 bg-emerald-100 text-emerald-900 font-extrabold">진급반</th>
+                                <th className="py-2.5 px-3 bg-emerald-100 text-emerald-900 font-extrabold text-center">번호 (새번호)</th>
+                                <th className="py-2.5 px-3">비고 (특이사항 컬러)</th>
+                                <th className="py-2.5 px-3 text-right">반 이동</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100 bg-white">
+                              {filtered.map((s) => {
+                                const isCollision = activeClass.nameCollisions.some(c => c.firstName === s.firstName);
+                                const isSepViolation = activeClass.separationViolations.some(v => v.studentA.id === s.id || v.studentB.id === s.id);
+                                const cellBg = getRemarksCellBg(s.tags);
+
+                                return (
+                                  <tr key={s.id} className={`hover:bg-emerald-50/40 transition-colors ${isCollision || isSepViolation ? 'bg-rose-50/80' : ''}`}>
+                                    <td className="py-2.5 px-3 font-semibold text-slate-600 bg-slate-50/50">{s.prevClass}</td>
+                                    <td className="py-2.5 px-3 text-slate-500 bg-slate-50/50">{s.prevNumber}</td>
+                                    <td className="py-2.5 px-3 font-bold text-slate-800">
+                                      {s.name}
+                                      {isCollision && <span className="ml-1 px-1 py-0.5 bg-rose-200 text-rose-800 text-[10px] rounded font-bold">이름중복</span>}
+                                      {isSepViolation && <span className="ml-1 px-1 py-0.5 bg-rose-500 text-white text-[10px] rounded font-bold">분리위반</span>}
+                                    </td>
+                                    <td className="py-2.5 px-3">
+                                      <span className={`px-2 py-0.5 rounded font-bold text-[11px] ${s.gender === '남' ? 'bg-blue-100 text-blue-700' : 'bg-pink-100 text-pink-700'}`}>
+                                        {s.gender}
+                                      </span>
+                                    </td>
+                                    <td className="py-2.5 px-3 text-center font-bold text-slate-700">{s.rank ? `${s.rank}등` : '-'}</td>
+                                    <td className="py-2.5 px-3 font-extrabold text-emerald-800 bg-emerald-50/40">{activeResultTab}</td>
+                                    <td className="py-2.5 px-3 text-center font-extrabold text-emerald-700 bg-emerald-50/40 text-sm">
+                                      {s.assignedNumber}
+                                    </td>
+                                    <td className={`py-2.5 px-3 ${cellBg}`}>
+                                      {s.tags && s.tags.length > 0 ? (
+                                        <div className="flex flex-wrap gap-1">
+                                          {s.tags.map((t, idx) => {
+                                            const style = getTagStyle(t);
+                                            return (
+                                              <span
+                                                key={idx}
+                                                className={`px-2 py-0.5 rounded text-[10px] font-extrabold border ${style.badgeBg} ${style.text} ${style.border} shadow-xs flex items-center`}
+                                              >
+                                                <span className="w-1.5 h-1.5 rounded-full mr-1" style={{ backgroundColor: style.hexText }}></span>
+                                                {t}
+                                              </span>
+                                            );
+                                          })}
+                                        </div>
+                                      ) : (
+                                        <span className="text-slate-300">-</span>
+                                      )}
+                                    </td>
+                                    <td className="py-2.5 px-3 text-right">
+                                      <select
+                                        value={activeResultTab}
+                                        onChange={(e) => handleMoveStudent(s.id, activeResultTab, e.target.value)}
+                                        className="text-xs px-2 py-1 rounded-lg border border-slate-300 bg-white"
+                                      >
+                                        {newClassNames.map(cName => (
+                                          <option key={cName} value={cName}>{cName}으로 이동</option>
+                                        ))}
+                                      </select>
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+              </div>
+            )}
+          </main>
+
+          <footer className="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-400 mt-12">
+            스마트 학급편성 시스템 · 엑셀 파일 저장 시 비고란 특이사항별 배경색(빨강, 파랑, 노랑, 주황 등) 자동 적용
+          </footer>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>

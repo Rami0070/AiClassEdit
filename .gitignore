@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.spec
+build/
+dist/
+
+# Node
+node_modules/
+.npm/
+
+# Temporary & Test files
+*.tmp
+*.log
+test_*.xlsx
+scratch_*
+
+# OS & Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

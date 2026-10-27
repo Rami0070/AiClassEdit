@@ -1,0 +1,99 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #F8FAFC;
+  --foreground: #1E293B;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", "Noto Sans KR", sans-serif;
+}
+
+/* 3D Skeuomorphic Physical Buttons */
+.btn-3d {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.08s ease-in-out;
+}
+
+.btn-3d-mint {
+  background: linear-gradient(180deg, #10B981 0%, #059669 100%);
+  color: #ffffff;
+  border-bottom: 4px solid #047857;
+  box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.2), 0 2px 4px -2px rgba(16, 185, 129, 0.2);
+}
+.btn-3d-mint:hover {
+  filter: brightness(1.06);
+}
+.btn-3d-mint:active {
+  transform: translateY(3px);
+  border-bottom-width: 1px;
+  margin-bottom: 3px;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.btn-3d-teal {
+  background: linear-gradient(180deg, #14B8A6 0%, #0D9488 100%);
+  color: #ffffff;
+  border-bottom: 4px solid #0F766E;
+  box-shadow: 0 4px 6px -1px rgba(20, 184, 166, 0.2);
+}
+.btn-3d-teal:hover {
+  filter: brightness(1.06);
+}
+.btn-3d-teal:active {
+  transform: translateY(3px);
+  border-bottom-width: 1px;
+  margin-bottom: 3px;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.btn-3d-sage {
+  background: linear-gradient(180deg, #FFFFFF 0%, #F0FDF4 100%);
+  color: #166534;
+  border: 1px solid #BBF7D0;
+  border-bottom: 4px solid #86EFAC;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+}
+.btn-3d-sage:hover {
+  background: #DCFCE7;
+}
+.btn-3d-sage:active {
+  transform: translateY(3px);
+  border-bottom-width: 1px;
+  margin-bottom: 3px;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06);
+}
+
+.btn-3d-white {
+  background: #FFFFFF;
+  color: #334155;
+  border: 1px solid #E2E8F0;
+  border-bottom: 4px solid #CBD5E1;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
+}
+.btn-3d-white:hover {
+  background: #F8FAFC;
+}
+.btn-3d-white:active {
+  transform: translateY(3px);
+  border-bottom-width: 1px;
+  margin-bottom: 3px;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.card-soft {
+  background: #FFFFFF;
+  border: 1px solid #E6F4EA;
+  border-radius: 1rem;
+  box-shadow: 0 10px 25px -5px rgba(22, 101, 52, 0.05), 0 8px 10px -6px rgba(22, 101, 52, 0.03);
+}
