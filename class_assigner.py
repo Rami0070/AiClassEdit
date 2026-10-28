@@ -173,9 +173,9 @@ class SimpleExcel:
         return sheets_data
 
     @staticmethod
-    def write_styled_xlsx(file_path, sheets_records):
+    @staticmethod
+    def write_styled_xlsx(file_path, sheets_records, is_template=False):
         """특이사항 배경색이 포함된 .xlsx 파일 생성"""
-        # openpyxl이 설치되어 있으면 openpyxl 우선 사용 (고급 스타일)
         try:
             import openpyxl
             from openpyxl.styles import PatternFill, Font, Alignment, Border, Side
@@ -193,7 +193,7 @@ class SimpleExcel:
             header_fill = PatternFill(start_color='E2E8F0', end_color='E2E8F0', fill_type='solid')
             header_font = Font(name='Malgun Gothic', size=10, bold=True, color='1E293B')
 
-            headers = ['반', '번호', '이름', '성별', '석차', '진급반', '새번호', '비고']
+            headers = ['번호', '이름', '성별', '국어', '수학', '합계', '석차', '비고'] if is_template else ['반', '번호', '이름', '성별', '석차', '진급반', '새번호', '비고']
 
             for sheet_name, records in sheets_records.items():
                 ws = wb.create_sheet(title=sheet_name)
@@ -207,16 +207,31 @@ class SimpleExcel:
 
                 # 데이터 작성
                 for row_idx, r in enumerate(records, 2):
-                    row_data = [
-                        r.get('prevClass', ''),
-                        r.get('prevNumber', ''),
-                        r.get('name', ''),
-                        r.get('gender', ''),
-                        r.get('rank', ''),
-                        r.get('assignedClass', ''),
-                        r.get('assignedNumber', ''),
-                        r.get('remarks', '')
-                    ]
+                    if is_template:
+                        kor = r.get('kor', 90)
+                        math = r.get('math', 88)
+                        total = r.get('score', kor + math)
+                        row_data = [
+                            r.get('prevNumber', ''),
+                            r.get('name', ''),
+                            r.get('gender', ''),
+                            kor,
+                            math,
+                            total,
+                            r.get('rank', ''),
+                            r.get('remarks', '')
+                        ]
+                    else:
+                        row_data = [
+                            r.get('prevClass', ''),
+                            r.get('prevNumber', ''),
+                            r.get('name', ''),
+                            r.get('gender', ''),
+                            r.get('rank', ''),
+                            r.get('assignedClass', ''),
+                            r.get('assignedNumber', ''),
+                            r.get('remarks', '')
+                        ]
                     remark_text = str(r.get('remarks', ''))
                     style_info = get_remark_style(remark_text)
 
@@ -235,7 +250,7 @@ class SimpleExcel:
                 # 열 너비 자동 조정
                 for col in ws.columns:
                     col_letter = get_column_letter(col[0].column)
-                    ws.column_dimensions[col_letter].width = 13 if col_letter != 'H' else 25
+                    ws.column_dimensions[col_letter].width = 13 if col_letter != 'H' else 28
 
             wb.save(file_path)
             return True
@@ -245,20 +260,32 @@ class SimpleExcel:
             import csv
             with open(csv_path, 'w', encoding='utf-8-sig', newline='') as f:
                 writer = csv.writer(f)
-                headers = ['반', '번호', '이름', '성별', '석차', '진급반', '새번호', '비고']
+                headers = ['번호', '이름', '성별', '국어', '수학', '합계', '석차', '비고'] if is_template else ['반', '번호', '이름', '성별', '석차', '진급반', '새번호', '비고']
                 writer.writerow(headers)
                 for sheet_name, records in sheets_records.items():
                     for r in records:
-                        writer.writerow([
-                            r.get('prevClass', ''),
-                            r.get('prevNumber', ''),
-                            r.get('name', ''),
-                            r.get('gender', ''),
-                            r.get('rank', ''),
-                            r.get('assignedClass', ''),
-                            r.get('assignedNumber', ''),
-                            r.get('remarks', '')
-                        ])
+                        if is_template:
+                            writer.writerow([
+                                r.get('prevNumber', ''),
+                                r.get('name', ''),
+                                r.get('gender', ''),
+                                r.get('kor', 90),
+                                r.get('math', 88),
+                                r.get('score', 178),
+                                r.get('rank', ''),
+                                r.get('remarks', '')
+                            ])
+                        else:
+                            writer.writerow([
+                                r.get('prevClass', ''),
+                                r.get('prevNumber', ''),
+                                r.get('name', ''),
+                                r.get('gender', ''),
+                                r.get('rank', ''),
+                                r.get('assignedClass', ''),
+                                r.get('assignedNumber', ''),
+                                r.get('remarks', '')
+                            ])
             return True
 
 # -------------------------------------------------------------
@@ -465,44 +492,44 @@ class SmartClassApp(tk.Tk):
         style = ttk.Style(self)
         style.theme_use('clam')
 
-        # 폰트 및 공통 스타일 설정
-        style.configure('.', font=('Malgun Gothic', 10), background='#F8FAFC')
+        # 폰트 및 공통 스타일 설정 (+2~3pt 가시성 강화)
+        style.configure('.', font=('Malgun Gothic', 11), background='#F8FAFC')
         style.configure('TFrame', background='#F8FAFC')
         style.configure('White.TFrame', background='#FFFFFF')
         
         # 버튼 스타일
-        style.configure('Mint.TButton', font=('Malgun Gothic', 10, 'bold'), background='#10B981', foreground='#FFFFFF', borderwidth=0)
+        style.configure('Mint.TButton', font=('Malgun Gothic', 12, 'bold'), background='#10B981', foreground='#FFFFFF', borderwidth=0)
         style.map('Mint.TButton', background=[('active', '#059669')])
         
-        style.configure('White.TButton', font=('Malgun Gothic', 10, 'bold'), background='#FFFFFF', foreground='#334155', borderwidth=1)
+        style.configure('White.TButton', font=('Malgun Gothic', 12, 'bold'), background='#FFFFFF', foreground='#334155', borderwidth=1)
         style.map('White.TButton', background=[('active', '#F1F5F9')])
 
         # 헤더 라벨
-        style.configure('Header.TLabel', font=('Malgun Gothic', 16, 'bold'), foreground='#1E293B', background='#FFFFFF')
-        style.configure('SubHeader.TLabel', font=('Malgun Gothic', 9), foreground='#64748B', background='#FFFFFF')
+        style.configure('Header.TLabel', font=('Malgun Gothic', 18, 'bold'), foreground='#1E293B', background='#FFFFFF')
+        style.configure('SubHeader.TLabel', font=('Malgun Gothic', 11), foreground='#64748B', background='#FFFFFF')
 
         # 트리뷰(테이블) 스타일
-        style.configure('Treeview', font=('Malgun Gothic', 9), rowheight=28, background='#FFFFFF', fieldbackground='#FFFFFF')
-        style.configure('Treeview.Heading', font=('Malgun Gothic', 10, 'bold'), background='#F1F5F9', foreground='#1E293B')
+        style.configure('Treeview', font=('Malgun Gothic', 11), rowheight=36, background='#FFFFFF', fieldbackground='#FFFFFF')
+        style.configure('Treeview.Heading', font=('Malgun Gothic', 12, 'bold'), background='#F1F5F9', foreground='#1E293B')
 
     def create_widgets(self):
         # 상단 네비게이션 헤더
-        header_frame = tk.Frame(self, bg='#FFFFFF', height=70, bd=1, relief='solid', highlightthickness=0)
+        header_frame = tk.Frame(self, bg='#FFFFFF', height=76, bd=1, relief='solid', highlightthickness=0)
         header_frame.pack(fill='x', side='top')
         header_frame.pack_propagate(False)
 
         title_box = tk.Frame(header_frame, bg='#FFFFFF')
-        title_box.pack(side='left', padx=25, pady=12)
+        title_box.pack(side='left', padx=28, pady=16)
 
-        title_label = tk.Label(title_box, text="스마트 학급편성 시스템", font=('Malgun Gothic', 15, 'bold'), bg='#FFFFFF', fg='#1E293B')
+        title_label = tk.Label(title_box, text="스마트 학급편성 시스템", font=('Malgun Gothic', 18, 'bold'), bg='#FFFFFF', fg='#1E293B')
         title_label.pack(side='left')
 
-        badge = tk.Label(title_box, text="완전 오프라인 Standalone Edition", font=('Malgun Gothic', 8, 'bold'), bg='#D1FAE5', fg='#065F46', padx=8, pady=2)
-        badge.pack(side='left', padx=10)
+        badge = tk.Label(title_box, text="완전 오프라인 Standalone Edition", font=('Malgun Gothic', 10, 'bold'), bg='#D1FAE5', fg='#065F46', padx=10, pady=4)
+        badge.pack(side='left', padx=12)
 
         # 메인 컨테이너 (단계별 뷰 전환)
         self.main_container = tk.Frame(self, bg='#F8FAFC')
-        self.main_container.pack(fill='both', expand=True, padx=25, pady=20)
+        self.main_container.pack(fill='both', expand=True, padx=28, pady=25)
 
         self.show_step1()
 
@@ -520,68 +547,68 @@ class SmartClassApp(tk.Tk):
         banner = tk.Frame(self.main_container, bg='#ECFDF5', bd=1, relief='solid', highlightbackground='#A7F3D0')
         banner.pack(fill='x', pady=(0, 15))
 
-        banner_inner = tk.Frame(banner, bg='#ECFDF5', padx=20, pady=15)
+        banner_inner = tk.Frame(banner, bg='#ECFDF5', padx=20, pady=18)
         banner_inner.pack(fill='x')
 
-        b_title = tk.Label(banner_inner, text="엑셀 파일 저장 시 비고란 특이사항별 셀 배경색 자동 반영!", font=('Malgun Gothic', 12, 'bold'), bg='#ECFDF5', fg='#065F46')
-        b_title.pack(anchor='center', pady=(0, 5))
+        b_title = tk.Label(banner_inner, text="엑셀 파일 저장 시 비고란 특이사항별 셀 배경색 자동 반영!", font=('Malgun Gothic', 14, 'bold'), bg='#ECFDF5', fg='#065F46')
+        b_title.pack(anchor='center', pady=(0, 6))
 
-        b_desc = tk.Label(banner_inner, text="생활지도(빨강), 특수아동(파랑), 다문화(노랑), 학습부진(주황), 운동부(초록), 분리요청(보라) 등 배경색이 실제 엑셀 파일에 칠해져 저장됩니다.", font=('Malgun Gothic', 9), bg='#ECFDF5', fg='#047857')
-        b_desc.pack(anchor='center', pady=(0, 10))
+        b_desc = tk.Label(banner_inner, text="생활지도(빨강), 특수아동(파랑), 다문화(노랑), 학습부진(주황), 운동부(초록), 분리요청(보라) 등 배경색이 실제 엑셀 파일에 칠해져 저장됩니다.", font=('Malgun Gothic', 11), bg='#ECFDF5', fg='#047857')
+        b_desc.pack(anchor='center', pady=(0, 12))
 
         btn_box = tk.Frame(banner_inner, bg='#ECFDF5')
         btn_box.pack(anchor='center')
 
-        load_mock_btn = tk.Button(btn_box, text="예시 데이터 불러오기 (80명)", font=('Malgun Gothic', 10, 'bold'), bg='#FFFFFF', fg='#334155', padx=15, pady=6, bd=1, relief='solid', cursor='hand2', command=self.load_mock_data)
-        load_mock_btn.pack(side='left', padx=5)
+        load_mock_btn = tk.Button(btn_box, text="예시 데이터 불러오기 (80명)", font=('Malgun Gothic', 12, 'bold'), bg='#FFFFFF', fg='#334155', padx=18, pady=8, bd=1, relief='solid', cursor='hand2', command=self.load_mock_data)
+        load_mock_btn.pack(side='left', padx=6)
 
-        download_template_btn = tk.Button(btn_box, text="표준 엑셀 양식 다운로드 (.xlsx)", font=('Malgun Gothic', 10, 'bold'), bg='#10B981', fg='#FFFFFF', padx=15, pady=6, bd=0, cursor='hand2', command=self.download_sample_excel)
-        download_template_btn.pack(side='left', padx=5)
+        download_template_btn = tk.Button(btn_box, text="표준 엑셀 양식 다운로드 (.xlsx)", font=('Malgun Gothic', 12, 'bold'), bg='#10B981', fg='#FFFFFF', padx=18, pady=8, bd=0, cursor='hand2', command=self.download_sample_excel)
+        download_template_btn.pack(side='left', padx=6)
 
         # 파일 업로드 드롭 박스
-        upload_card = tk.Frame(self.main_container, bg='#FFFFFF', bd=1, relief='solid', highlightbackground='#E2E8F0', padx=20, pady=20)
-        upload_card.pack(fill='x', pady=(0, 15))
+        upload_card = tk.Frame(self.main_container, bg='#FFFFFF', bd=1, relief='solid', highlightbackground='#E2E8F0', padx=25, pady=24)
+        upload_card.pack(fill='x', pady=(0, 18))
 
-        self.file_label = tk.Label(upload_card, text="엑셀 파일 (.xlsx, .xls)을 선택해주세요", font=('Malgun Gothic', 11, 'bold'), bg='#FFFFFF', fg='#334155')
-        self.file_label.pack(pady=(5, 2))
+        self.file_label = tk.Label(upload_card, text="엑셀 파일 (.xlsx, .xls)을 선택해주세요", font=('Malgun Gothic', 13, 'bold'), bg='#FFFFFF', fg='#334155')
+        self.file_label.pack(pady=(6, 4))
 
-        u_hint = tk.Label(upload_card, text="필수 항목: 반, 번호, 이름, 성별, 국어, 수학, 합계, 석차, 비고 (모든 시트 자동 취합)", font=('Malgun Gothic', 9), bg='#FFFFFF', fg='#94A3B8')
-        u_hint.pack(pady=(2, 10))
+        u_hint = tk.Label(upload_card, text="필수 항목: [번호, 이름, 성별, 국어, 수학, 합계, 석차, 비고] (모든 학급 시트 자동 취합)", font=('Malgun Gothic', 11), bg='#FFFFFF', fg='#64748B')
+        u_hint.pack(pady=(2, 12))
 
-        choose_file_btn = tk.Button(upload_card, text="컴퓨터에서 파일 찾기", font=('Malgun Gothic', 10, 'bold'), bg='#F1F5F9', fg='#1E293B', padx=18, pady=6, bd=1, relief='solid', cursor='hand2', command=self.choose_file)
+        choose_file_btn = tk.Button(upload_card, text="컴퓨터에서 파일 찾기", font=('Malgun Gothic', 12, 'bold'), bg='#F1F5F9', fg='#1E293B', padx=22, pady=8, bd=1, relief='solid', cursor='hand2', command=self.choose_file)
         choose_file_btn.pack()
 
         # 하단 2분할 설정 영역 (배정 성적 기준 & 진급반 번호 부여 방식)
         settings_frame = tk.Frame(self.main_container, bg='#F8FAFC')
-        settings_frame.pack(fill='x', pady=(0, 15))
+        settings_frame.pack(fill='x', pady=(0, 18))
 
         # 1. 배정 성적 기준 카드
-        card_score = tk.Frame(settings_frame, bg='#FFFFFF', bd=1, relief='solid', highlightbackground='#E2E8F0', padx=20, pady=15)
+        card_score = tk.Frame(settings_frame, bg='#FFFFFF', bd=1, relief='solid', highlightbackground='#E2E8F0', padx=22, pady=18)
         card_score.pack(side='left', fill='both', expand=True, padx=(0, 10))
 
-        score_title = tk.Label(card_score, text="배정 성적 기준", font=('Malgun Gothic', 12, 'bold'), bg='#FFFFFF', fg='#1E293B')
+        score_title = tk.Label(card_score, text="배정 성적 기준", font=('Malgun Gothic', 14, 'bold'), bg='#FFFFFF', fg='#1E293B')
         score_title.pack(anchor='w', pady=(0, 12))
 
         score_btn_box = tk.Frame(card_score, bg='#FFFFFF')
         score_btn_box.pack(fill='x')
 
-        self.btn_score_rank = tk.Button(score_btn_box, text="석차 기준\n(1등이 우수)", font=('Malgun Gothic', 10, 'bold'), padx=10, pady=8, bd=1, relief='solid', cursor='hand2', command=lambda: self.set_score_type('rank'))
-        self.btn_score_rank.pack(side='left', fill='both', expand=True, padx=2)
+        self.btn_score_rank = tk.Button(score_btn_box, text="석차 기준\n(1등이 우수)", font=('Malgun Gothic', 12, 'bold'), padx=12, pady=12, bd=1, relief='solid', cursor='hand2', command=lambda: self.set_score_type('rank'))
+        self.btn_score_rank.pack(side='left', fill='both', expand=True, padx=4)
 
-        self.btn_score_total = tk.Button(score_btn_box, text="합계 점수 기준\n(총점 높은 순)", font=('Malgun Gothic', 10, 'bold'), padx=10, pady=8, bd=1, relief='solid', cursor='hand2', command=lambda: self.set_score_type('score'))
-        self.btn_score_total.pack(side='left', fill='both', expand=True, padx=2)
+        self.btn_score_total = tk.Button(score_btn_box, text="합계 점수 기준\n(총점 높은 순)", font=('Malgun Gothic', 12, 'bold'), padx=12, pady=12, bd=1, relief='solid', cursor='hand2', command=lambda: self.set_score_type('score'))
+        self.btn_score_total.pack(side='left', fill='both', expand=True, padx=4)
 
         # 2. 진급반 번호 부여 방식 카드
-        card_num = tk.Frame(settings_frame, bg='#FFFFFF', bd=1, relief='solid', highlightbackground='#E2E8F0', padx=20, pady=15)
+        card_num = tk.Frame(settings_frame, bg='#FFFFFF', bd=1, relief='solid', highlightbackground='#E2E8F0', padx=22, pady=18)
         card_num.pack(side='left', fill='both', expand=True, padx=(10, 0))
 
         num_header = tk.Frame(card_num, bg='#FFFFFF')
         num_header.pack(fill='x', pady=(0, 12))
 
-        num_title = tk.Label(num_header, text="진급반 번호 부여 방식", font=('Malgun Gothic', 12, 'bold'), bg='#FFFFFF', fg='#1E293B')
+        num_title = tk.Label(num_header, text="진급반 번호 부여 방식", font=('Malgun Gothic', 14, 'bold'), bg='#FFFFFF', fg='#1E293B')
         num_title.pack(side='left')
 
-        num_badge = tk.Label(num_header, text="새 학급 번호 규칙", font=('Malgun Gothic', 8, 'bold'), bg='#ECFDF5', fg='#065F46', padx=6, pady=1)
+        num_badge = tk.Label(num_header, text="새 학급 번호 규칙", font=('Malgun Gothic', 10, 'bold'), bg='#ECFDF5', fg='#065F46', padx=8, pady=2)
         num_badge.pack(side='right')
 
         num_btn_box = tk.Frame(card_num, bg='#FFFFFF')
@@ -597,8 +624,8 @@ class SmartClassApp(tk.Tk):
         for idx, (m_val, m_text) in enumerate(modes):
             row = idx // 2
             col = idx % 2
-            btn = tk.Button(num_btn_box, text=m_text, font=('Malgun Gothic', 9, 'bold'), padx=8, pady=6, bd=1, relief='solid', cursor='hand2', command=lambda v=m_val: self.set_numbering_mode(v))
-            btn.grid(row=row, column=col, sticky='nsew', padx=2, pady=2)
+            btn = tk.Button(num_btn_box, text=m_text, font=('Malgun Gothic', 11, 'bold'), padx=10, pady=8, bd=1, relief='solid', cursor='hand2', command=lambda v=m_val: self.set_numbering_mode(v))
+            btn.grid(row=row, column=col, sticky='nsew', padx=3, pady=3)
             num_btn_box.grid_columnconfigure(col, weight=1)
             self.num_buttons[m_val] = btn
 
@@ -606,9 +633,9 @@ class SmartClassApp(tk.Tk):
 
         # 하단 다음 단계 버튼
         action_bar = tk.Frame(self.main_container, bg='#F8FAFC')
-        action_bar.pack(fill='x', pady=10)
+        action_bar.pack(fill='x', pady=12)
 
-        self.next_btn = tk.Button(action_bar, text="다음 단계: 반 설정 및 배정 실행 →", font=('Malgun Gothic', 11, 'bold'), bg='#10B981', fg='#FFFFFF', padx=25, pady=10, bd=0, cursor='hand2', command=self.show_step2)
+        self.next_btn = tk.Button(action_bar, text="다음 단계: 반 설정 및 배정 실행 →", font=('Malgun Gothic', 13, 'bold'), bg='#10B981', fg='#FFFFFF', padx=28, pady=12, bd=0, cursor='hand2', command=self.show_step2)
         self.next_btn.pack(side='right')
 
     def set_score_type(self, val):
@@ -655,7 +682,8 @@ class SmartClassApp(tk.Tk):
                 for row in rows[1:]:
                     if not row or not any(row):
                         continue
-                    name = str(row[col_map.get('이름', 2)]).strip() if '이름' in col_map and col_map['이름'] < len(row) else ''
+                    col_name = col_map.get('이름', 1 if '반' not in col_map else 2)
+                    name = str(row[col_name]).strip() if col_name < len(row) else ''
                     if not name:
                         continue
 
@@ -664,11 +692,17 @@ class SmartClassApp(tk.Tk):
                         prev_class = sheet_name
                     classes_set.add(prev_class)
 
-                    gender = str(row[col_map.get('성별', 3)]).strip() if '성별' in col_map and col_map['성별'] < len(row) else '남'
-                    prev_num = row[col_map.get('번호', 1)] if '번호' in col_map and col_map['번호'] < len(row) else ''
-                    rank_val = row[col_map.get('석차', 7)] if '석차' in col_map and col_map['석차'] < len(row) else 99
-                    score_val = row[col_map.get('합계', 6)] if '합계' in col_map and col_map['합계'] < len(row) else 0
-                    remarks = str(row[col_map.get('비고', 8)]).strip() if '비고' in col_map and col_map['비고'] < len(row) else ''
+                    col_gender = col_map.get('성별', 2 if '반' not in col_map else 3)
+                    col_num = col_map.get('번호', 0 if '반' not in col_map else 1)
+                    col_rank = col_map.get('석차', 6 if '반' not in col_map else 7)
+                    col_score = col_map.get('합계', 5 if '반' not in col_map else 6)
+                    col_remarks = col_map.get('비고', 7 if '반' not in col_map else 8)
+
+                    gender = str(row[col_gender]).strip() if col_gender < len(row) else '남'
+                    prev_num = row[col_num] if col_num < len(row) else ''
+                    rank_val = row[col_rank] if col_rank < len(row) else 99
+                    score_val = row[col_score] if col_score < len(row) else 0
+                    remarks = str(row[col_remarks]).strip() if col_remarks < len(row) else ''
 
                     self.raw_records.append({
                         'id': f"{prev_class}_{prev_num}_{name}",
@@ -744,18 +778,28 @@ class SmartClassApp(tk.Tk):
 
         mock_sheets = {
             '1반': [
-                {'prevClass': '1반', 'prevNumber': 1, 'name': '김민준', 'gender': '남', 'rank': 1, 'remarks': '생활지도, 분리요청(이도윤)'},
-                {'prevClass': '1반', 'prevNumber': 2, 'name': '이서아', 'gender': '여', 'rank': 2, 'remarks': '특수아동'},
-                {'prevClass': '1반', 'prevNumber': 3, 'name': '박서준', 'gender': '남', 'rank': 3, 'remarks': '다문화'},
-                {'prevClass': '1반', 'prevNumber': 4, 'name': '김서윤', 'gender': '여', 'rank': 4, 'remarks': '학습부진'},
+                {'prevClass': '1반', 'prevNumber': 1, 'name': '김민준', 'gender': '남', 'kor': 95, 'math': 92, 'score': 187, 'rank': 1, 'remarks': '생활지도, 분리요청(이도윤)'},
+                {'prevClass': '1반', 'prevNumber': 2, 'name': '이서아', 'gender': '여', 'kor': 92, 'math': 94, 'score': 186, 'rank': 2, 'remarks': '특수아동'},
+                {'prevClass': '1반', 'prevNumber': 3, 'name': '박서준', 'gender': '남', 'kor': 88, 'math': 85, 'score': 173, 'rank': 3, 'remarks': '다문화'},
+                {'prevClass': '1반', 'prevNumber': 4, 'name': '김서윤', 'gender': '여', 'kor': 82, 'math': 80, 'score': 162, 'rank': 4, 'remarks': '학습부진'},
             ],
             '2반': [
-                {'prevClass': '2반', 'prevNumber': 1, 'name': '이도윤', 'gender': '남', 'rank': 1, 'remarks': '분리요청(김민준)'},
-                {'prevClass': '2반', 'prevNumber': 2, 'name': '박지우', 'gender': '여', 'rank': 2, 'remarks': '운동부'},
+                {'prevClass': '2반', 'prevNumber': 1, 'name': '이도윤', 'gender': '남', 'kor': 96, 'math': 92, 'score': 188, 'rank': 1, 'remarks': '분리요청(김민준)'},
+                {'prevClass': '2반', 'prevNumber': 2, 'name': '박지우', 'gender': '여', 'kor': 91, 'math': 89, 'score': 180, 'rank': 2, 'remarks': '운동부'},
+                {'prevClass': '2반', 'prevNumber': 3, 'name': '정예준', 'gender': '남', 'kor': 85, 'math': 87, 'score': 172, 'rank': 3, 'remarks': ''},
+                {'prevClass': '2반', 'prevNumber': 4, 'name': '최하은', 'gender': '여', 'kor': 80, 'math': 78, 'score': 158, 'rank': 4, 'remarks': ''},
+            ],
+            '3반': [
+                {'prevClass': '3반', 'prevNumber': 1, 'name': '정시우', 'gender': '남', 'kor': 98, 'math': 95, 'score': 193, 'rank': 1, 'remarks': ''},
+                {'prevClass': '3반', 'prevNumber': 2, 'name': '윤지호', 'gender': '여', 'kor': 89, 'math': 90, 'score': 179, 'rank': 2, 'remarks': ''},
+            ],
+            '4반': [
+                {'prevClass': '4반', 'prevNumber': 1, 'name': '강건우', 'gender': '남', 'kor': 94, 'math': 91, 'score': 185, 'rank': 1, 'remarks': ''},
+                {'prevClass': '4반', 'prevNumber': 2, 'name': '한수아', 'gender': '여', 'kor': 87, 'math': 86, 'score': 173, 'rank': 2, 'remarks': ''},
             ]
         }
-        SimpleExcel.write_styled_xlsx(path, mock_sheets)
-        messagebox.showinfo("저장 완료", f"표준 엑셀 양식이 저장되었습니다:\n{path}")
+        SimpleExcel.write_styled_xlsx(path, mock_sheets, is_template=True)
+        messagebox.showinfo("저장 완료", f"표준 엑셀 양식이 저장되었습니다:\n{path}\n\n각 학급 시트(1반, 2반 등)에 '반' 항목 없이 [번호, 이름, 성별, 국어, 수학, 합계, 석차, 비고] 8개 항목으로 구성되어 있습니다.")
 
     # ---------------------------------------------------------
     # STEP 2: 반 명칭 및 배정 실행 화면
@@ -774,31 +818,31 @@ class SmartClassApp(tk.Tk):
         t.pack(side='left')
 
         # 반 설정 카드
-        card = tk.Frame(self.main_container, bg='#FFFFFF', bd=1, relief='solid', highlightbackground='#E2E8F0', padx=25, pady=20)
+        card = tk.Frame(self.main_container, bg='#FFFFFF', bd=1, relief='solid', highlightbackground='#E2E8F0', padx=28, pady=22)
         card.pack(fill='x', pady=(0, 20))
 
-        desc = tk.Label(card, text="편성될 새로운 반의 명칭을 입력하세요 (쉼표로 구분):", font=('Malgun Gothic', 10, 'bold'), bg='#FFFFFF', fg='#334155')
-        desc.pack(anchor='w', pady=(0, 8))
+        desc = tk.Label(card, text="편성될 새로운 반의 명칭을 입력하세요 (쉼표로 구분):", font=('Malgun Gothic', 12, 'bold'), bg='#FFFFFF', fg='#334155')
+        desc.pack(anchor='w', pady=(0, 10))
 
-        self.new_classes_entry = tk.Entry(card, font=('Malgun Gothic', 11), bd=1, relief='solid')
+        self.new_classes_entry = tk.Entry(card, font=('Malgun Gothic', 13), bd=1, relief='solid')
         self.new_classes_entry.insert(0, ", ".join(self.new_classes))
-        self.new_classes_entry.pack(fill='x', ipady=6, pady=(0, 15))
+        self.new_classes_entry.pack(fill='x', ipady=8, pady=(0, 16))
 
-        info_box = tk.Frame(card, bg='#F8FAFC', bd=1, relief='solid', highlightbackground='#E2E8F0', padx=15, pady=10)
+        info_box = tk.Frame(card, bg='#F8FAFC', bd=1, relief='solid', highlightbackground='#E2E8F0', padx=18, pady=12)
         info_box.pack(fill='x')
 
         info_text = f"현재 총 {len(self.raw_records)}명 학생 | 기존 반: {', '.join(self.prev_classes)} | 선택된 번호방식: {self.numbering_mode.get()}"
-        lbl_info = tk.Label(info_box, text=info_text, font=('Malgun Gothic', 9), bg='#F8FAFC', fg='#475569')
+        lbl_info = tk.Label(info_box, text=info_text, font=('Malgun Gothic', 11), bg='#F8FAFC', fg='#475569')
         lbl_info.pack(anchor='w')
 
         # 실행 버튼 바
         action_bar = tk.Frame(self.main_container, bg='#F8FAFC')
-        action_bar.pack(fill='x', pady=15)
+        action_bar.pack(fill='x', pady=16)
 
-        back_btn = tk.Button(action_bar, text="← 이전 화면 (설정 수정)", font=('Malgun Gothic', 10, 'bold'), bg='#FFFFFF', fg='#334155', padx=18, pady=8, bd=1, relief='solid', cursor='hand2', command=self.show_step1)
+        back_btn = tk.Button(action_bar, text="← 이전 화면 (설정 수정)", font=('Malgun Gothic', 12, 'bold'), bg='#FFFFFF', fg='#334155', padx=20, pady=10, bd=1, relief='solid', cursor='hand2', command=self.show_step1)
         back_btn.pack(side='left')
 
-        start_btn = tk.Button(action_bar, text="스마트 학급 배정 실행하기", font=('Malgun Gothic', 11, 'bold'), bg='#10B981', fg='#FFFFFF', padx=25, pady=10, bd=0, cursor='hand2', command=self.run_assignment)
+        start_btn = tk.Button(action_bar, text="스마트 학급 배정 실행하기", font=('Malgun Gothic', 13, 'bold'), bg='#10B981', fg='#FFFFFF', padx=28, pady=12, bd=0, cursor='hand2', command=self.run_assignment)
         start_btn.pack(side='right')
 
     def run_assignment(self):
@@ -831,23 +875,23 @@ class SmartClassApp(tk.Tk):
 
         # 상단 액션 바
         top_bar = tk.Frame(self.main_container, bg='#F8FAFC')
-        top_bar.pack(fill='x', pady=(0, 15))
+        top_bar.pack(fill='x', pady=(0, 16))
 
-        t_title = tk.Label(top_bar, text="배정 완료 대시보드", font=('Malgun Gothic', 14, 'bold'), bg='#F8FAFC', fg='#1E293B')
+        t_title = tk.Label(top_bar, text="배정 완료 대시보드", font=('Malgun Gothic', 16, 'bold'), bg='#F8FAFC', fg='#1E293B')
         t_title.pack(side='left')
 
         btn_box = tk.Frame(top_bar, bg='#F8FAFC')
         btn_box.pack(side='right')
 
-        home_btn = tk.Button(btn_box, text="첫 화면으로 돌아가기", font=('Malgun Gothic', 9, 'bold'), bg='#FFFFFF', fg='#334155', padx=12, pady=6, bd=1, relief='solid', cursor='hand2', command=self.show_step1)
-        home_btn.pack(side='left', padx=5)
+        home_btn = tk.Button(btn_box, text="첫 화면으로 돌아가기", font=('Malgun Gothic', 11, 'bold'), bg='#FFFFFF', fg='#334155', padx=15, pady=8, bd=1, relief='solid', cursor='hand2', command=self.show_step1)
+        home_btn.pack(side='left', padx=6)
 
-        export_btn = tk.Button(btn_box, text="특이사항 컬러 반영 전체 엑셀 다운로드 (.xlsx)", font=('Malgun Gothic', 10, 'bold'), bg='#10B981', fg='#FFFFFF', padx=16, pady=6, bd=0, cursor='hand2', command=self.export_to_excel)
-        export_btn.pack(side='left', padx=5)
+        export_btn = tk.Button(btn_box, text="특이사항 컬러 반영 전체 엑셀 다운로드 (.xlsx)", font=('Malgun Gothic', 12, 'bold'), bg='#10B981', fg='#FFFFFF', padx=18, pady=8, bd=0, cursor='hand2', command=self.export_to_excel)
+        export_btn.pack(side='left', padx=6)
 
         # 5개 핵심 지표 통계 카드 영역 (HTML 버전 100% 매칭)
         stats_frame = tk.Frame(self.main_container, bg='#F8FAFC')
-        stats_frame.pack(fill='x', pady=(0, 15))
+        stats_frame.pack(fill='x', pady=(0, 16))
 
         total_students = len(self.raw_records)
         total_special = sum(1 for s in self.raw_records if s.get('isSpecial') or '특수' in str(s.get('remarks', '')))
@@ -872,14 +916,14 @@ class SmartClassApp(tk.Tk):
         ]
 
         for idx, (t, v, sub, v_col, bg_col, b_col) in enumerate(stat_cards_info):
-            card = tk.Frame(stats_frame, bg=bg_col, bd=1, relief='solid', highlightbackground=b_col, padx=12, pady=10)
-            card.pack(side='left', fill='both', expand=True, padx=3)
+            card = tk.Frame(stats_frame, bg=bg_col, bd=1, relief='solid', highlightbackground=b_col, padx=14, pady=12)
+            card.pack(side='left', fill='both', expand=True, padx=4)
 
-            lbl_t = tk.Label(card, text=t, font=('Malgun Gothic', 8, 'bold'), bg=bg_col, fg='#64748B')
+            lbl_t = tk.Label(card, text=t, font=('Malgun Gothic', 10, 'bold'), bg=bg_col, fg='#64748B')
             lbl_t.pack(anchor='w')
-            lbl_v = tk.Label(card, text=v, font=('Malgun Gothic', 13, 'bold'), bg=bg_col, fg=v_col)
+            lbl_v = tk.Label(card, text=v, font=('Malgun Gothic', 15, 'bold'), bg=bg_col, fg=v_col)
             lbl_v.pack(anchor='w', pady=2)
-            lbl_s = tk.Label(card, text=sub, font=('Malgun Gothic', 8), bg=bg_col, fg='#475569')
+            lbl_s = tk.Label(card, text=sub, font=('Malgun Gothic', 10), bg=bg_col, fg='#475569')
             lbl_s.pack(anchor='w')
 
         # 반별 탭 노트북
@@ -909,59 +953,59 @@ class SmartClassApp(tk.Tk):
             self.build_class_tree(tab_frame, stds, stat_text)
 
     def build_class_tree(self, parent_frame, stds, stat_text):
-        summary_bar = tk.Frame(parent_frame, bg='#F8FAFC', bd=1, relief='solid', highlightbackground='#E2E8F0', padx=12, pady=8)
-        summary_bar.pack(fill='x', pady=(0, 10))
-        lbl_stat = tk.Label(summary_bar, text=stat_text, font=('Malgun Gothic', 10, 'bold'), bg='#F8FAFC', fg='#1E293B')
+        summary_bar = tk.Frame(parent_frame, bg='#F8FAFC', bd=1, relief='solid', highlightbackground='#E2E8F0', padx=14, pady=10)
+        summary_bar.pack(fill='x', pady=(0, 12))
+        lbl_stat = tk.Label(summary_bar, text=stat_text, font=('Malgun Gothic', 12, 'bold'), bg='#F8FAFC', fg='#1E293B')
         lbl_stat.pack(side='left')
 
         cols = ('prevClass', 'prevNumber', 'name', 'gender', 'rank', 'assignedClass', 'assignedNumber', 'remarks')
         tree = ttk.Treeview(parent_frame, columns=cols, show='headings', selectmode='browse')
 
-            tree.heading('prevClass', text='기존반')
-            tree.heading('prevNumber', text='기존번호')
-            tree.heading('name', text='이름')
-            tree.heading('gender', text='성별')
-            tree.heading('rank', text='석차')
-            tree.heading('assignedClass', text='진급반')
-            tree.heading('assignedNumber', text='새번호')
-            tree.heading('remarks', text='비고')
+        tree.heading('prevClass', text='기존반')
+        tree.heading('prevNumber', text='기존번호')
+        tree.heading('name', text='이름')
+        tree.heading('gender', text='성별')
+        tree.heading('rank', text='석차')
+        tree.heading('assignedClass', text='진급반')
+        tree.heading('assignedNumber', text='새번호')
+        tree.heading('remarks', text='비고')
 
-            tree.column('prevClass', width=70, anchor='center')
-            tree.column('prevNumber', width=70, anchor='center')
-            tree.column('name', width=100, anchor='center')
-            tree.column('gender', width=60, anchor='center')
-            tree.column('rank', width=60, anchor='center')
-            tree.column('assignedClass', width=80, anchor='center')
-            tree.column('assignedNumber', width=80, anchor='center')
-            tree.column('remarks', width=350, anchor='w')
+        tree.column('prevClass', width=75, anchor='center')
+        tree.column('prevNumber', width=75, anchor='center')
+        tree.column('name', width=110, anchor='center')
+        tree.column('gender', width=70, anchor='center')
+        tree.column('rank', width=70, anchor='center')
+        tree.column('assignedClass', width=90, anchor='center')
+        tree.column('assignedNumber', width=90, anchor='center')
+        tree.column('remarks', width=380, anchor='w')
 
-            # 스크롤바
-            scrollbar = ttk.Scrollbar(parent_frame, orient='vertical', command=tree.yview)
-            tree.configure(yscrollcommand=scrollbar.set)
-            scrollbar.pack(side='right', fill='y')
-            tree.pack(side='left', fill='both', expand=True)
+        # 스크롤바
+        scrollbar = ttk.Scrollbar(parent_frame, orient='vertical', command=tree.yview)
+        tree.configure(yscrollcommand=scrollbar.set)
+        scrollbar.pack(side='right', fill='y')
+        tree.pack(side='left', fill='both', expand=True)
 
-            # 태그별 색상 설정
-            for kw, s_info in REMARK_COLORS.items():
-                tree.tag_configure(kw, background=s_info['bg'], foreground=s_info['fg'])
+        # 태그별 색상 설정
+        for kw, s_info in REMARK_COLORS.items():
+            tree.tag_configure(kw, background=s_info['bg'], foreground=s_info['fg'])
 
-            for s in stds:
-                tag = ''
-                for kw in REMARK_COLORS.keys():
-                    if kw in str(s.get('remarks', '')):
-                        tag = kw
-                        break
+        for s in stds:
+            tag = ''
+            for kw in REMARK_COLORS.keys():
+                if kw in str(s.get('remarks', '')):
+                    tag = kw
+                    break
 
-                tree.insert('', 'end', values=(
-                    s.get('prevClass', ''),
-                    s.get('prevNumber', ''),
-                    s.get('name', ''),
-                    s.get('gender', ''),
-                    s.get('rank', ''),
-                    s.get('assignedClass', ''),
-                    s.get('assignedNumber', ''),
-                    s.get('remarks', '')
-                ), tags=(tag,) if tag else ())
+            tree.insert('', 'end', values=(
+                s.get('prevClass', ''),
+                s.get('prevNumber', ''),
+                s.get('name', ''),
+                s.get('gender', ''),
+                s.get('rank', ''),
+                s.get('assignedClass', ''),
+                s.get('assignedNumber', ''),
+                s.get('remarks', '')
+            ), tags=(tag,) if tag else ())
 
     def export_to_excel(self):
         if not self.assignment_result:

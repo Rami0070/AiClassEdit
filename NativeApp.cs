@@ -8,6 +8,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using System.Xml;
+using System.Runtime.InteropServices;
 
 namespace SmartClassAssigner
 {
@@ -350,11 +351,24 @@ namespace SmartClassAssigner
                     else if ((h.Contains("비고") || h.Contains("특기") || h.Contains("참고") || h.Contains("메모")) && colRemarks == -1) colRemarks = kv.Key;
                 }
 
-                if (colName == -1) colName = 2;
-                if (colGender == -1) colGender = 3;
-                if (colScore == -1) colScore = 6;
-                if (colRank == -1) colRank = 7;
-                if (colRemarks == -1) colRemarks = 8;
+                if (colClass == -1)
+                {
+                    if (colNum == -1) colNum = 0;
+                    if (colName == -1) colName = 1;
+                    if (colGender == -1) colGender = 2;
+                    if (colScore == -1) colScore = 5;
+                    if (colRank == -1) colRank = 6;
+                    if (colRemarks == -1) colRemarks = 7;
+                }
+                else
+                {
+                    if (colNum == -1) colNum = 1;
+                    if (colName == -1) colName = 2;
+                    if (colGender == -1) colGender = 3;
+                    if (colScore == -1) colScore = 6;
+                    if (colRank == -1) colRank = 7;
+                    if (colRemarks == -1) colRemarks = 8;
+                }
 
                 for (int r = headerRowIdx + 1; r < rowNodes.Count; r++)
                 {
@@ -528,8 +542,24 @@ namespace SmartClassAssigner
                 else if ((h.Contains("비고") || h.Contains("특기") || h.Contains("참고")) && colRemarks == -1) colRemarks = i;
             }
 
-            if (colName == -1) colName = 2;
-            if (colGender == -1) colGender = 3;
+            if (colClass == -1)
+            {
+                if (colNum == -1) colNum = 0;
+                if (colName == -1) colName = 1;
+                if (colGender == -1) colGender = 2;
+                if (colScore == -1) colScore = 5;
+                if (colRank == -1) colRank = 6;
+                if (colRemarks == -1) colRemarks = 7;
+            }
+            else
+            {
+                if (colNum == -1) colNum = 1;
+                if (colName == -1) colName = 2;
+                if (colGender == -1) colGender = 3;
+                if (colScore == -1) colScore = 6;
+                if (colRank == -1) colRank = 7;
+                if (colRemarks == -1) colRemarks = 8;
+            }
 
             for (int r = 1; r < lines.Length; r++)
             {
@@ -581,7 +611,7 @@ namespace SmartClassAssigner
             return result;
         }
 
-        public static void WriteStyledXlsx(string filePath, Dictionary<string, List<StudentRecord>> classSheets)
+        public static void WriteStyledXlsx(string filePath, Dictionary<string, List<StudentRecord>> classSheets, bool isTemplate = false)
         {
             // 기본 엑셀 구조 생성
             if (File.Exists(filePath)) File.Delete(filePath);
@@ -610,7 +640,7 @@ namespace SmartClassAssigner
                 int sheetIndex = 1;
                 foreach (var kv in classSheets)
                 {
-                    string sheetXml = GenerateWorksheetXml(kv.Value);
+                    string sheetXml = GenerateWorksheetXml(kv.Value, isTemplate);
                     WriteZipEntry(zip, string.Format("xl/worksheets/sheet{0}.xml", sheetIndex), sheetXml);
                     sheetIndex++;
                 }
@@ -728,25 +758,42 @@ namespace SmartClassAssigner
                 "</styleSheet>";
         }
 
-        private static string GenerateWorksheetXml(List<StudentRecord> students)
+        private static string GenerateWorksheetXml(List<StudentRecord> students, bool isTemplate)
         {
             StringBuilder sb = new StringBuilder();
             sb.Append("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n");
             sb.Append("<worksheet xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\">\n");
             sb.Append("  <cols>\n");
-            sb.Append("    <col min=\"1\" max=\"1\" width=\"10\" customWidth=\"1\"/>\n");
-            sb.Append("    <col min=\"2\" max=\"2\" width=\"10\" customWidth=\"1\"/>\n");
-            sb.Append("    <col min=\"3\" max=\"3\" width=\"13\" customWidth=\"1\"/>\n");
-            sb.Append("    <col min=\"4\" max=\"4\" width=\"10\" customWidth=\"1\"/>\n");
-            sb.Append("    <col min=\"5\" max=\"5\" width=\"10\" customWidth=\"1\"/>\n");
-            sb.Append("    <col min=\"6\" max=\"6\" width=\"12\" customWidth=\"1\"/>\n");
-            sb.Append("    <col min=\"7\" max=\"7\" width=\"10\" customWidth=\"1\"/>\n");
-            sb.Append("    <col min=\"8\" max=\"8\" width=\"30\" customWidth=\"1\"/>\n");
+            if (isTemplate)
+            {
+                sb.Append("    <col min=\"1\" max=\"1\" width=\"10\" customWidth=\"1\"/>\n");
+                sb.Append("    <col min=\"2\" max=\"2\" width=\"13\" customWidth=\"1\"/>\n");
+                sb.Append("    <col min=\"3\" max=\"3\" width=\"10\" customWidth=\"1\"/>\n");
+                sb.Append("    <col min=\"4\" max=\"4\" width=\"10\" customWidth=\"1\"/>\n");
+                sb.Append("    <col min=\"5\" max=\"5\" width=\"10\" customWidth=\"1\"/>\n");
+                sb.Append("    <col min=\"6\" max=\"6\" width=\"12\" customWidth=\"1\"/>\n");
+                sb.Append("    <col min=\"7\" max=\"7\" width=\"10\" customWidth=\"1\"/>\n");
+                sb.Append("    <col min=\"8\" max=\"8\" width=\"32\" customWidth=\"1\"/>\n");
+            }
+            else
+            {
+                sb.Append("    <col min=\"1\" max=\"1\" width=\"10\" customWidth=\"1\"/>\n");
+                sb.Append("    <col min=\"2\" max=\"2\" width=\"10\" customWidth=\"1\"/>\n");
+                sb.Append("    <col min=\"3\" max=\"3\" width=\"13\" customWidth=\"1\"/>\n");
+                sb.Append("    <col min=\"4\" max=\"4\" width=\"10\" customWidth=\"1\"/>\n");
+                sb.Append("    <col min=\"5\" max=\"5\" width=\"10\" customWidth=\"1\"/>\n");
+                sb.Append("    <col min=\"6\" max=\"6\" width=\"12\" customWidth=\"1\"/>\n");
+                sb.Append("    <col min=\"7\" max=\"7\" width=\"10\" customWidth=\"1\"/>\n");
+                sb.Append("    <col min=\"8\" max=\"8\" width=\"32\" customWidth=\"1\"/>\n");
+            }
             sb.Append("  </cols>\n");
             sb.Append("  <sheetData>\n");
 
             // 헤더 행 (s="1")
-            string[] headers = new string[] { "반", "번호", "이름", "성별", "석차", "진급반", "새번호", "비고" };
+            string[] headers = isTemplate
+                ? new string[] { "번호", "이름", "성별", "국어", "수학", "합계", "석차", "비고" }
+                : new string[] { "반", "번호", "이름", "성별", "석차", "진급반", "새번호", "비고" };
+
             sb.Append("    <row r=\"1\">\n");
             for (int i = 0; i < headers.Length; i++)
             {
@@ -761,17 +808,38 @@ namespace SmartClassAssigner
             {
                 sb.AppendFormat("    <row r=\"{0}\">\n", rowIdx);
 
-                string[] vals = new string[]
+                string[] vals;
+                if (isTemplate)
                 {
-                    s.PrevClass ?? "",
-                    s.PrevNumber ?? "",
-                    s.Name ?? "",
-                    s.Gender ?? "",
-                    s.Rank > 0 ? s.Rank.ToString() : "",
-                    s.AssignedClass ?? "",
-                    s.AssignedNumber > 0 ? s.AssignedNumber.ToString() : "",
-                    s.Remarks ?? ""
-                };
+                    int kor = s.Score > 0 ? (int)(s.Score * 0.52) : 90;
+                    int math = s.Score > 0 ? (int)(s.Score * 0.48) : 88;
+                    int total = s.Score > 0 ? (int)s.Score : (kor + math);
+                    vals = new string[]
+                    {
+                        s.PrevNumber ?? "",
+                        s.Name ?? "",
+                        s.Gender ?? "",
+                        kor.ToString(),
+                        math.ToString(),
+                        total.ToString(),
+                        s.Rank > 0 ? s.Rank.ToString() : "",
+                        s.Remarks ?? ""
+                    };
+                }
+                else
+                {
+                    vals = new string[]
+                    {
+                        s.PrevClass ?? "",
+                        s.PrevNumber ?? "",
+                        s.Name ?? "",
+                        s.Gender ?? "",
+                        s.Rank > 0 ? s.Rank.ToString() : "",
+                        s.AssignedClass ?? "",
+                        s.AssignedNumber > 0 ? s.AssignedNumber.ToString() : "",
+                        s.Remarks ?? ""
+                    };
+                }
 
                 // 비고 스타일 식별
                 int remarkStyle = 2; // 기본 테두리+가운데정렬
@@ -1082,13 +1150,29 @@ namespace SmartClassAssigner
 
         private bool isHovered = false;
         private bool isPressed = false;
+        private int cornerRadius = 12;
+
+        public int CornerRadius
+        {
+            get { return cornerRadius; }
+            set { cornerRadius = value; Invalidate(); }
+        }
 
         public Button3D()
         {
             SetStyle(ControlStyles.UserPaint | ControlStyles.AllPaintingInWmPaint | 
-                     ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw, true);
-            Font = new Font("Malgun Gothic", 10f, FontStyle.Bold);
-            Cursor = Cursors.Hand;
+                     ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw |
+                     ControlStyles.SupportsTransparentBackColor, true);
+            SetStyle(ControlStyles.Selectable, false);
+
+            this.FlatStyle = FlatStyle.Flat;
+            this.FlatAppearance.BorderSize = 0;
+            this.FlatAppearance.BorderColor = Color.FromArgb(0, 255, 255, 255);
+            this.FlatAppearance.MouseDownBackColor = Color.Transparent;
+            this.FlatAppearance.MouseOverBackColor = Color.Transparent;
+            this.BackColor = Color.Transparent;
+            this.Cursor = Cursors.Hand;
+            this.Font = new Font("Malgun Gothic", 12.5f, FontStyle.Bold);
         }
 
         protected override void OnMouseEnter(EventArgs e) { isHovered = true; Invalidate(); base.OnMouseEnter(e); }
@@ -1100,81 +1184,69 @@ namespace SmartClassAssigner
         {
             Graphics g = pevent.Graphics;
             g.SmoothingMode = SmoothingMode.AntiAlias;
+            g.PixelOffsetMode = PixelOffsetMode.HighQuality;
             g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
 
-            if (Parent != null)
+            // 부모 배경색으로 외곽 완전히 지우기 (검은 점 및 테두리 잔여선 원천 방지)
+            Color parentBg = (Parent != null) ? Parent.BackColor : Color.FromArgb(248, 250, 252);
+            using (SolidBrush pb = new SolidBrush(parentBg))
             {
-                using (SolidBrush pb = new SolidBrush(Parent.BackColor))
-                {
-                    g.FillRectangle(pb, ClientRectangle);
-                }
+                g.FillRectangle(pb, ClientRectangle);
             }
 
-            int pressOffset = isPressed ? 2 : 0;
-            int bottomBorderHeight = isPressed ? 1 : 4;
-            int radius = 10;
+            int r = cornerRadius;
+            Rectangle rect = new Rectangle(1, 1, Width - 3, Height - 3);
+            if (isPressed)
+            {
+                rect.Y += 1;
+            }
 
-            Rectangle btnRect = new Rectangle(0, pressOffset, Width - 1, Height - 1 - (4 - bottomBorderHeight));
+            Color bgTop, bgBottom, strokeColor, textColor;
 
-            Color bgTop, bgBottom, bottomBorderColor, strokeColor, textColor;
-
-            if (theme == Button3DTheme.Mint || theme == Button3DTheme.SelectedMint)
+            if (theme == Button3DTheme.Mint)
             {
                 bgTop = isHovered ? Color.FromArgb(52, 211, 153) : Color.FromArgb(16, 185, 129);
                 bgBottom = isHovered ? Color.FromArgb(16, 185, 129) : Color.FromArgb(5, 150, 105);
-                bottomBorderColor = Color.FromArgb(4, 120, 87);
-                strokeColor = Color.FromArgb(5, 150, 105);
+                strokeColor = isHovered ? Color.FromArgb(52, 211, 153) : Color.FromArgb(16, 185, 129);
+                textColor = Color.White;
+            }
+            else if (theme == Button3DTheme.SelectedMint)
+            {
+                bgTop = Color.FromArgb(5, 150, 105);
+                bgBottom = Color.FromArgb(4, 120, 87);
+                strokeColor = Color.FromArgb(110, 231, 183);
                 textColor = Color.White;
             }
             else // White
             {
-                bgTop = isHovered ? Color.FromArgb(248, 250, 252) : Color.White;
-                bgBottom = isHovered ? Color.FromArgb(241, 245, 249) : Color.FromArgb(248, 250, 252);
-                bottomBorderColor = Color.FromArgb(148, 163, 184);
-                strokeColor = Color.FromArgb(203, 213, 225);
-                textColor = Color.FromArgb(51, 65, 85);
+                bgTop = isHovered ? Color.FromArgb(241, 245, 249) : Color.White;
+                bgBottom = isHovered ? Color.FromArgb(226, 232, 240) : Color.FromArgb(248, 250, 252);
+                strokeColor = isHovered ? Color.FromArgb(148, 163, 184) : Color.FromArgb(203, 213, 225);
+                textColor = Color.FromArgb(30, 41, 59);
             }
 
-            // 그림자 / 3D 베벨 바닥면
-            using (GraphicsPath basePath = GraphicsHelper.GetRoundedPath(new Rectangle(0, pressOffset + 2, Width - 1, Height - 3 - pressOffset), radius))
-            using (SolidBrush bb = new SolidBrush(bottomBorderColor))
+            // 부드러운 라운드 본체 렌더링
+            using (GraphicsPath btnPath = GraphicsHelper.GetRoundedPath(rect, r))
             {
-                g.FillPath(bb, basePath);
-            }
-
-            // 본체
-            using (GraphicsPath btnPath = GraphicsHelper.GetRoundedPath(btnRect, radius))
-            {
-                using (LinearGradientBrush lgb = new LinearGradientBrush(btnRect, bgTop, bgBottom, LinearGradientMode.Vertical))
+                using (LinearGradientBrush lgb = new LinearGradientBrush(rect, bgTop, bgBottom, LinearGradientMode.Vertical))
                 {
                     g.FillPath(lgb, btnPath);
                 }
 
-                using (Pen sp = new Pen(strokeColor, 1.2f))
+                float strokeW = (theme == Button3DTheme.SelectedMint) ? 2.5f : 1.4f;
+                using (Pen sp = new Pen(strokeColor, strokeW))
                 {
                     g.DrawPath(sp, btnPath);
                 }
-
-                if (theme == Button3DTheme.SelectedMint)
-                {
-                    using (Pen ringPen = new Pen(Color.FromArgb(110, 231, 183), 2f))
-                    {
-                        Rectangle innerRing = new Rectangle(btnRect.X + 1, btnRect.Y + 1, btnRect.Width - 2, btnRect.Height - 2);
-                        using (GraphicsPath ringPath = GraphicsHelper.GetRoundedPath(innerRing, radius - 1))
-                        {
-                            g.DrawPath(ringPen, ringPath);
-                        }
-                    }
-                }
             }
 
-            // 텍스트 그리기
+            // 텍스트 균형 배치
             StringFormat sf = new StringFormat
             {
                 Alignment = StringAlignment.Center,
                 LineAlignment = StringAlignment.Center
             };
-            Rectangle textRect = new Rectangle(btnRect.X, btnRect.Y, btnRect.Width, btnRect.Height - (isPressed ? 0 : 2));
+            Rectangle textRect = new Rectangle(rect.X + 2, rect.Y, rect.Width - 4, rect.Height);
             using (SolidBrush tb = new SolidBrush(textColor))
             {
                 g.DrawString(Text, Font, tb, textRect, sf);
@@ -1284,26 +1356,26 @@ namespace SmartClassAssigner
             }
 
             // Title
-            using (Font tf = new Font("Malgun Gothic", 8.5f, FontStyle.Bold))
+            using (Font tf = new Font("Malgun Gothic", 12f, FontStyle.Bold))
             using (SolidBrush tb = new SolidBrush(Color.FromArgb(100, 116, 139)))
             {
-                g.DrawString(Title, tf, tb, new RectangleF(12, 10, Width - 24, 18));
+                g.DrawString(Title, tf, tb, new RectangleF(14, 12, Width - 28, 22));
             }
 
             // Value
-            using (Font vf = new Font("Malgun Gothic", 15f, FontStyle.Bold))
+            using (Font vf = new Font("Malgun Gothic", 19f, FontStyle.Bold))
             using (SolidBrush vb = new SolidBrush(ValueColor))
             {
-                g.DrawString(Value, vf, vb, new RectangleF(12, 28, Width - 24, 28));
+                g.DrawString(Value, vf, vb, new RectangleF(14, 34, Width - 28, 36));
             }
 
             // SubText
             if (!string.IsNullOrEmpty(SubText))
             {
-                using (Font sf = new Font("Malgun Gothic", 8f, FontStyle.Regular))
+                using (Font sf = new Font("Malgun Gothic", 11f, FontStyle.Regular))
                 using (SolidBrush sb = new SolidBrush(Color.FromArgb(71, 85, 105)))
                 {
-                    g.DrawString(SubText, sf, sb, new RectangleF(12, 58, Width - 24, 18));
+                    g.DrawString(SubText, sf, sb, new RectangleF(14, 72, Width - 28, 24));
                 }
             }
         }
@@ -1314,6 +1386,14 @@ namespace SmartClassAssigner
     // =========================================================
     public class MainForm : Form
     {
+        [DllImport("user32.dll", SetLastError = true)]
+        private static extern bool ChangeWindowMessageFilter(uint message, uint dwFlag);
+
+        private const uint WM_DROPFILES = 0x0233;
+        private const uint WM_COPYDATA = 0x004A;
+        private const uint WM_COPYGLOBALDATA = 0x0049;
+        private const uint MSGFLT_ADD = 1;
+
         private List<StudentRecord> rawRecords = new List<StudentRecord>();
         private List<string> prevClasses = new List<string> { "1반", "2반", "3반", "4반" };
         private List<string> newClasses = new List<string> { "가반", "나반", "다반", "라반" };
@@ -1329,6 +1409,8 @@ namespace SmartClassAssigner
         private Panel step3Panel;
 
         // Step 1 컨트롤
+        private Panel dropArea;
+        private bool isDropAreaHovered = false;
         private Label lblFileStatus;
         private Button3D btnScoreRank;
         private Button3D btnScoreTotal;
@@ -1349,24 +1431,98 @@ namespace SmartClassAssigner
 
         public MainForm()
         {
+            try
+            {
+                ChangeWindowMessageFilter(WM_DROPFILES, MSGFLT_ADD);
+                ChangeWindowMessageFilter(WM_COPYDATA, MSGFLT_ADD);
+                ChangeWindowMessageFilter(WM_COPYGLOBALDATA, MSGFLT_ADD);
+            }
+            catch { }
+
             InitializeComponent();
             ShowStep1();
+        }
+
+        private void HighlightDropArea(bool highlight)
+        {
+            if (isDropAreaHovered != highlight)
+            {
+                isDropAreaHovered = highlight;
+                if (dropArea != null)
+                {
+                    dropArea.BackColor = highlight ? Color.FromArgb(220, 252, 231) : Color.FromArgb(240, 253, 244);
+                    dropArea.Invalidate();
+                }
+            }
+        }
+
+        private void AttachFileDropHandler(Control control)
+        {
+            if (control == null) return;
+            control.AllowDrop = true;
+            control.DragEnter += (s, e) =>
+            {
+                if (e.Data.GetDataPresent(DataFormats.FileDrop))
+                {
+                    e.Effect = DragDropEffects.Copy;
+                    HighlightDropArea(true);
+                }
+                else
+                {
+                    e.Effect = DragDropEffects.None;
+                }
+            };
+            control.DragOver += (s, e) =>
+            {
+                if (e.Data.GetDataPresent(DataFormats.FileDrop))
+                {
+                    e.Effect = DragDropEffects.Copy;
+                }
+            };
+            control.DragLeave += (s, e) =>
+            {
+                HighlightDropArea(false);
+            };
+            control.DragDrop += (s, e) =>
+            {
+                HighlightDropArea(false);
+                try
+                {
+                    if (e.Data.GetDataPresent(DataFormats.FileDrop))
+                    {
+                        string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+                        if (files != null && files.Length > 0)
+                        {
+                            LoadExcel(files[0]);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("파일을 읽는 도중 오류가 발생했습니다: " + ex.Message, "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            };
+
+            foreach (Control child in control.Controls)
+            {
+                AttachFileDropHandler(child);
+            }
         }
 
         private void InitializeComponent()
         {
             this.Text = "스마트 학급편성 시스템";
-            this.Size = new Size(1240, 840);
-            this.MinimumSize = new Size(1020, 720);
+            this.Size = new Size(1300, 920);
+            this.MinimumSize = new Size(1120, 780);
             this.StartPosition = FormStartPosition.CenterScreen;
             this.BackColor = Color.FromArgb(248, 250, 252);
-            this.Font = new Font("Malgun Gothic", 9.5f, FontStyle.Regular);
+            this.Font = new Font("Malgun Gothic", 11f, FontStyle.Regular);
 
             // 1. 헤더 바 (모던 클린 스타일)
             headerPanel = new Panel
             {
                 Dock = DockStyle.Top,
-                Height = 65,
+                Height = 78,
                 BackColor = Color.White
             };
             headerPanel.Paint += (s, e) =>
@@ -1380,24 +1536,24 @@ namespace SmartClassAssigner
             Label lblTitle = new Label
             {
                 Text = "스마트 학급편성 시스템",
-                Font = new Font("Malgun Gothic", 14.5f, FontStyle.Bold),
+                Font = new Font("Malgun Gothic", 18f, FontStyle.Bold),
                 ForeColor = Color.FromArgb(30, 41, 59),
-                Location = new Point(24, 18),
+                Location = new Point(28, 22),
                 AutoSize = true
             };
 
             // 커스텀 둥근 뱃지
             Panel pnlBadge = new Panel
             {
-                Location = new Point(275, 20),
-                Size = new Size(225, 26),
+                Location = new Point(340, 24),
+                Size = new Size(290, 32),
                 BackColor = Color.FromArgb(209, 250, 229)
             };
             pnlBadge.Paint += (s, e) =>
             {
                 e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
                 Rectangle r = new Rectangle(0, 0, pnlBadge.Width - 1, pnlBadge.Height - 1);
-                using (GraphicsPath p = GraphicsHelper.GetRoundedPath(r, 12))
+                using (GraphicsPath p = GraphicsHelper.GetRoundedPath(r, 14))
                 using (Pen pen = new Pen(Color.FromArgb(167, 243, 208), 1.2f))
                 {
                     e.Graphics.DrawPath(pen, p);
@@ -1406,7 +1562,7 @@ namespace SmartClassAssigner
             Label lblBadge = new Label
             {
                 Text = "완전 오프라인 네이티브 데스크톱 에디션",
-                Font = new Font("Malgun Gothic", 8.5f, FontStyle.Bold),
+                Font = new Font("Malgun Gothic", 11.5f, FontStyle.Bold),
                 ForeColor = Color.FromArgb(6, 95, 70),
                 BackColor = Color.Transparent,
                 Dock = DockStyle.Fill,
@@ -1416,7 +1572,7 @@ namespace SmartClassAssigner
 
             headerPanel.Controls.AddRange(new Control[] { lblTitle, pnlBadge });
 
-            // 2. 메인 컨텐츠 영역 (헤더 바 아래에 깔끔하게 도킹하여 메뉴 가려짐 원천 방지)
+            // 2. 메인 컨텐츠 영역 (헤더 바 아래 도킹)
             contentPanel = new Panel
             {
                 Dock = DockStyle.Fill,
@@ -1425,8 +1581,8 @@ namespace SmartClassAssigner
 
             this.Controls.Add(contentPanel);
             this.Controls.Add(headerPanel);
-            headerPanel.BringToFront();
-            contentPanel.SendToBack();
+            headerPanel.SendToBack();
+            contentPanel.BringToFront();
 
             // Step 패널 초기화 및 contentPanel에 등록
             CreateStep1Panel();
@@ -1434,6 +1590,9 @@ namespace SmartClassAssigner
             CreateStep3Panel();
 
             contentPanel.Controls.AddRange(new Control[] { step1Panel, step2Panel, step3Panel });
+
+            // 전체 폼 및 모든 하위 컨트롤에 드래그 앤 드롭 재귀 등록
+            AttachFileDropHandler(this);
         }
 
         private void CreateStep1Panel()
@@ -1441,16 +1600,22 @@ namespace SmartClassAssigner
             step1Panel = new Panel
             {
                 Dock = DockStyle.Fill,
-                Padding = new Padding(25, 20, 25, 25),
                 BackColor = Color.FromArgb(248, 250, 252),
                 AutoScroll = true
             };
 
-            // 상단 안내 배너 카드 (연녹색 그라데이션 및 둥근 테두리)
+            Panel centerContainer = new Panel
+            {
+                Width = 1080,
+                Height = 720,
+                BackColor = Color.Transparent
+            };
+
+            // 1. 상단 안내 배너 카드
             ModernCard banner = new ModernCard
             {
-                Dock = DockStyle.Top,
-                Height = 115,
+                Location = new Point(0, 0),
+                Size = new Size(1080, 145),
                 Radius = 16,
                 BackColor = Color.FromArgb(236, 253, 245),
                 BorderColor = Color.FromArgb(167, 243, 208),
@@ -1460,25 +1625,26 @@ namespace SmartClassAssigner
             Label bTitle = new Label
             {
                 Text = "엑셀 파일 저장 시 비고란 특이사항별 셀 배경색 자동 반영!",
-                Font = new Font("Malgun Gothic", 11.5f, FontStyle.Bold),
+                Font = new Font("Malgun Gothic", 15.5f, FontStyle.Bold),
                 ForeColor = Color.FromArgb(6, 95, 70),
-                Location = new Point(20, 12),
-                AutoSize = true
+                AutoSize = true,
+                BackColor = Color.Transparent
             };
             Label bDesc = new Label
             {
                 Text = "생활지도(빨강), 특수아동(파랑), 다문화(노랑), 학습부진(주황), 운동부(초록), 분리요청(보라) 등 배경색이 실제 엑셀 파일에 칠해져 저장됩니다.",
-                Font = new Font("Malgun Gothic", 9.5f),
+                Font = new Font("Malgun Gothic", 12.5f),
                 ForeColor = Color.FromArgb(4, 120, 87),
-                Location = new Point(20, 36),
-                AutoSize = true
+                AutoSize = true,
+                BackColor = Color.Transparent
             };
 
             Button3D btnMock = new Button3D
             {
                 Text = "예시 데이터 불러오기 (80명)",
                 Theme = Button3DTheme.White,
-                Size = new Size(240, 38)
+                Font = new Font("Malgun Gothic", 13f, FontStyle.Bold),
+                Size = new Size(280, 48)
             };
             btnMock.Click += (s, e) => LoadMockData();
 
@@ -1486,76 +1652,62 @@ namespace SmartClassAssigner
             {
                 Text = "표준 엑셀 양식 다운로드 (.xlsx)",
                 Theme = Button3DTheme.Mint,
-                Size = new Size(260, 38)
+                Font = new Font("Malgun Gothic", 13f, FontStyle.Bold),
+                Size = new Size(330, 48)
             };
             btnTemplate.Click += (s, e) => DownloadSampleExcel();
 
             Action updateBannerLayout = () =>
             {
-                int totalBtnW = btnMock.Width + 15 + btnTemplate.Width;
-                int startX = Math.Max(20, (banner.ClientSize.Width - totalBtnW) / 2);
-                btnMock.Location = new Point(startX, 65);
-                btnTemplate.Location = new Point(startX + btnMock.Width + 15, 65);
-
-                bTitle.Location = new Point(Math.Max(20, (banner.ClientSize.Width - bTitle.PreferredWidth) / 2), 12);
-                bDesc.Location = new Point(Math.Max(20, (banner.ClientSize.Width - bDesc.PreferredWidth) / 2), 36);
+                bTitle.Location = new Point(Math.Max(20, (banner.Width - bTitle.PreferredWidth) / 2), 16);
+                bDesc.Location = new Point(Math.Max(20, (banner.Width - bDesc.PreferredWidth) / 2), 46);
+                int totalBtnW = btnMock.Width + 18 + btnTemplate.Width;
+                int startX = Math.Max(20, (banner.Width - totalBtnW) / 2);
+                btnMock.Location = new Point(startX, 80);
+                btnTemplate.Location = new Point(startX + btnMock.Width + 18, 80);
             };
-
             banner.Resize += (s, e) => updateBannerLayout();
             banner.Controls.AddRange(new Control[] { bTitle, bDesc, btnMock, btnTemplate });
             updateBannerLayout();
 
-            // 업로드 드롭 박스 카드
+            // 2. 업로드 드롭 박스 카드
             ModernCard uploadCard = new ModernCard
             {
-                Dock = DockStyle.Top,
-                Height = 155,
-                Radius = 16,
-                Margin = new Padding(0, 15, 0, 15)
+                Location = new Point(0, 160),
+                Size = new Size(1080, 195),
+                Radius = 16
             };
 
-            Panel dropArea = new Panel
+            dropArea = new Panel
             {
                 Dock = DockStyle.Fill,
-                BackColor = Color.FromArgb(240, 253, 244),
-                AllowDrop = true
+                BackColor = Color.FromArgb(240, 253, 244)
             };
             dropArea.Paint += (s, e) =>
             {
                 e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
                 Rectangle r = new Rectangle(1, 1, dropArea.Width - 3, dropArea.Height - 3);
-                using (GraphicsPath p = GraphicsHelper.GetRoundedPath(r, 12))
-                using (Pen pen = new Pen(Color.FromArgb(167, 243, 208), 2f))
+                using (GraphicsPath p = GraphicsHelper.GetRoundedPath(r, 14))
+                using (Pen pen = new Pen(isDropAreaHovered ? Color.FromArgb(5, 150, 105) : Color.FromArgb(167, 243, 208), isDropAreaHovered ? 2.5f : 2f))
                 {
                     pen.DashStyle = DashStyle.Dash;
                     e.Graphics.DrawPath(pen, p);
                 }
             };
-            dropArea.DragEnter += (s, e) =>
-            {
-                if (e.Data.GetDataPresent(DataFormats.FileDrop)) e.Effect = DragDropEffects.Copy;
-            };
-            dropArea.DragDrop += (s, e) =>
-            {
-                string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
-                if (files != null && files.Length > 0) LoadExcel(files[0]);
-            };
 
             lblFileStatus = new Label
             {
                 Text = "파일을 여기로 드래그 앤 드롭하거나 컴퓨터에서 선택하세요",
-                Font = new Font("Malgun Gothic", 11.5f, FontStyle.Bold),
-                ForeColor = Color.FromArgb(51, 65, 85),
-                Location = new Point(30, 22),
+                Font = new Font("Malgun Gothic", 16f, FontStyle.Bold),
+                ForeColor = Color.FromArgb(30, 41, 59),
                 AutoSize = true,
                 BackColor = Color.Transparent
             };
             Label uHint = new Label
             {
-                Text = "[반, 번호, 이름, 성별, 국어, 수학, 합계, 석차, 비고] 컬럼 · 모든 시트 자동 추출",
-                Font = new Font("Malgun Gothic", 9f),
+                Text = "[번호, 이름, 성별, 국어, 수학, 합계, 석차, 비고] 엑셀(.xlsx) 또는 CSV 파일 지원 · 각 반 시트 자동 인식",
+                Font = new Font("Malgun Gothic", 12.5f),
                 ForeColor = Color.FromArgb(100, 116, 139),
-                Location = new Point(30, 50),
                 AutoSize = true,
                 BackColor = Color.Transparent
             };
@@ -1563,9 +1715,8 @@ namespace SmartClassAssigner
             {
                 Text = "컴퓨터에서 파일 찾기",
                 Theme = Button3DTheme.White,
-                Font = new Font("Malgun Gothic", 9.5f, FontStyle.Bold),
-                Location = new Point(30, 84),
-                Size = new Size(160, 36)
+                Font = new Font("Malgun Gothic", 13.5f, FontStyle.Bold),
+                Size = new Size(260, 48)
             };
             btnSelectFile.Click += (s, e) =>
             {
@@ -1573,32 +1724,40 @@ namespace SmartClassAssigner
                 if (ofd.ShowDialog() == DialogResult.OK) LoadExcel(ofd.FileName);
             };
 
+            Action updateDropLayout = () =>
+            {
+                lblFileStatus.Location = new Point(Math.Max(20, (dropArea.Width - lblFileStatus.PreferredWidth) / 2), 22);
+                uHint.Location = new Point(Math.Max(20, (dropArea.Width - uHint.PreferredWidth) / 2), 60);
+                btnSelectFile.Location = new Point((dropArea.Width - btnSelectFile.Width) / 2, 110);
+            };
+            dropArea.Resize += (s, e) => updateDropLayout();
             dropArea.Controls.AddRange(new Control[] { lblFileStatus, uHint, btnSelectFile });
             uploadCard.Controls.Add(dropArea);
+            updateDropLayout();
 
-            // 설정 카드 영역 (2분할: 45% / 55%)
+            // 3. 설정 카드 영역
             TableLayoutPanel settingsTable = new TableLayoutPanel
             {
-                Dock = DockStyle.Top,
-                Height = 185,
+                Location = new Point(0, 370),
+                Size = new Size(1080, 240),
                 ColumnCount = 2,
                 RowCount = 1,
                 BackColor = Color.FromArgb(248, 250, 252)
             };
-            settingsTable.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 45));
-            settingsTable.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 55));
+            settingsTable.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 48));
+            settingsTable.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 52));
 
             // 카드 1: 배정 성적 기준
-            ModernCard cardScore = new ModernCard { Dock = DockStyle.Fill, Radius = 14, Margin = new Padding(0, 15, 10, 0) };
-            Label scTitle = new Label { Text = "배정 성적 기준", Font = new Font("Malgun Gothic", 12.5f, FontStyle.Bold), ForeColor = Color.FromArgb(30, 41, 59), Location = new Point(16, 14), AutoSize = true, BackColor = Color.Transparent };
+            ModernCard cardScore = new ModernCard { Dock = DockStyle.Fill, Radius = 16, Margin = new Padding(0, 0, 10, 0) };
+            Label scTitle = new Label { Text = "배정 성적 기준", Font = new Font("Malgun Gothic", 15.5f, FontStyle.Bold), ForeColor = Color.FromArgb(30, 41, 59), Location = new Point(22, 18), AutoSize = true, BackColor = Color.Transparent };
 
             btnScoreRank = new Button3D
             {
                 Text = "석차 기준\n(1등이 우수)",
                 Theme = Button3DTheme.SelectedMint,
-                Font = new Font("Malgun Gothic", 10.5f, FontStyle.Bold),
-                Location = new Point(16, 50),
-                Size = new Size(220, 92)
+                Font = new Font("Malgun Gothic", 13.5f, FontStyle.Bold),
+                Location = new Point(22, 65),
+                Size = new Size(225, 135)
             };
             btnScoreRank.Click += (s, e) => SetScoreType("rank");
 
@@ -1606,39 +1765,39 @@ namespace SmartClassAssigner
             {
                 Text = "합계 점수 기준\n(총점 높은 순)",
                 Theme = Button3DTheme.White,
-                Font = new Font("Malgun Gothic", 10.5f, FontStyle.Bold),
-                Location = new Point(246, 50),
-                Size = new Size(220, 92)
+                Font = new Font("Malgun Gothic", 13.5f, FontStyle.Bold),
+                Location = new Point(258, 65),
+                Size = new Size(225, 135)
             };
             btnScoreTotal.Click += (s, e) => SetScoreType("score");
 
             cardScore.Controls.AddRange(new Control[] { scTitle, btnScoreRank, btnScoreTotal });
 
             // 카드 2: 진급반 번호 부여 방식
-            ModernCard cardNum = new ModernCard { Dock = DockStyle.Fill, Radius = 14, Margin = new Padding(10, 15, 0, 0) };
-            Label nmTitle = new Label { Text = "진급반 번호 부여 방식", Font = new Font("Malgun Gothic", 12.5f, FontStyle.Bold), ForeColor = Color.FromArgb(30, 41, 59), Location = new Point(16, 14), AutoSize = true, BackColor = Color.Transparent };
+            ModernCard cardNum = new ModernCard { Dock = DockStyle.Fill, Radius = 16, Margin = new Padding(10, 0, 0, 0) };
+            Label nmTitle = new Label { Text = "진급반 번호 부여 방식", Font = new Font("Malgun Gothic", 15.5f, FontStyle.Bold), ForeColor = Color.FromArgb(30, 41, 59), Location = new Point(22, 18), AutoSize = true, BackColor = Color.Transparent };
 
-            Panel pnlRuleBadge = new Panel { Location = new Point(470, 16), Size = new Size(110, 24), BackColor = Color.FromArgb(236, 253, 245) };
+            Panel pnlRuleBadge = new Panel { Location = new Point(385, 20), Size = new Size(150, 28), BackColor = Color.FromArgb(236, 253, 245) };
             pnlRuleBadge.Paint += (s, e) =>
             {
                 e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
                 Rectangle r = new Rectangle(0, 0, pnlRuleBadge.Width - 1, pnlRuleBadge.Height - 1);
-                using (GraphicsPath p = GraphicsHelper.GetRoundedPath(r, 10))
+                using (GraphicsPath p = GraphicsHelper.GetRoundedPath(r, 12))
                 using (Pen pen = new Pen(Color.FromArgb(167, 243, 208), 1.2f)) e.Graphics.DrawPath(pen, p);
             };
-            Label lblRuleBadge = new Label { Text = "새 학급 번호 규칙", Font = new Font("Malgun Gothic", 8f, FontStyle.Bold), ForeColor = Color.FromArgb(6, 95, 70), Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleCenter, BackColor = Color.Transparent };
+            Label lblRuleBadge = new Label { Text = "새 학급 번호 규칙", Font = new Font("Malgun Gothic", 10.5f, FontStyle.Bold), ForeColor = Color.FromArgb(6, 95, 70), Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleCenter, BackColor = Color.Transparent };
             pnlRuleBadge.Controls.Add(lblRuleBadge);
 
-            btnNumNameAll = new Button3D { Text = "남녀 무관 이름순 (1~N번)", Theme = Button3DTheme.SelectedMint, Font = new Font("Malgun Gothic", 9.5f, FontStyle.Bold), Location = new Point(16, 50), Size = new Size(255, 43) };
+            btnNumNameAll = new Button3D { Text = "남녀 무관 이름순 (1~N번)", Theme = Button3DTheme.SelectedMint, Font = new Font("Malgun Gothic", 12.5f, FontStyle.Bold), Location = new Point(22, 65), Size = new Size(250, 62) };
             btnNumNameAll.Click += (s, e) => SetNumberingMode("name_all");
 
-            btnNumSeparate = new Button3D { Text = "남 1번~ / 여 1번~ (각각)", Theme = Button3DTheme.White, Font = new Font("Malgun Gothic", 9.5f, FontStyle.Bold), Location = new Point(280, 50), Size = new Size(255, 43) };
+            btnNumSeparate = new Button3D { Text = "남 1번~ / 여 1번~ (각각)", Theme = Button3DTheme.White, Font = new Font("Malgun Gothic", 12.5f, FontStyle.Bold), Location = new Point(280, 65), Size = new Size(250, 62) };
             btnNumSeparate.Click += (s, e) => SetNumberingMode("separate");
 
-            btnNumContinuous = new Button3D { Text = "남 1번~ / 여 21번~", Theme = Button3DTheme.White, Font = new Font("Malgun Gothic", 9.5f, FontStyle.Bold), Location = new Point(16, 98), Size = new Size(255, 43) };
+            btnNumContinuous = new Button3D { Text = "남 1번~ / 여 21번~", Theme = Button3DTheme.White, Font = new Font("Malgun Gothic", 12.5f, FontStyle.Bold), Location = new Point(22, 138), Size = new Size(250, 62) };
             btnNumContinuous.Click += (s, e) => SetNumberingMode("continuous");
 
-            btnNumContinuousFemale = new Button3D { Text = "여 1번~ / 남 21번~", Theme = Button3DTheme.White, Font = new Font("Malgun Gothic", 9.5f, FontStyle.Bold), Location = new Point(280, 98), Size = new Size(255, 43) };
+            btnNumContinuousFemale = new Button3D { Text = "여 1번~ / 남 21번~", Theme = Button3DTheme.White, Font = new Font("Malgun Gothic", 12.5f, FontStyle.Bold), Location = new Point(280, 138), Size = new Size(250, 62) };
             btnNumContinuousFemale.Click += (s, e) => SetNumberingMode("continuous_female");
 
             cardNum.Controls.AddRange(new Control[] { nmTitle, pnlRuleBadge, btnNumNameAll, btnNumSeparate, btnNumContinuous, btnNumContinuousFemale });
@@ -1646,42 +1805,61 @@ namespace SmartClassAssigner
             settingsTable.Controls.Add(cardScore, 0, 0);
             settingsTable.Controls.Add(cardNum, 1, 0);
 
-            // 하단 이동 버튼 (3D Mint 버튼)
-            Panel bottomBar = new Panel { Dock = DockStyle.Bottom, Height = 65, BackColor = Color.FromArgb(248, 250, 252) };
+            // 4. 하단 이동 버튼
+            Panel bottomBar = new Panel { Location = new Point(0, 625), Size = new Size(1080, 65), BackColor = Color.Transparent };
             Button3D btnNext = new Button3D
             {
                 Text = "다음 단계: 반 설정 및 배정 실행 →",
                 Theme = Button3DTheme.Mint,
-                Font = new Font("Malgun Gothic", 11.5f, FontStyle.Bold),
-                Dock = DockStyle.Right,
-                Width = 290
+                Font = new Font("Malgun Gothic", 14.5f, FontStyle.Bold),
+                Location = new Point(1080 - 390, 4),
+                Size = new Size(390, 56)
             };
             btnNext.Click += (s, e) => ShowStep2();
             bottomBar.Controls.Add(btnNext);
 
-            Panel middleSpacer = new Panel { Dock = DockStyle.Top, Height = 15, BackColor = Color.Transparent };
-            Panel topSpacer = new Panel { Dock = DockStyle.Top, Height = 15, BackColor = Color.Transparent };
+            centerContainer.Controls.AddRange(new Control[] { banner, uploadCard, settingsTable, bottomBar });
 
-            step1Panel.Controls.Add(bottomBar);
-            step1Panel.Controls.Add(settingsTable);
-            step1Panel.Controls.Add(middleSpacer);
-            step1Panel.Controls.Add(uploadCard);
-            step1Panel.Controls.Add(topSpacer);
-            step1Panel.Controls.Add(banner);
+            Action centerLayout = () =>
+            {
+                int left = Math.Max(20, (step1Panel.ClientSize.Width - centerContainer.Width) / 2);
+                centerContainer.Location = new Point(left, 50);
+            };
+            step1Panel.Resize += (s, e) => centerLayout();
+            step1Panel.Controls.Add(centerContainer);
+            centerLayout();
         }
 
         private void CreateStep2Panel()
         {
-            step2Panel = new Panel { Dock = DockStyle.Fill, Padding = new Padding(25, 20, 25, 25), BackColor = Color.FromArgb(248, 250, 252), AutoScroll = true, Visible = false };
+            step2Panel = new Panel
+            {
+                Dock = DockStyle.Fill,
+                BackColor = Color.FromArgb(248, 250, 252),
+                AutoScroll = true,
+                Visible = false
+            };
 
-            ModernCard card = new ModernCard { Dock = DockStyle.Fill, Radius = 16 };
+            Panel centerContainer = new Panel
+            {
+                Width = 1080,
+                Height = 730,
+                BackColor = Color.Transparent
+            };
+
+            ModernCard card = new ModernCard
+            {
+                Location = new Point(0, 0),
+                Size = new Size(1080, 620),
+                Radius = 16
+            };
 
             Label title = new Label
             {
                 Text = "진급 학급 및 배정 규칙 설정",
-                Font = new Font("Malgun Gothic", 14f, FontStyle.Bold),
+                Font = new Font("Malgun Gothic", 18.5f, FontStyle.Bold),
                 ForeColor = Color.FromArgb(30, 41, 59),
-                Location = new Point(20, 20),
+                Location = new Point(26, 24),
                 AutoSize = true,
                 BackColor = Color.Transparent
             };
@@ -1689,9 +1867,9 @@ namespace SmartClassAssigner
             lblStep2Info = new Label
             {
                 Text = "업로드된 학생 명단 정보를 기반으로 진급반을 설정합니다.",
-                Font = new Font("Malgun Gothic", 10f),
+                Font = new Font("Malgun Gothic", 13.5f),
                 ForeColor = Color.FromArgb(71, 85, 105),
-                Location = new Point(20, 52),
+                Location = new Point(26, 64),
                 AutoSize = true,
                 BackColor = Color.Transparent
             };
@@ -1699,9 +1877,9 @@ namespace SmartClassAssigner
             Label lblNewClass = new Label
             {
                 Text = "새로운 반 명칭 (쉼표로 구분하여 입력):",
-                Font = new Font("Malgun Gothic", 11f, FontStyle.Bold),
+                Font = new Font("Malgun Gothic", 14.5f, FontStyle.Bold),
                 ForeColor = Color.FromArgb(30, 41, 59),
-                Location = new Point(20, 95),
+                Location = new Point(26, 108),
                 AutoSize = true,
                 BackColor = Color.Transparent
             };
@@ -1709,16 +1887,16 @@ namespace SmartClassAssigner
             txtNewClasses = new TextBox
             {
                 Text = "가반, 나반, 다반, 라반",
-                Font = new Font("Malgun Gothic", 12f, FontStyle.Bold),
-                Location = new Point(20, 125),
-                Width = 480
+                Font = new Font("Malgun Gothic", 15f, FontStyle.Bold),
+                Location = new Point(26, 142),
+                Width = 560
             };
 
             // 7대 배정 황금률 안내 박스
             ModernCard ruleBox = new ModernCard
             {
-                Location = new Point(20, 180),
-                Size = new Size(820, 260),
+                Location = new Point(26, 200),
+                Size = new Size(1028, 380),
                 Radius = 14,
                 BackColor = Color.FromArgb(240, 253, 244),
                 BorderColor = Color.FromArgb(167, 243, 208)
@@ -1727,9 +1905,9 @@ namespace SmartClassAssigner
             Label rbTitle = new Label
             {
                 Text = "7대 스마트 학급편성 제약 조건 자동 적용:",
-                Font = new Font("Malgun Gothic", 11f, FontStyle.Bold),
+                Font = new Font("Malgun Gothic", 14.5f, FontStyle.Bold),
                 ForeColor = Color.FromArgb(6, 95, 70),
-                Location = new Point(18, 15),
+                Location = new Point(22, 20),
                 AutoSize = true,
                 BackColor = Color.Transparent
             };
@@ -1745,34 +1923,33 @@ namespace SmartClassAssigner
                 "7. 선택한 번호 체계 자동 부여 (남녀무관 이름순, 남1~/여21~, 여1~/남21~, 남1~/여1~)"
             };
 
-            int yOffset = 45;
+            int yOffset = 58;
             foreach (var rText in ruleTexts)
             {
                 Label lblR = new Label
                 {
                     Text = rText,
-                    Font = new Font("Malgun Gothic", 9.5f),
+                    Font = new Font("Malgun Gothic", 12.5f),
                     ForeColor = Color.FromArgb(4, 120, 87),
-                    Location = new Point(20, yOffset),
+                    Location = new Point(24, yOffset),
                     AutoSize = true,
                     BackColor = Color.Transparent
                 };
                 ruleBox.Controls.Add(lblR);
-                yOffset += 28;
+                yOffset += 42;
             }
 
             ruleBox.Controls.Add(rbTitle);
-
             card.Controls.AddRange(new Control[] { title, lblStep2Info, lblNewClass, txtNewClasses, ruleBox });
 
-            Panel bottomBar = new Panel { Dock = DockStyle.Bottom, Height = 65, BackColor = Color.FromArgb(248, 250, 252) };
+            Panel bottomBar = new Panel { Location = new Point(0, 635), Size = new Size(1080, 65), BackColor = Color.Transparent };
             Button3D btnBack = new Button3D
             {
                 Text = "← 이전 화면 (설정 수정)",
                 Theme = Button3DTheme.White,
-                Font = new Font("Malgun Gothic", 10.5f, FontStyle.Bold),
-                Dock = DockStyle.Left,
-                Width = 210
+                Font = new Font("Malgun Gothic", 13.5f, FontStyle.Bold),
+                Location = new Point(0, 6),
+                Size = new Size(270, 54)
             };
             btnBack.Click += (s, e) => ShowStep1();
 
@@ -1780,30 +1957,44 @@ namespace SmartClassAssigner
             {
                 Text = "스마트 학급 배정 실행하기",
                 Theme = Button3DTheme.Mint,
-                Font = new Font("Malgun Gothic", 11.5f, FontStyle.Bold),
-                Dock = DockStyle.Right,
-                Width = 280
+                Font = new Font("Malgun Gothic", 14.5f, FontStyle.Bold),
+                Location = new Point(1080 - 360, 6),
+                Size = new Size(360, 54)
             };
             btnRun.Click += (s, e) => RunAssignment();
 
             bottomBar.Controls.AddRange(new Control[] { btnBack, btnRun });
 
-            step2Panel.Controls.Add(bottomBar);
-            step2Panel.Controls.Add(card);
+            centerContainer.Controls.AddRange(new Control[] { card, bottomBar });
+
+            Action centerLayout = () =>
+            {
+                int left = Math.Max(20, (step2Panel.ClientSize.Width - centerContainer.Width) / 2);
+                centerContainer.Location = new Point(left, 50);
+            };
+            step2Panel.Resize += (s, e) => centerLayout();
+            step2Panel.Controls.Add(centerContainer);
+            centerLayout();
         }
 
         private void CreateStep3Panel()
         {
-            step3Panel = new Panel { Dock = DockStyle.Fill, Padding = new Padding(25, 20, 25, 25), BackColor = Color.FromArgb(248, 250, 252), Visible = false };
+            step3Panel = new Panel
+            {
+                Dock = DockStyle.Fill,
+                Padding = new Padding(28, 30, 28, 25),
+                BackColor = Color.FromArgb(248, 250, 252),
+                Visible = false
+            };
 
             // 상단 액션 바
-            Panel topBar = new Panel { Dock = DockStyle.Top, Height = 55, BackColor = Color.FromArgb(248, 250, 252) };
+            Panel topBar = new Panel { Dock = DockStyle.Top, Height = 65, BackColor = Color.FromArgb(248, 250, 252) };
             Label title = new Label
             {
                 Text = "배정 완료 대시보드",
-                Font = new Font("Malgun Gothic", 14f, FontStyle.Bold),
+                Font = new Font("Malgun Gothic", 18f, FontStyle.Bold),
                 ForeColor = Color.FromArgb(30, 41, 59),
-                Location = new Point(0, 10),
+                Location = new Point(0, 12),
                 AutoSize = true
             };
 
@@ -1811,9 +2002,9 @@ namespace SmartClassAssigner
             {
                 Text = "첫 화면으로 돌아가기",
                 Theme = Button3DTheme.White,
-                Font = new Font("Malgun Gothic", 10f, FontStyle.Bold),
-                Location = new Point(540, 6),
-                Size = new Size(190, 40)
+                Font = new Font("Malgun Gothic", 13f, FontStyle.Bold),
+                Location = new Point(480, 8),
+                Size = new Size(230, 48)
             };
             btnHome.Click += (s, e) => ShowStep1();
 
@@ -1821,24 +2012,31 @@ namespace SmartClassAssigner
             {
                 Text = "특이사항 컬러 반영 전체 엑셀 다운로드 (.xlsx)",
                 Theme = Button3DTheme.Mint,
-                Font = new Font("Malgun Gothic", 10.5f, FontStyle.Bold),
-                Location = new Point(745, 6),
-                Size = new Size(390, 40)
+                Font = new Font("Malgun Gothic", 13.5f, FontStyle.Bold),
+                Location = new Point(705, 8),
+                Size = new Size(480, 48)
             };
             btnExport.Click += (s, e) => ExportExcel();
 
+            Action updateTopBarLayout = () =>
+            {
+                btnExport.Location = new Point(topBar.ClientSize.Width - btnExport.Width, 8);
+                btnHome.Location = new Point(btnExport.Left - btnHome.Width - 14, 8);
+            };
+            topBar.Resize += (s, e) => updateTopBarLayout();
             topBar.Controls.AddRange(new Control[] { title, btnHome, btnExport });
+            updateTopBarLayout();
 
             // 5개 핵심 통계 위젯 카드 바
-            statCardsPanel = new Panel { Dock = DockStyle.Top, Height = 95, BackColor = Color.FromArgb(248, 250, 252) };
+            statCardsPanel = new Panel { Dock = DockStyle.Top, Height = 115, BackColor = Color.FromArgb(248, 250, 252) };
 
             // 반 선택 탭 버튼 영역
             classTabPanel = new FlowLayoutPanel
             {
                 Dock = DockStyle.Top,
-                Height = 45,
+                Height = 56,
                 BackColor = Color.FromArgb(248, 250, 252),
-                Padding = new Padding(0, 4, 0, 0)
+                Padding = new Padding(0, 6, 0, 0)
             };
 
             // 결과 그리드 카드
@@ -1854,16 +2052,16 @@ namespace SmartClassAssigner
                 ReadOnly = true,
                 SelectionMode = DataGridViewSelectionMode.FullRowSelect,
                 EnableHeadersVisualStyles = false,
-                RowTemplate = { Height = 34 },
-                Font = new Font("Malgun Gothic", 9.5f),
+                RowTemplate = { Height = 42 },
+                Font = new Font("Malgun Gothic", 12f),
                 GridColor = Color.FromArgb(226, 232, 240)
             };
 
             gridResult.ColumnHeadersDefaultCellStyle.BackColor = Color.FromArgb(241, 245, 249);
             gridResult.ColumnHeadersDefaultCellStyle.ForeColor = Color.FromArgb(51, 65, 85);
-            gridResult.ColumnHeadersDefaultCellStyle.Font = new Font("Malgun Gothic", 9.5f, FontStyle.Bold);
+            gridResult.ColumnHeadersDefaultCellStyle.Font = new Font("Malgun Gothic", 12.5f, FontStyle.Bold);
             gridResult.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
-            gridResult.ColumnHeadersHeight = 38;
+            gridResult.ColumnHeadersHeight = 46;
 
             gridResult.Columns.Add("prevClass", "기존반");
             gridResult.Columns.Add("prevNumber", "기존번호");
@@ -1874,13 +2072,13 @@ namespace SmartClassAssigner
             gridResult.Columns.Add("assignedNumber", "새 번호");
             gridResult.Columns.Add("remarks", "비고 (특이사항 뱃지)");
 
-            gridResult.Columns[0].Width = 75;
-            gridResult.Columns[1].Width = 80;
-            gridResult.Columns[2].Width = 95;
-            gridResult.Columns[3].Width = 70;
-            gridResult.Columns[4].Width = 70;
-            gridResult.Columns[5].Width = 85;
-            gridResult.Columns[6].Width = 85;
+            gridResult.Columns[0].Width = 95;
+            gridResult.Columns[1].Width = 100;
+            gridResult.Columns[2].Width = 120;
+            gridResult.Columns[3].Width = 85;
+            gridResult.Columns[4].Width = 85;
+            gridResult.Columns[5].Width = 110;
+            gridResult.Columns[6].Width = 110;
             gridResult.Columns[7].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
 
             for (int i = 0; i < 7; i++) gridResult.Columns[i].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
@@ -1899,8 +2097,8 @@ namespace SmartClassAssigner
                         g.SmoothingMode = SmoothingMode.AntiAlias;
 
                         string[] tokens = text.Split(new char[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
-                        int currentX = e.CellBounds.X + 8;
-                        int badgeY = e.CellBounds.Y + (e.CellBounds.Height - 22) / 2;
+                        int currentX = e.CellBounds.X + 10;
+                        int badgeY = e.CellBounds.Y + (e.CellBounds.Height - 28) / 2;
 
                         foreach (var tok in tokens)
                         {
@@ -1918,23 +2116,23 @@ namespace SmartClassAssigner
                             else if (tag.Contains("분리요청")) { pillBg = Color.FromArgb(233, 213, 255); pillFg = Color.FromArgb(107, 33, 168); pillBorder = Color.FromArgb(216, 180, 254); }
                             else if (tag.Contains("운동부")) { pillBg = Color.FromArgb(187, 247, 208); pillFg = Color.FromArgb(22, 101, 52); pillBorder = Color.FromArgb(134, 239, 172); }
 
-                            using (Font bf = new Font("Malgun Gothic", 8.5f, FontStyle.Bold))
+                            using (Font bf = new Font("Malgun Gothic", 11f, FontStyle.Bold))
                             {
                                 SizeF sz = g.MeasureString(tag, bf);
-                                int badgeW = (int)sz.Width + 14;
-                                Rectangle badgeRect = new Rectangle(currentX, badgeY, badgeW, 22);
+                                int badgeW = (int)sz.Width + 18;
+                                Rectangle badgeRect = new Rectangle(currentX, badgeY, badgeW, 28);
 
-                                using (GraphicsPath bp = GraphicsHelper.GetRoundedPath(badgeRect, 6))
+                                using (GraphicsPath bp = GraphicsHelper.GetRoundedPath(badgeRect, 8))
                                 {
                                     using (SolidBrush pbb = new SolidBrush(pillBg)) g.FillPath(pbb, bp);
-                                    using (Pen pbp = new Pen(pillBorder, 1f)) g.DrawPath(pbp, bp);
+                                    using (Pen pbp = new Pen(pillBorder, 1.2f)) g.DrawPath(pbp, bp);
                                     using (SolidBrush pfb = new SolidBrush(pillFg))
                                     {
                                         StringFormat bsf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
                                         g.DrawString(tag, bf, pfb, badgeRect, bsf);
                                     }
                                 }
-                                currentX += badgeW + 6;
+                                currentX += badgeW + 8;
                             }
                         }
                     }
@@ -2041,7 +2239,7 @@ namespace SmartClassAssigner
 
                 if (rawRecords.Count == 0)
                 {
-                    MessageBox.Show("엑셀 파일에서 학생 명단을 찾을 수 없습니다.\n[반, 번호, 이름, 성별, ...] 등의 컬럼명이 포함되어 있는지 확인해주세요.", "안내", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    MessageBox.Show("엑셀 파일에서 학생 명단을 찾을 수 없습니다.\n[번호, 이름, 성별, 국어, 수학, 합계, 석차, 비고] 등의 컬럼명이 포함되어 있는지 확인해주세요.", "안내", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
 
@@ -2128,23 +2326,45 @@ namespace SmartClassAssigner
 
         private void DownloadSampleExcel()
         {
-            SaveFileDialog sfd = new SaveFileDialog { Filter = "Excel Files (*.xlsx)|*.xlsx", FileName = "학급편성_업로드용_표준양식.xlsx" };
+            SaveFileDialog sfd = new SaveFileDialog
+            {
+                Filter = "Excel Files (*.xlsx)|*.xlsx",
+                FileName = "학급편성_업로드용_표준양식.xlsx"
+            };
             if (sfd.ShowDialog() == DialogResult.OK)
             {
                 var sample = new Dictionary<string, List<StudentRecord>>();
                 sample.Add("1반", new List<StudentRecord>
                 {
-                    new StudentRecord { PrevClass = "1반", PrevNumber = "1", Name = "김민준", Gender = "남", Rank = 1, Remarks = "생활지도, 분리요청(이도윤)" },
-                    new StudentRecord { PrevClass = "1반", PrevNumber = "2", Name = "이서아", Gender = "여", Rank = 2, Remarks = "특수아동" },
-                    new StudentRecord { PrevClass = "1반", PrevNumber = "3", Name = "박서준", Gender = "남", Rank = 3, Remarks = "다문화" }
+                    new StudentRecord { PrevClass = "1반", PrevNumber = "1", Name = "김민준", Gender = "남", Score = 187, Rank = 1, Remarks = "생활지도, 분리요청(이도윤)" },
+                    new StudentRecord { PrevClass = "1반", PrevNumber = "2", Name = "이서아", Gender = "여", Score = 186, Rank = 2, Remarks = "특수아동" },
+                    new StudentRecord { PrevClass = "1반", PrevNumber = "3", Name = "박서준", Gender = "남", Score = 173, Rank = 3, Remarks = "다문화" },
+                    new StudentRecord { PrevClass = "1반", PrevNumber = "4", Name = "김서윤", Gender = "여", Score = 162, Rank = 4, Remarks = "학습부진" }
                 });
                 sample.Add("2반", new List<StudentRecord>
                 {
-                    new StudentRecord { PrevClass = "2반", PrevNumber = "1", Name = "이도윤", Gender = "남", Rank = 1, Remarks = "분리요청(김민준)" },
-                    new StudentRecord { PrevClass = "2반", PrevNumber = "2", Name = "박지우", Gender = "여", Rank = 2, Remarks = "운동부" }
+                    new StudentRecord { PrevClass = "2반", PrevNumber = "1", Name = "이도윤", Gender = "남", Score = 188, Rank = 1, Remarks = "분리요청(김민준)" },
+                    new StudentRecord { PrevClass = "2반", PrevNumber = "2", Name = "박지우", Gender = "여", Score = 180, Rank = 2, Remarks = "운동부" },
+                    new StudentRecord { PrevClass = "2반", PrevNumber = "3", Name = "정예준", Gender = "남", Score = 172, Rank = 3, Remarks = "" },
+                    new StudentRecord { PrevClass = "2반", PrevNumber = "4", Name = "최하은", Gender = "여", Score = 158, Rank = 4, Remarks = "" }
                 });
-                ExcelManager.WriteStyledXlsx(sfd.FileName, sample);
-                MessageBox.Show("표준 엑셀 양식이 저장되었습니다:\n" + sfd.FileName, "저장 성공", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                sample.Add("3반", new List<StudentRecord>
+                {
+                    new StudentRecord { PrevClass = "3반", PrevNumber = "1", Name = "정시우", Gender = "남", Score = 193, Rank = 1, Remarks = "" },
+                    new StudentRecord { PrevClass = "3반", PrevNumber = "2", Name = "윤지호", Gender = "여", Score = 179, Rank = 2, Remarks = "" },
+                    new StudentRecord { PrevClass = "3반", PrevNumber = "3", Name = "임도현", Gender = "남", Score = 166, Rank = 3, Remarks = "" },
+                    new StudentRecord { PrevClass = "3반", PrevNumber = "4", Name = "송서현", Gender = "여", Score = 160, Rank = 4, Remarks = "" }
+                });
+                sample.Add("4반", new List<StudentRecord>
+                {
+                    new StudentRecord { PrevClass = "4반", PrevNumber = "1", Name = "강건우", Gender = "남", Score = 185, Rank = 1, Remarks = "" },
+                    new StudentRecord { PrevClass = "4반", PrevNumber = "2", Name = "한수아", Gender = "여", Score = 173, Rank = 2, Remarks = "" },
+                    new StudentRecord { PrevClass = "4반", PrevNumber = "3", Name = "배준서", Gender = "남", Score = 168, Rank = 3, Remarks = "" },
+                    new StudentRecord { PrevClass = "4반", PrevNumber = "4", Name = "신예은", Gender = "여", Score = 157, Rank = 4, Remarks = "" }
+                });
+
+                ExcelManager.WriteStyledXlsx(sfd.FileName, sample, isTemplate: true);
+                MessageBox.Show("표준 엑셀 양식이 저장되었습니다:\n" + sfd.FileName + "\n\n각 학급 시트(1반, 2반, 3반, 4반)에 '반' 항목 없이 [번호, 이름, 성별, 국어, 수학, 합계, 석차, 비고] 8개 컬럼으로 구성되어 있습니다.", "저장 성공", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
         }
 
@@ -2276,8 +2496,8 @@ namespace SmartClassAssigner
             {
                 Text = "전체 통합 명단 (" + totalStudents + "명)",
                 Theme = Button3DTheme.SelectedMint,
-                Size = new Size(185, 36),
-                Font = new Font("Malgun Gothic", 9f, FontStyle.Bold)
+                Size = new Size(240, 44),
+                Font = new Font("Malgun Gothic", 12.5f, FontStyle.Bold)
             };
             btnTabAll.Click += (s, e) => SwitchClassTab("전체통합", btnTabAll);
             classTabPanel.Controls.Add(btnTabAll);
@@ -2290,8 +2510,8 @@ namespace SmartClassAssigner
                 {
                     Text = string.Format("{0} ({1}명)", cName, count),
                     Theme = Button3DTheme.White,
-                    Size = new Size(130, 36),
-                    Font = new Font("Malgun Gothic", 9f, FontStyle.Bold)
+                    Size = new Size(160, 44),
+                    Font = new Font("Malgun Gothic", 12.5f, FontStyle.Bold)
                 };
                 btnTabClass.Click += (s, e) => SwitchClassTab(cName, btnTabClass);
                 classTabPanel.Controls.Add(btnTabClass);
@@ -2347,22 +2567,22 @@ namespace SmartClassAssigner
                 if (s.Gender == "남")
                 {
                     genderCell.Style.ForeColor = Color.FromArgb(37, 99, 235);
-                    genderCell.Style.Font = new Font("Malgun Gothic", 9.5f, FontStyle.Bold);
+                    genderCell.Style.Font = new Font("Malgun Gothic", 12f, FontStyle.Bold);
                 }
                 else
                 {
                     genderCell.Style.ForeColor = Color.FromArgb(219, 39, 119);
-                    genderCell.Style.Font = new Font("Malgun Gothic", 9.5f, FontStyle.Bold);
+                    genderCell.Style.Font = new Font("Malgun Gothic", 12f, FontStyle.Bold);
                 }
 
                 // 진급반 및 새번호 강조
                 var clsCell = gridResult.Rows[rIdx].Cells[5];
                 clsCell.Style.ForeColor = Color.FromArgb(5, 150, 105);
-                clsCell.Style.Font = new Font("Malgun Gothic", 10f, FontStyle.Bold);
+                clsCell.Style.Font = new Font("Malgun Gothic", 12.5f, FontStyle.Bold);
 
                 var numCell = gridResult.Rows[rIdx].Cells[6];
                 numCell.Style.ForeColor = Color.FromArgb(5, 150, 105);
-                numCell.Style.Font = new Font("Malgun Gothic", 10f, FontStyle.Bold);
+                numCell.Style.Font = new Font("Malgun Gothic", 12.5f, FontStyle.Bold);
             }
         }
 
