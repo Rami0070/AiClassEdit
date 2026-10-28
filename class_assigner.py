@@ -514,12 +514,20 @@ class SmartClassApp(tk.Tk):
 
     def create_widgets(self):
         # 상단 네비게이션 헤더
-        header_frame = tk.Frame(self, bg='#FFFFFF', height=76, bd=1, relief='solid', highlightthickness=0)
+        header_frame = tk.Frame(self, bg='#FFFFFF', height=88, bd=1, relief='solid', highlightthickness=0)
         header_frame.pack(fill='x', side='top')
         header_frame.pack_propagate(False)
 
-        title_label = tk.Label(header_frame, text="스마트 학급편성 시스템", font=('Malgun Gothic', 19, 'bold'), bg='#FFFFFF', fg='#1E293B')
-        title_label.place(relx=0.5, rely=0.5, anchor='center')
+        # 타이틀 박스 (디자인적 테두리 및 24pt 굵은 글씨)
+        title_box = tk.Frame(header_frame, bg='#FFFFFF', bd=1, relief='solid', highlightthickness=1, highlightbackground='#CBD5E1', padx=32, pady=10)
+        title_box.place(relx=0.5, rely=0.5, anchor='center')
+
+        title_label = tk.Label(title_box, text="스마트 학급편성 시스템", font=('Malgun Gothic', 24, 'bold'), bg='#FFFFFF', fg='#0F172A')
+        title_label.pack()
+
+        # 하단 에메랄드 포인트 라인
+        accent_bar = tk.Frame(title_box, bg='#10B981', height=3)
+        accent_bar.pack(fill='x', pady=(4, 0))
 
         # 메인 컨테이너 (단계별 뷰 전환)
         self.main_container = tk.Frame(self, bg='#F8FAFC')

@@ -1519,6 +1519,82 @@ namespace SmartClassAssigner
         }
     }
 
+    public class HeaderTitleBox : Panel
+    {
+        public string TitleText { get; set; }
+
+        public HeaderTitleBox()
+        {
+            SetStyle(ControlStyles.UserPaint | ControlStyles.AllPaintingInWmPaint |
+                     ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw, true);
+            BackColor = Color.White;
+            TitleText = "스마트 학급편성 시스템";
+            Font = new Font("Malgun Gothic", 24f, FontStyle.Bold);
+            Height = 64;
+            Width = 470;
+        }
+
+        protected override void OnPaint(PaintEventArgs pevent)
+        {
+            Graphics g = pevent.Graphics;
+            g.SmoothingMode = SmoothingMode.AntiAlias;
+            g.PixelOffsetMode = PixelOffsetMode.HighQuality;
+            g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
+
+            // 부모 배경색 채우기
+            Color parentBg = (Parent != null) ? Parent.BackColor : Color.White;
+            using (SolidBrush pb = new SolidBrush(parentBg))
+            {
+                g.FillRectangle(pb, ClientRectangle);
+            }
+
+            // 1. 은은한 입체 그림자
+            Rectangle shadowRect = new Rectangle(1, 2, Width - 3, Height - 3);
+            using (GraphicsPath sp = GraphicsHelper.GetRoundedPath(shadowRect, 16))
+            using (SolidBrush sb = new SolidBrush(Color.FromArgb(238, 242, 246)))
+            {
+                g.FillPath(sb, sp);
+            }
+
+            // 2. 메인 카드 본체: 프리미엄 소프트 그라데이션
+            Rectangle mainRect = new Rectangle(1, 1, Width - 3, Height - 4);
+            using (GraphicsPath mp = GraphicsHelper.GetRoundedPath(mainRect, 16))
+            {
+                using (LinearGradientBrush lgb = new LinearGradientBrush(mainRect,
+                    Color.FromArgb(255, 255, 255),
+                    Color.FromArgb(248, 250, 252),
+                    LinearGradientMode.Vertical))
+                {
+                    g.FillPath(lgb, mp);
+                }
+
+                // 세련된 외곽 테두리 선
+                using (Pen bp = new Pen(Color.FromArgb(203, 213, 225), 1.5f))
+                {
+                    g.DrawPath(bp, mp);
+                }
+
+                // 하단 에메랄드 시그니처 포인트 라인
+                using (Pen ep = new Pen(Color.FromArgb(16, 185, 129), 2.5f))
+                {
+                    g.DrawLine(ep, 32, Height - 4, Width - 32, Height - 4);
+                }
+            }
+
+            // 3. 타이틀 텍스트 렌더링 (24pt 굵은 글씨, 완벽한 중앙 배치)
+            StringFormat sf = new StringFormat
+            {
+                Alignment = StringAlignment.Center,
+                LineAlignment = StringAlignment.Center
+            };
+            Rectangle textRect = new Rectangle(0, 0, Width, Height - 4);
+            using (SolidBrush tb = new SolidBrush(Color.FromArgb(15, 23, 42)))
+            {
+                g.DrawString(TitleText, Font, tb, textRect, sf);
+            }
+        }
+    }
+
     // =========================================================
     // 6. 네이티브 GUI 메인 윈도우 (WinForms)
     // =========================================================
@@ -1678,7 +1754,7 @@ namespace SmartClassAssigner
             headerPanel = new Panel
             {
                 Dock = DockStyle.Top,
-                Height = 78,
+                Height = 88,
                 BackColor = Color.White
             };
             headerPanel.Paint += (s, e) =>
@@ -1689,23 +1765,17 @@ namespace SmartClassAssigner
                 }
             };
 
-            Label lblTitle = new Label
-            {
-                Text = "스마트 학급편성 시스템",
-                Font = new Font("Malgun Gothic", 19f, FontStyle.Bold),
-                ForeColor = Color.FromArgb(30, 41, 59),
-                AutoSize = true
-            };
+            HeaderTitleBox titleBox = new HeaderTitleBox();
 
             Action centerHeaderTitle = () =>
             {
-                lblTitle.Location = new Point(
-                    Math.Max(20, (headerPanel.ClientSize.Width - lblTitle.PreferredWidth) / 2),
-                    (headerPanel.ClientSize.Height - lblTitle.PreferredHeight) / 2
+                titleBox.Location = new Point(
+                    Math.Max(20, (headerPanel.ClientSize.Width - titleBox.Width) / 2),
+                    (headerPanel.ClientSize.Height - titleBox.Height) / 2
                 );
             };
             headerPanel.Resize += (s, e) => centerHeaderTitle();
-            headerPanel.Controls.Add(lblTitle);
+            headerPanel.Controls.Add(titleBox);
             centerHeaderTitle();
 
             // 2. 메인 컨텐츠 영역 (헤더 바 아래 도킹)
