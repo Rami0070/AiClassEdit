@@ -1852,6 +1852,21 @@ namespace SmartClassAssigner
             this.BackColor = Color.FromArgb(248, 250, 252);
             this.Font = AppFont.Get(11f, FontStyle.Regular);
 
+            // 윈도우 타이틀바 및 작업표시줄 아이콘 적용
+            try
+            {
+                string iconPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "app.ico");
+                if (File.Exists(iconPath))
+                {
+                    this.Icon = new Icon(iconPath);
+                }
+                else
+                {
+                    this.Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath);
+                }
+            }
+            catch { }
+
             // 1. 헤더 바 (모던 클린 스타일)
             headerPanel = new Panel
             {

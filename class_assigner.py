@@ -492,6 +492,16 @@ class SmartClassApp(tk.Tk):
         self.minsize(1000, 700)
         self.configure(bg="#F8FAFC")
 
+        # 아이콘 적용
+        try:
+            ico_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "app.ico")
+            if os.path.exists(ico_path):
+                self.iconbitmap(ico_path)
+            elif os.path.exists("app.ico"):
+                self.iconbitmap("app.ico")
+        except Exception:
+            pass
+
         # 전역 상태
         self.raw_records = []
         self.file_name = ""
