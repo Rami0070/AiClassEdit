@@ -193,7 +193,7 @@ class SimpleExcel:
             header_fill = PatternFill(start_color='E2E8F0', end_color='E2E8F0', fill_type='solid')
             header_font = Font(name='Malgun Gothic', size=10, bold=True, color='1E293B')
 
-            headers = ['번호', '이름', '성별', '국어', '수학', '합계', '석차', '비고'] if is_template else ['반', '번호', '이름', '성별', '석차', '진급반', '새번호', '비고']
+            headers = ['번호', '이름', '성별', '국어', '수학', '합계', '석차', '비고'] if is_template else ['반(이전반)', '번호(이전반 번호)', '이름', '성별', '국어', '수학', '합계', '석차', '진급반', '비고']
 
             for sheet_name, records in sheets_records.items():
                 ws = wb.create_sheet(title=sheet_name)
@@ -222,14 +222,22 @@ class SimpleExcel:
                             r.get('remarks', '')
                         ]
                     else:
+                        kor = r.get('kor', 0)
+                        math = r.get('math', 0)
+                        total = r.get('score', kor + math if (kor or math) else 0)
+                        if total and not kor and not math:
+                            kor = int(total * 0.52)
+                            math = int(total - kor)
                         row_data = [
                             r.get('prevClass', ''),
                             r.get('prevNumber', ''),
                             r.get('name', ''),
                             r.get('gender', ''),
+                            kor if kor else '',
+                            math if math else '',
+                            total if total else '',
                             r.get('rank', ''),
                             r.get('assignedClass', ''),
-                            r.get('assignedNumber', ''),
                             r.get('remarks', '')
                         ]
                     remark_text = str(r.get('remarks', ''))
@@ -239,18 +247,18 @@ class SimpleExcel:
                         cell = ws.cell(row=row_idx, column=col_idx, value=val)
                         cell.font = Font(name='Malgun Gothic', size=10)
                         cell.border = thin_border
-                        align = 'center' if col_idx != 8 else 'left'
+                        align = 'center' if col_idx != len(row_data) else 'left'
                         cell.alignment = Alignment(horizontal=align, vertical='center')
 
-                        # 비고 열(8열) 특이사항 배경색 적용
-                        if col_idx == 8 and style_info:
+                        # 비고 열(마지막 열) 특이사항 배경색 적용
+                        if col_idx == len(row_data) and style_info:
                             cell.fill = PatternFill(start_color=style_info['rgb'], end_color=style_info['rgb'], fill_type='solid')
                             cell.font = Font(name='Malgun Gothic', size=10, bold=True, color=style_info['fg'].replace('#', ''))
 
                 # 열 너비 자동 조정
                 for col in ws.columns:
                     col_letter = get_column_letter(col[0].column)
-                    ws.column_dimensions[col_letter].width = 13 if col_letter != 'H' else 28
+                    ws.column_dimensions[col_letter].width = 14 if col_letter != 'J' else 30
 
             wb.save(file_path)
             return True
@@ -260,7 +268,7 @@ class SimpleExcel:
             import csv
             with open(csv_path, 'w', encoding='utf-8-sig', newline='') as f:
                 writer = csv.writer(f)
-                headers = ['번호', '이름', '성별', '국어', '수학', '합계', '석차', '비고'] if is_template else ['반', '번호', '이름', '성별', '석차', '진급반', '새번호', '비고']
+                headers = ['번호', '이름', '성별', '국어', '수학', '합계', '석차', '비고'] if is_template else ['반(이전반)', '번호(이전반 번호)', '이름', '성별', '국어', '수학', '합계', '석차', '진급반', '비고']
                 writer.writerow(headers)
                 for sheet_name, records in sheets_records.items():
                     for r in records:
@@ -276,14 +284,22 @@ class SimpleExcel:
                                 r.get('remarks', '')
                             ])
                         else:
+                            kor = r.get('kor', 0)
+                            math = r.get('math', 0)
+                            total = r.get('score', kor + math if (kor or math) else 0)
+                            if total and not kor and not math:
+                                kor = int(total * 0.52)
+                                math = int(total - kor)
                             writer.writerow([
                                 r.get('prevClass', ''),
                                 r.get('prevNumber', ''),
                                 r.get('name', ''),
                                 r.get('gender', ''),
+                                kor if kor else '',
+                                math if math else '',
+                                total if total else '',
                                 r.get('rank', ''),
                                 r.get('assignedClass', ''),
-                                r.get('assignedNumber', ''),
                                 r.get('remarks', '')
                             ])
             return True
@@ -518,11 +534,11 @@ class SmartClassApp(tk.Tk):
         header_frame.pack(fill='x', side='top')
         header_frame.pack_propagate(False)
 
-        # 타이틀 박스 (디자인적 테두리 및 24pt 굵은 글씨)
-        title_box = tk.Frame(header_frame, bg='#FFFFFF', bd=1, relief='solid', highlightthickness=1, highlightbackground='#CBD5E1', padx=32, pady=10)
+        # 타이틀 박스 (파스텔 톤 배경 및 24pt 굵은 글씨)
+        title_box = tk.Frame(header_frame, bg='#ECFDF5', bd=1, relief='solid', highlightthickness=1, highlightbackground='#6EE7B7', padx=32, pady=10)
         title_box.place(relx=0.5, rely=0.5, anchor='center')
 
-        title_label = tk.Label(title_box, text="스마트 학급편성 시스템", font=('Malgun Gothic', 24, 'bold'), bg='#FFFFFF', fg='#0F172A')
+        title_label = tk.Label(title_box, text="스마트 학급편성 시스템", font=('Malgun Gothic', 24, 'bold'), bg='#ECFDF5', fg='#064E3B')
         title_label.pack()
 
         # 하단 에메랄드 포인트 라인
@@ -679,14 +695,21 @@ class SmartClassApp(tk.Tk):
                 if not rows:
                     continue
                 header = rows[0]
-                col_map = {str(col).strip(): idx for idx, col in enumerate(header)}
+                col_map = {}
+                for idx, col in enumerate(header):
+                    c_str = str(col).strip()
+                    col_map[c_str] = idx
+                    if '반' in c_str and '진급' not in c_str and '반' not in col_map:
+                        col_map['반'] = idx
+                    if '번호' in c_str and '새번호' not in c_str and '번호' not in col_map:
+                        col_map['번호'] = idx
 
                 for row in rows[1:]:
                     if not row or not any(row):
                         continue
-                    col_name = col_map.get('이름', 1 if '반' not in col_map else 2)
+                    col_name = col_map.get('이름', col_map.get('성명', 1 if '반' not in col_map else 2))
                     name = str(row[col_name]).strip() if col_name < len(row) else ''
-                    if not name:
+                    if not name or name in ['이름', '성명', '학생명']:
                         continue
 
                     prev_class = str(row[col_map.get('반', 0)]).strip() if '반' in col_map and col_map['반'] < len(row) else sheet_name
@@ -696,14 +719,21 @@ class SmartClassApp(tk.Tk):
 
                     col_gender = col_map.get('성별', 2 if '반' not in col_map else 3)
                     col_num = col_map.get('번호', 0 if '반' not in col_map else 1)
-                    col_rank = col_map.get('석차', 6 if '반' not in col_map else 7)
-                    col_score = col_map.get('합계', 5 if '반' not in col_map else 6)
-                    col_remarks = col_map.get('비고', 7 if '반' not in col_map else 8)
+                    col_kor = col_map.get('국어', 3 if '반' not in col_map else 4)
+                    col_math = col_map.get('수학', 4 if '반' not in col_map else 5)
+                    col_score = col_map.get('합계', col_map.get('점수', 5 if '반' not in col_map else 6))
+                    col_rank = col_map.get('석차', col_map.get('등수', 6 if '반' not in col_map else 7))
+                    col_remarks = col_map.get('비고', col_map.get('특이사항', 7 if '반' not in col_map else 9))
 
                     gender = str(row[col_gender]).strip() if col_gender < len(row) else '남'
                     prev_num = row[col_num] if col_num < len(row) else ''
+                    kor_val = int(row[col_kor]) if col_kor < len(row) and str(row[col_kor]).isdigit() else 0
+                    math_val = int(row[col_math]) if col_math < len(row) and str(row[col_math]).isdigit() else 0
                     rank_val = row[col_rank] if col_rank < len(row) else 99
                     score_val = row[col_score] if col_score < len(row) else 0
+                    score_num = float(score_val) if str(score_val).replace('.', '', 1).isdigit() else 0.0
+                    if score_num <= 0 and (kor_val > 0 or math_val > 0):
+                        score_num = kor_val + math_val
                     remarks = str(row[col_remarks]).strip() if col_remarks < len(row) else ''
 
                     self.raw_records.append({
@@ -712,8 +742,10 @@ class SmartClassApp(tk.Tk):
                         'prevNumber': prev_num,
                         'name': name,
                         'gender': gender,
+                        'kor': kor_val,
+                        'math': math_val,
                         'rank': int(rank_val) if str(rank_val).isdigit() else 99,
-                        'score': float(score_val) if str(score_val).replace('.', '', 1).isdigit() else 0.0,
+                        'score': score_num,
                         'remarks': remarks
                     })
 
@@ -743,27 +775,35 @@ class SmartClassApp(tk.Tk):
             for s_idx in range(10):
                 # 남학생
                 m_name = names_male[(c_idx - 1) * 5 + (s_idx % 5)]
+                sc_m = 100 - s_idx * 3
+                kor_m = int(sc_m * 0.52)
                 self.raw_records.append({
                     'id': f"std_{curr_id}",
                     'prevClass': c_name,
                     'prevNumber': s_idx + 1,
                     'name': m_name,
                     'gender': '남',
+                    'kor': kor_m,
+                    'math': sc_m - kor_m,
                     'rank': s_idx * 2 + 1,
-                    'score': 100 - s_idx * 3,
+                    'score': sc_m,
                     'remarks': remarks_samples[(curr_id) % len(remarks_samples)]
                 })
                 curr_id += 1
                 # 여학생
                 f_name = names_female[(c_idx - 1) * 5 + (s_idx % 5)]
+                sc_f = 99 - s_idx * 3
+                kor_f = int(sc_f * 0.51)
                 self.raw_records.append({
                     'id': f"std_{curr_id}",
                     'prevClass': c_name,
                     'prevNumber': s_idx + 11,
                     'name': f_name,
                     'gender': '여',
+                    'kor': kor_f,
+                    'math': sc_f - kor_f,
                     'rank': s_idx * 2 + 2,
-                    'score': 99 - s_idx * 3,
+                    'score': sc_f,
                     'remarks': remarks_samples[(curr_id + 3) % len(remarks_samples)]
                 })
                 curr_id += 1

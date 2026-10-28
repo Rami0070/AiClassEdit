@@ -346,8 +346,8 @@ namespace SmartClassAssigner
                 foreach (var kv in colHeaders)
                 {
                     string h = kv.Value.Replace(" ", "");
-                    if ((h.Contains("반") || h.Contains("학급") || h.Contains("원적") || h.Contains("기존반") || h.Contains("현재반") || h.Contains("이전반")) && colClass == -1) colClass = kv.Key;
-                    else if ((h.Contains("번호") || h.Contains("순번") || h == "번") && colNum == -1) colNum = kv.Key;
+                    if ((h.Contains("반") || h.Contains("학급") || h.Contains("원적") || h.Contains("기존반") || h.Contains("현재반") || h.Contains("이전반")) && !h.Contains("진급") && !h.Contains("배정") && colClass == -1) colClass = kv.Key;
+                    else if ((h.Contains("번호") || h.Contains("순번") || h == "번") && !h.Contains("새번호") && colNum == -1) colNum = kv.Key;
                     else if ((h.Contains("이름") || h.Contains("성명") || h.Contains("학생")) && colName == -1) colName = kv.Key;
                     else if ((h.Contains("성별") || h == "성") && colGender == -1) colGender = kv.Key;
                     else if (h.Contains("국어") && colKor == -1) colKor = kv.Key;
@@ -371,12 +371,15 @@ namespace SmartClassAssigner
                 }
                 else
                 {
+                    // 10개 컬럼: [반(이전반), 번호(이전반 번호), 이름, 성별, 국어, 수학, 합계, 석차, 진급반, 비고]
                     if (colNum == -1) colNum = 1;
                     if (colName == -1) colName = 2;
                     if (colGender == -1) colGender = 3;
+                    if (colKor == -1) colKor = 4;
+                    if (colMath == -1) colMath = 5;
                     if (colScore == -1) colScore = 6;
                     if (colRank == -1) colRank = 7;
-                    if (colRemarks == -1) colRemarks = 8;
+                    if (colRemarks == -1) colRemarks = (colHeaders.Count > 9 ? 9 : 8);
                 }
 
                 for (int r = headerRowIdx + 1; r < rowNodes.Count; r++)
@@ -550,15 +553,15 @@ namespace SmartClassAssigner
             for (int i = 0; i < headers.Length; i++)
             {
                 string h = headers[i].Trim().Replace(" ", "");
-                if ((h.Contains("반") || h.Contains("학급") || h.Contains("원적")) && colClass == -1) colClass = i;
-                else if ((h.Contains("번호") || h.Contains("순번") || h == "번") && colNum == -1) colNum = i;
+                if ((h.Contains("반") || h.Contains("학급") || h.Contains("원적") || h.Contains("기존반") || h.Contains("현재반") || h.Contains("이전반")) && !h.Contains("진급") && !h.Contains("배정") && colClass == -1) colClass = i;
+                else if ((h.Contains("번호") || h.Contains("순번") || h == "번") && !h.Contains("새번호") && colNum == -1) colNum = i;
                 else if ((h.Contains("이름") || h.Contains("성명") || h.Contains("학생")) && colName == -1) colName = i;
                 else if ((h.Contains("성별") || h == "성") && colGender == -1) colGender = i;
                 else if (h.Contains("국어") && colKor == -1) colKor = i;
                 else if (h.Contains("수학") && colMath == -1) colMath = i;
                 else if ((h.Contains("석차") || h.Contains("등수") || h.Contains("순위")) && colRank == -1) colRank = i;
                 else if ((h.Contains("합계") || h.Contains("점수") || h.Contains("총점") || h.Contains("성적")) && colScore == -1) colScore = i;
-                else if ((h.Contains("비고") || h.Contains("특기") || h.Contains("참고")) && colRemarks == -1) colRemarks = i;
+                else if ((h.Contains("비고") || h.Contains("특기") || h.Contains("참고") || h.Contains("메모")) && colRemarks == -1) colRemarks = i;
             }
 
             if (colClass == -1)
@@ -575,12 +578,15 @@ namespace SmartClassAssigner
             }
             else
             {
+                // 10개 컬럼: [반(이전반), 번호(이전반 번호), 이름, 성별, 국어, 수학, 합계, 석차, 진급반, 비고]
                 if (colNum == -1) colNum = 1;
                 if (colName == -1) colName = 2;
                 if (colGender == -1) colGender = 3;
+                if (colKor == -1) colKor = 4;
+                if (colMath == -1) colMath = 5;
                 if (colScore == -1) colScore = 6;
                 if (colRank == -1) colRank = 7;
-                if (colRemarks == -1) colRemarks = 8;
+                if (colRemarks == -1) colRemarks = (headers.Length > 9 ? 9 : 8);
             }
 
             for (int r = 1; r < lines.Length; r++)
@@ -807,14 +813,17 @@ namespace SmartClassAssigner
             }
             else
             {
-                sb.Append("    <col min=\"1\" max=\"1\" width=\"10\" customWidth=\"1\"/>\n");
-                sb.Append("    <col min=\"2\" max=\"2\" width=\"10\" customWidth=\"1\"/>\n");
-                sb.Append("    <col min=\"3\" max=\"3\" width=\"13\" customWidth=\"1\"/>\n");
-                sb.Append("    <col min=\"4\" max=\"4\" width=\"10\" customWidth=\"1\"/>\n");
-                sb.Append("    <col min=\"5\" max=\"5\" width=\"10\" customWidth=\"1\"/>\n");
-                sb.Append("    <col min=\"6\" max=\"6\" width=\"12\" customWidth=\"1\"/>\n");
-                sb.Append("    <col min=\"7\" max=\"7\" width=\"10\" customWidth=\"1\"/>\n");
-                sb.Append("    <col min=\"8\" max=\"8\" width=\"32\" customWidth=\"1\"/>\n");
+                // [ 반(이전반)/번호(이전반 번호)/이름/성별/국어/수학/합계/석차/진급반/비고 ]
+                sb.Append("    <col min=\"1\" max=\"1\" width=\"13\" customWidth=\"1\"/>\n"); // 반(이전반)
+                sb.Append("    <col min=\"2\" max=\"2\" width=\"18\" customWidth=\"1\"/>\n"); // 번호(이전반 번호)
+                sb.Append("    <col min=\"3\" max=\"3\" width=\"13\" customWidth=\"1\"/>\n"); // 이름
+                sb.Append("    <col min=\"4\" max=\"4\" width=\"9\" customWidth=\"1\"/>\n");  // 성별
+                sb.Append("    <col min=\"5\" max=\"5\" width=\"11\" customWidth=\"1\"/>\n"); // 국어
+                sb.Append("    <col min=\"6\" max=\"6\" width=\"11\" customWidth=\"1\"/>\n"); // 수학
+                sb.Append("    <col min=\"7\" max=\"7\" width=\"11\" customWidth=\"1\"/>\n"); // 합계
+                sb.Append("    <col min=\"8\" max=\"8\" width=\"9\" customWidth=\"1\"/>\n");  // 석차
+                sb.Append("    <col min=\"9\" max=\"9\" width=\"13\" customWidth=\"1\"/>\n"); // 진급반
+                sb.Append("    <col min=\"10\" max=\"10\" width=\"32\" customWidth=\"1\"/>\n"); // 비고
             }
             sb.Append("  </cols>\n");
             sb.Append("  <sheetData>\n");
@@ -822,7 +831,7 @@ namespace SmartClassAssigner
             // 헤더 행 (s="1")
             string[] headers = isTemplate
                 ? new string[] { "번호", "이름", "성별", "국어", "수학", "합계", "석차", "비고" }
-                : new string[] { "반", "번호", "이름", "성별", "석차", "진급반", "새번호", "비고" };
+                : new string[] { "반(이전반)", "번호(이전반 번호)", "이름", "성별", "국어", "수학", "합계", "석차", "진급반", "비고" };
 
             sb.Append("    <row r=\"1\">\n");
             for (int i = 0; i < headers.Length; i++)
@@ -858,15 +867,20 @@ namespace SmartClassAssigner
                 }
                 else
                 {
+                    int kor = s.KoreanScore > 0 ? s.KoreanScore : (s.Score > 0 ? (int)(s.Score * 0.52) : 0);
+                    int math = s.MathScore > 0 ? s.MathScore : (s.Score > 0 ? (int)(s.Score - kor) : 0);
+                    int total = s.Score > 0 ? (int)s.Score : (kor + math);
                     vals = new string[]
                     {
                         s.PrevClass ?? "",
                         s.PrevNumber ?? "",
                         s.Name ?? "",
                         s.Gender ?? "",
+                        (kor > 0 || s.KoreanScore > 0) ? kor.ToString() : (total > 0 ? kor.ToString() : ""),
+                        (math > 0 || s.MathScore > 0) ? math.ToString() : (total > 0 ? math.ToString() : ""),
+                        total > 0 ? total.ToString() : "",
                         s.Rank > 0 ? s.Rank.ToString() : "",
                         s.AssignedClass ?? "",
-                        s.AssignedNumber > 0 ? s.AssignedNumber.ToString() : "",
                         s.Remarks ?? ""
                     };
                 }
@@ -884,7 +898,7 @@ namespace SmartClassAssigner
                 for (int c = 0; c < vals.Length; c++)
                 {
                     string colLetter = ((char)('A' + c)).ToString();
-                    int styleId = (c == 7) ? remarkStyle : 2;
+                    int styleId = (c == vals.Length - 1) ? remarkStyle : 2;
                     sb.AppendFormat("      <c r=\"{0}{1}\" t=\"inlineStr\" s=\"{2}\"><is><t>{3}</t></is></c>\n",
                         colLetter, rowIdx, styleId, EscapeXml(vals[c]));
                 }
@@ -1548,28 +1562,28 @@ namespace SmartClassAssigner
                 g.FillRectangle(pb, ClientRectangle);
             }
 
-            // 1. 은은한 입체 그림자
+            // 1. 은은한 입체 그림자 (소프트 파스텔 그림자)
             Rectangle shadowRect = new Rectangle(1, 2, Width - 3, Height - 3);
             using (GraphicsPath sp = GraphicsHelper.GetRoundedPath(shadowRect, 16))
-            using (SolidBrush sb = new SolidBrush(Color.FromArgb(238, 242, 246)))
+            using (SolidBrush sb = new SolidBrush(Color.FromArgb(220, 238, 230)))
             {
                 g.FillPath(sb, sp);
             }
 
-            // 2. 메인 카드 본체: 프리미엄 소프트 그라데이션
+            // 2. 메인 카드 본체: 고급 파스텔 민트 그라데이션
             Rectangle mainRect = new Rectangle(1, 1, Width - 3, Height - 4);
             using (GraphicsPath mp = GraphicsHelper.GetRoundedPath(mainRect, 16))
             {
                 using (LinearGradientBrush lgb = new LinearGradientBrush(mainRect,
-                    Color.FromArgb(255, 255, 255),
-                    Color.FromArgb(248, 250, 252),
+                    Color.FromArgb(236, 253, 245),
+                    Color.FromArgb(209, 250, 229),
                     LinearGradientMode.Vertical))
                 {
                     g.FillPath(lgb, mp);
                 }
 
-                // 세련된 외곽 테두리 선
-                using (Pen bp = new Pen(Color.FromArgb(203, 213, 225), 1.5f))
+                // 세련된 파스텔 에메랄드 테두리 선 (#6EE7B7)
+                using (Pen bp = new Pen(Color.FromArgb(110, 231, 183), 1.5f))
                 {
                     g.DrawPath(bp, mp);
                 }
@@ -1581,14 +1595,14 @@ namespace SmartClassAssigner
                 }
             }
 
-            // 3. 타이틀 텍스트 렌더링 (24pt 굵은 글씨, 완벽한 중앙 배치)
+            // 3. 타이틀 텍스트 렌더링 (24pt 굵은 글씨, 선명하고 고급스러운 딥 에메랄드 그린)
             StringFormat sf = new StringFormat
             {
                 Alignment = StringAlignment.Center,
                 LineAlignment = StringAlignment.Center
             };
             Rectangle textRect = new Rectangle(0, 0, Width, Height - 4);
-            using (SolidBrush tb = new SolidBrush(Color.FromArgb(15, 23, 42)))
+            using (SolidBrush tb = new SolidBrush(Color.FromArgb(6, 78, 59)))
             {
                 g.DrawString(TitleText, Font, tb, textRect, sf);
             }
@@ -2676,6 +2690,9 @@ namespace SmartClassAssigner
                 for (int i = 0; i < 10; i++)
                 {
                     // 남학생
+                    int scoreM = 100 - i * 3;
+                    int korM = (int)(scoreM * 0.52);
+                    int mathM = scoreM - korM;
                     var sM = new StudentRecord
                     {
                         Id = "std_" + idCounter,
@@ -2683,8 +2700,10 @@ namespace SmartClassAssigner
                         PrevNumber = (i + 1).ToString(),
                         Name = namesM[i],
                         Gender = "남",
+                        KoreanScore = korM,
+                        MathScore = mathM,
                         Rank = i * 2 + 1,
-                        Score = 100 - i * 3,
+                        Score = scoreM,
                         Remarks = remarksPool[(idCounter) % remarksPool.Length],
                         IsSpecial = remarksPool[(idCounter) % remarksPool.Length].Contains("특수"),
                         SeparateFromNames = NameParser.ParseSeparationRequests(remarksPool[(idCounter) % remarksPool.Length])
@@ -2696,6 +2715,9 @@ namespace SmartClassAssigner
                     idCounter++;
 
                     // 여학생
+                    int scoreF = 99 - i * 3;
+                    int korF = (int)(scoreF * 0.51);
+                    int mathF = scoreF - korF;
                     var sF = new StudentRecord
                     {
                         Id = "std_" + idCounter,
@@ -2703,8 +2725,10 @@ namespace SmartClassAssigner
                         PrevNumber = (i + 11).ToString(),
                         Name = namesF[i],
                         Gender = "여",
+                        KoreanScore = korF,
+                        MathScore = mathF,
                         Rank = i * 2 + 2,
-                        Score = 99 - i * 3,
+                        Score = scoreF,
                         Remarks = remarksPool[(idCounter + 3) % remarksPool.Length],
                         IsSpecial = remarksPool[(idCounter + 3) % remarksPool.Length].Contains("특수"),
                         SeparateFromNames = NameParser.ParseSeparationRequests(remarksPool[(idCounter + 3) % remarksPool.Length])
