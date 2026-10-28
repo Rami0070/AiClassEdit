@@ -756,9 +756,9 @@ namespace SmartClassAssigner
                 "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n" +
                 "<styleSheet xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\">\n" +
                 "  <fonts count=\"3\">\n" +
-                "    <font><name val=\"Malgun Gothic\"/><sz val=\"10\"/></font>\n" +
-                "    <font><name val=\"Malgun Gothic\"/><sz val=\"10\"/><b/></font>\n" +
-                "    <font><name val=\"Malgun Gothic\"/><sz val=\"10\"/><b/><color rgb=\"FF9F1239\"/></font>\n" +
+                "    <font><name val=\"Pretendard\"/><sz val=\"10\"/></font>\n" +
+                "    <font><name val=\"Pretendard\"/><sz val=\"10\"/><b/></font>\n" +
+                "    <font><name val=\"Pretendard\"/><sz val=\"10\"/><b/><color rgb=\"FF9F1239\"/></font>\n" +
                 "  </fonts>\n" +
                 "  <fills count=\"9\">\n" +
                 "    <fill><patternFill patternType=\"none\"/></fill>\n" +
@@ -1176,6 +1176,97 @@ namespace SmartClassAssigner
         }
     }
 
+    // =========================================================
+    // 폰트 유틸리티 (Pretendard 프리텐다드 글로벌 폰트 관리자)
+    // =========================================================
+    public static class AppFont
+    {
+        public static readonly string FontFamilyName;
+
+        [DllImport("gdi32.dll", SetLastError = true)]
+        private static extern int AddFontResourceEx(string lpszFilename, uint fl, IntPtr pdv);
+
+        static AppFont()
+        {
+            FontFamilyName = ResolveFontFamily();
+        }
+
+        private static string ResolveFontFamily()
+        {
+            try
+            {
+                string[] searchDirs = new string[]
+                {
+                    AppDomain.CurrentDomain.BaseDirectory,
+                    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"Microsoft\Windows\Fonts"),
+                    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "Fonts")
+                };
+
+                foreach (string dir in searchDirs)
+                {
+                    if (Directory.Exists(dir))
+                    {
+                        foreach (string file in Directory.GetFiles(dir, "*Pretendard*.?tf"))
+                        {
+                            try { AddFontResourceEx(file, 0x10, IntPtr.Zero); } catch { }
+                        }
+                    }
+                }
+            }
+            catch { }
+
+            try
+            {
+                using (Font f = new Font("Pretendard", 10f))
+                {
+                    if (!string.Equals(f.FontFamily.Name, "Microsoft Sans Serif", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return "Pretendard";
+                    }
+                }
+            }
+            catch { }
+
+            try
+            {
+                using (Font f = new Font("Pretendard Variable", 10f))
+                {
+                    if (!string.Equals(f.FontFamily.Name, "Microsoft Sans Serif", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return "Pretendard Variable";
+                    }
+                }
+            }
+            catch { }
+
+            return "Pretendard";
+        }
+
+        private const string FallbackFamily = "Malgun Gothic";
+
+        public static Font Get(float size, FontStyle style)
+        {
+            try
+            {
+                Font f = new Font(FontFamilyName, size, style);
+                if (string.Equals(f.FontFamily.Name, "Microsoft Sans Serif", StringComparison.OrdinalIgnoreCase))
+                {
+                    return new Font(FallbackFamily, size, style);
+                }
+                return f;
+            }
+            catch
+            {
+                return new Font(FallbackFamily, size, style);
+            }
+        }
+
+        public static Font Get(float size)
+        {
+            return Get(size, FontStyle.Regular);
+        }
+    }
+
     public enum Button3DTheme
     {
         Mint,
@@ -1217,7 +1308,7 @@ namespace SmartClassAssigner
             this.BackColor = Color.Transparent;
             this.TabStop = false;
             this.Cursor = Cursors.Hand;
-            this.Font = new Font("Malgun Gothic", 12.5f, FontStyle.Bold);
+            this.Font = AppFont.Get(12.5f, FontStyle.Bold);
         }
 
         protected override void OnMouseEnter(EventArgs e) { isHovered = true; Invalidate(); base.OnMouseEnter(e); }
@@ -1411,14 +1502,14 @@ namespace SmartClassAssigner
             }
 
             // Title
-            using (Font tf = new Font("Malgun Gothic", 12f, FontStyle.Bold))
+            using (Font tf = AppFont.Get(12f, FontStyle.Bold))
             using (SolidBrush tb = new SolidBrush(Color.FromArgb(100, 116, 139)))
             {
                 g.DrawString(Title, tf, tb, new RectangleF(14, 12, Width - 28, 22));
             }
 
             // Value
-            using (Font vf = new Font("Malgun Gothic", 19f, FontStyle.Bold))
+            using (Font vf = AppFont.Get(19f, FontStyle.Bold))
             using (SolidBrush vb = new SolidBrush(ValueColor))
             {
                 g.DrawString(Value, vf, vb, new RectangleF(14, 34, Width - 28, 36));
@@ -1427,7 +1518,7 @@ namespace SmartClassAssigner
             // SubText
             if (!string.IsNullOrEmpty(SubText))
             {
-                using (Font sf = new Font("Malgun Gothic", 11f, FontStyle.Regular))
+                using (Font sf = AppFont.Get(11f, FontStyle.Regular))
                 using (SolidBrush sb = new SolidBrush(Color.FromArgb(71, 85, 105)))
                 {
                     g.DrawString(SubText, sf, sb, new RectangleF(14, 72, Width - 28, 24));
@@ -1471,7 +1562,7 @@ namespace SmartClassAssigner
                 BorderStyle = BorderStyle.None,
                 BackColor = Color.White,
                 ForeColor = Color.FromArgb(30, 41, 59),
-                Font = new Font("Malgun Gothic", 13f, isGreenTheme ? FontStyle.Bold : FontStyle.Regular),
+                Font = AppFont.Get(13f, isGreenTheme ? FontStyle.Bold : FontStyle.Regular),
                 Text = initialText
             };
 
@@ -1543,7 +1634,7 @@ namespace SmartClassAssigner
                      ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw, true);
             BackColor = Color.White;
             TitleText = "스마트 학급편성 시스템";
-            Font = new Font("Malgun Gothic", 24f, FontStyle.Bold);
+            Font = AppFont.Get(24f, FontStyle.Bold);
             Height = 64;
             Width = 470;
         }
@@ -1762,7 +1853,7 @@ namespace SmartClassAssigner
             this.MinimumSize = new Size(1120, 780);
             this.StartPosition = FormStartPosition.CenterScreen;
             this.BackColor = Color.FromArgb(248, 250, 252);
-            this.Font = new Font("Malgun Gothic", 11f, FontStyle.Regular);
+            this.Font = AppFont.Get(11f, FontStyle.Regular);
 
             // 1. 헤더 바 (모던 클린 스타일)
             headerPanel = new Panel
@@ -1845,7 +1936,7 @@ namespace SmartClassAssigner
             Label bTitle = new Label
             {
                 Text = "엑셀 파일 저장 시 비고란 특이사항별 셀 배경색 자동 반영!",
-                Font = new Font("Malgun Gothic", 15.5f, FontStyle.Bold),
+                Font = AppFont.Get(15.5f, FontStyle.Bold),
                 ForeColor = Color.FromArgb(6, 95, 70),
                 AutoSize = true,
                 BackColor = Color.Transparent
@@ -1853,7 +1944,7 @@ namespace SmartClassAssigner
             Label bDesc = new Label
             {
                 Text = "생활지도(빨강), 특수아동(파랑), 다문화(노랑), 학습부진(주황), 운동부(초록), 분리요청(보라) 등 배경색이 실제 엑셀 파일에 칠해져 저장됩니다.",
-                Font = new Font("Malgun Gothic", 12.5f),
+                Font = AppFont.Get(12.5f),
                 ForeColor = Color.FromArgb(4, 120, 87),
                 AutoSize = true,
                 BackColor = Color.Transparent
@@ -1863,7 +1954,7 @@ namespace SmartClassAssigner
             {
                 Text = "예시 데이터 불러오기 (80명)",
                 Theme = Button3DTheme.White,
-                Font = new Font("Malgun Gothic", 13f, FontStyle.Bold),
+                Font = AppFont.Get(13f, FontStyle.Bold),
                 Size = new Size(280, 48)
             };
             btnMock.Click += (s, e) => LoadMockData();
@@ -1872,7 +1963,7 @@ namespace SmartClassAssigner
             {
                 Text = "표준 엑셀 양식 다운로드 (.xlsx)",
                 Theme = Button3DTheme.Mint,
-                Font = new Font("Malgun Gothic", 13f, FontStyle.Bold),
+                Font = AppFont.Get(13f, FontStyle.Bold),
                 Size = new Size(330, 48)
             };
             btnTemplate.Click += (s, e) => DownloadSampleExcel();
@@ -1918,7 +2009,7 @@ namespace SmartClassAssigner
             lblFileStatus = new Label
             {
                 Text = "파일을 여기로 드래그 앤 드롭하거나 컴퓨터에서 선택하세요",
-                Font = new Font("Malgun Gothic", 16f, FontStyle.Bold),
+                Font = AppFont.Get(16f, FontStyle.Bold),
                 ForeColor = Color.FromArgb(30, 41, 59),
                 AutoSize = true,
                 BackColor = Color.Transparent
@@ -1926,7 +2017,7 @@ namespace SmartClassAssigner
             Label uHint = new Label
             {
                 Text = "[번호, 이름, 성별, 국어, 수학, 합계, 석차, 비고] 엑셀(.xlsx) 또는 CSV 파일 지원 · 각 반 시트 자동 인식",
-                Font = new Font("Malgun Gothic", 12.5f),
+                Font = AppFont.Get(12.5f),
                 ForeColor = Color.FromArgb(100, 116, 139),
                 AutoSize = true,
                 BackColor = Color.Transparent
@@ -1935,7 +2026,7 @@ namespace SmartClassAssigner
             {
                 Text = "컴퓨터에서 파일 찾기",
                 Theme = Button3DTheme.White,
-                Font = new Font("Malgun Gothic", 13.5f, FontStyle.Bold),
+                Font = AppFont.Get(13.5f, FontStyle.Bold),
                 Size = new Size(260, 48)
             };
             btnSelectFile.Click += (s, e) =>
@@ -1969,13 +2060,13 @@ namespace SmartClassAssigner
 
             // 카드 1: 배정 성적 기준
             ModernCard cardScore = new ModernCard { Dock = DockStyle.Fill, Radius = 16, Margin = new Padding(0, 0, 10, 0) };
-            Label scTitle = new Label { Text = "배정 성적 기준", Font = new Font("Malgun Gothic", 15.5f, FontStyle.Bold), ForeColor = Color.FromArgb(30, 41, 59), Location = new Point(22, 18), AutoSize = true, BackColor = Color.Transparent };
+            Label scTitle = new Label { Text = "배정 성적 기준", Font = AppFont.Get(15.5f, FontStyle.Bold), ForeColor = Color.FromArgb(30, 41, 59), Location = new Point(22, 18), AutoSize = true, BackColor = Color.Transparent };
 
             btnScoreRank = new Button3D
             {
                 Text = "석차 기준\n(1등이 우수)",
                 Theme = Button3DTheme.SelectedMint,
-                Font = new Font("Malgun Gothic", 13.5f, FontStyle.Bold),
+                Font = AppFont.Get(13.5f, FontStyle.Bold),
                 Location = new Point(22, 65),
                 Size = new Size(225, 135)
             };
@@ -1985,7 +2076,7 @@ namespace SmartClassAssigner
             {
                 Text = "합계 점수 기준\n(총점 높은 순)",
                 Theme = Button3DTheme.White,
-                Font = new Font("Malgun Gothic", 13.5f, FontStyle.Bold),
+                Font = AppFont.Get(13.5f, FontStyle.Bold),
                 Location = new Point(258, 65),
                 Size = new Size(225, 135)
             };
@@ -1995,7 +2086,7 @@ namespace SmartClassAssigner
 
             // 카드 2: 진급반 번호 부여 방식
             ModernCard cardNum = new ModernCard { Dock = DockStyle.Fill, Radius = 16, Margin = new Padding(10, 0, 0, 0) };
-            Label nmTitle = new Label { Text = "진급반 번호 부여 방식", Font = new Font("Malgun Gothic", 15.5f, FontStyle.Bold), ForeColor = Color.FromArgb(30, 41, 59), Location = new Point(22, 18), AutoSize = true, BackColor = Color.Transparent };
+            Label nmTitle = new Label { Text = "진급반 번호 부여 방식", Font = AppFont.Get(15.5f, FontStyle.Bold), ForeColor = Color.FromArgb(30, 41, 59), Location = new Point(22, 18), AutoSize = true, BackColor = Color.Transparent };
 
             Panel pnlRuleBadge = new Panel { Location = new Point(385, 20), Size = new Size(150, 28), BackColor = Color.FromArgb(236, 253, 245) };
             pnlRuleBadge.Paint += (s, e) =>
@@ -2005,19 +2096,19 @@ namespace SmartClassAssigner
                 using (GraphicsPath p = GraphicsHelper.GetRoundedPath(r, 12))
                 using (Pen pen = new Pen(Color.FromArgb(167, 243, 208), 1.2f)) e.Graphics.DrawPath(pen, p);
             };
-            Label lblRuleBadge = new Label { Text = "새 학급 번호 규칙", Font = new Font("Malgun Gothic", 10.5f, FontStyle.Bold), ForeColor = Color.FromArgb(6, 95, 70), Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleCenter, BackColor = Color.Transparent };
+            Label lblRuleBadge = new Label { Text = "새 학급 번호 규칙", Font = AppFont.Get(10.5f, FontStyle.Bold), ForeColor = Color.FromArgb(6, 95, 70), Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleCenter, BackColor = Color.Transparent };
             pnlRuleBadge.Controls.Add(lblRuleBadge);
 
-            btnNumNameAll = new Button3D { Text = "남녀 무관 이름순 (1~N번)", Theme = Button3DTheme.SelectedMint, Font = new Font("Malgun Gothic", 12.5f, FontStyle.Bold), Location = new Point(22, 65), Size = new Size(250, 62) };
+            btnNumNameAll = new Button3D { Text = "남녀 무관 이름순 (1~N번)", Theme = Button3DTheme.SelectedMint, Font = AppFont.Get(12.5f, FontStyle.Bold), Location = new Point(22, 65), Size = new Size(250, 62) };
             btnNumNameAll.Click += (s, e) => SetNumberingMode("name_all");
 
-            btnNumSeparate = new Button3D { Text = "남 1번~ / 여 1번~ (각각)", Theme = Button3DTheme.White, Font = new Font("Malgun Gothic", 12.5f, FontStyle.Bold), Location = new Point(280, 65), Size = new Size(250, 62) };
+            btnNumSeparate = new Button3D { Text = "남 1번~ / 여 1번~ (각각)", Theme = Button3DTheme.White, Font = AppFont.Get(12.5f, FontStyle.Bold), Location = new Point(280, 65), Size = new Size(250, 62) };
             btnNumSeparate.Click += (s, e) => SetNumberingMode("separate");
 
-            btnNumContinuous = new Button3D { Text = "남 1번~ / 여 21번~", Theme = Button3DTheme.White, Font = new Font("Malgun Gothic", 12.5f, FontStyle.Bold), Location = new Point(22, 138), Size = new Size(250, 62) };
+            btnNumContinuous = new Button3D { Text = "남 1번~ / 여 21번~", Theme = Button3DTheme.White, Font = AppFont.Get(12.5f, FontStyle.Bold), Location = new Point(22, 138), Size = new Size(250, 62) };
             btnNumContinuous.Click += (s, e) => SetNumberingMode("continuous");
 
-            btnNumContinuousFemale = new Button3D { Text = "여 1번~ / 남 21번~", Theme = Button3DTheme.White, Font = new Font("Malgun Gothic", 12.5f, FontStyle.Bold), Location = new Point(280, 138), Size = new Size(250, 62) };
+            btnNumContinuousFemale = new Button3D { Text = "여 1번~ / 남 21번~", Theme = Button3DTheme.White, Font = AppFont.Get(12.5f, FontStyle.Bold), Location = new Point(280, 138), Size = new Size(250, 62) };
             btnNumContinuousFemale.Click += (s, e) => SetNumberingMode("continuous_female");
 
             cardNum.Controls.AddRange(new Control[] { nmTitle, pnlRuleBadge, btnNumNameAll, btnNumSeparate, btnNumContinuous, btnNumContinuousFemale });
@@ -2036,7 +2127,7 @@ namespace SmartClassAssigner
             {
                 Text = "다음 단계: 반 설정 및 배정 실행 →",
                 Theme = Button3DTheme.Mint,
-                Font = new Font("Malgun Gothic", 14.5f, FontStyle.Bold),
+                Font = AppFont.Get(14.5f, FontStyle.Bold),
                 Location = new Point(1080 - 390, 4),
                 Size = new Size(390, 56)
             };
@@ -2083,7 +2174,7 @@ namespace SmartClassAssigner
             lblStep2Title = new Label
             {
                 Text = "반 편성 및 번호 배정 상세",
-                Font = new Font("Malgun Gothic", 19f, FontStyle.Bold),
+                Font = AppFont.Get(19f, FontStyle.Bold),
                 ForeColor = Color.FromArgb(30, 41, 59),
                 Location = new Point(0, 0),
                 AutoSize = true
@@ -2092,7 +2183,7 @@ namespace SmartClassAssigner
             lblStep2Subtitle = new Label
             {
                 Text = "기존 반 수와 새로 진급할 반 수 및 명칭을 설정하세요.",
-                Font = new Font("Malgun Gothic", 12f, FontStyle.Regular),
+                Font = AppFont.Get(12f, FontStyle.Regular),
                 ForeColor = Color.FromArgb(100, 116, 139),
                 Location = new Point(2, 34),
                 AutoSize = true
@@ -2102,7 +2193,7 @@ namespace SmartClassAssigner
             {
                 Text = "← 명단 다시 올리기",
                 Theme = Button3DTheme.White,
-                Font = new Font("Malgun Gothic", 12.5f, FontStyle.Bold),
+                Font = AppFont.Get(12.5f, FontStyle.Bold),
                 Size = new Size(170, 44),
                 Location = new Point(1100 - 170 - 14 - 240, 6)
             };
@@ -2112,7 +2203,7 @@ namespace SmartClassAssigner
             {
                 Text = "스마트 학급 배정 실행하기",
                 Theme = Button3DTheme.Mint,
-                Font = new Font("Malgun Gothic", 13.5f, FontStyle.Bold),
+                Font = AppFont.Get(13.5f, FontStyle.Bold),
                 Size = new Size(240, 44),
                 Location = new Point(1100 - 240, 6)
             };
@@ -2145,12 +2236,12 @@ namespace SmartClassAssigner
             };
 
             Panel leftHeader = new Panel { Dock = DockStyle.Top, Height = 44, BackColor = Color.Transparent };
-            Label lblLeftTitle = new Label { Text = "기존 반 명칭 (현재 반)", Font = new Font("Malgun Gothic", 15f, FontStyle.Bold), ForeColor = Color.FromArgb(30, 41, 59), Location = new Point(0, 6), AutoSize = true };
+            Label lblLeftTitle = new Label { Text = "기존 반 명칭 (현재 반)", Font = AppFont.Get(15f, FontStyle.Bold), ForeColor = Color.FromArgb(30, 41, 59), Location = new Point(0, 6), AutoSize = true };
             Panel leftStepper = new Panel { Dock = DockStyle.Right, Width = 155, Height = 36, BackColor = Color.Transparent };
-            Button3D btnPrevMinus = new Button3D { Text = "-", Theme = Button3DTheme.White, Size = new Size(34, 34), Location = new Point(0, 0), Font = new Font("Malgun Gothic", 13.5f, FontStyle.Bold), CornerRadius = 8 };
+            Button3D btnPrevMinus = new Button3D { Text = "-", Theme = Button3DTheme.White, Size = new Size(34, 34), Location = new Point(0, 0), Font = AppFont.Get(13.5f, FontStyle.Bold), CornerRadius = 8 };
             btnPrevMinus.Click += (s, e) => HandlePrevCountChange(prevClasses.Count - 1);
-            lblPrevCount = new Label { Text = prevClasses.Count + "개 반", Font = new Font("Malgun Gothic", 13.5f, FontStyle.Bold), ForeColor = Color.FromArgb(4, 120, 87), Location = new Point(36, 0), Size = new Size(78, 34), TextAlign = ContentAlignment.MiddleCenter };
-            Button3D btnPrevPlus = new Button3D { Text = "+", Theme = Button3DTheme.White, Size = new Size(34, 34), Location = new Point(116, 0), Font = new Font("Malgun Gothic", 13.5f, FontStyle.Bold), CornerRadius = 8 };
+            lblPrevCount = new Label { Text = prevClasses.Count + "개 반", Font = AppFont.Get(13.5f, FontStyle.Bold), ForeColor = Color.FromArgb(4, 120, 87), Location = new Point(36, 0), Size = new Size(78, 34), TextAlign = ContentAlignment.MiddleCenter };
+            Button3D btnPrevPlus = new Button3D { Text = "+", Theme = Button3DTheme.White, Size = new Size(34, 34), Location = new Point(116, 0), Font = AppFont.Get(13.5f, FontStyle.Bold), CornerRadius = 8 };
             btnPrevPlus.Click += (s, e) => HandlePrevCountChange(prevClasses.Count + 1);
             leftStepper.Controls.AddRange(new Control[] { btnPrevMinus, lblPrevCount, btnPrevPlus });
             leftHeader.Controls.AddRange(new Control[] { lblLeftTitle, leftStepper });
@@ -2180,12 +2271,12 @@ namespace SmartClassAssigner
             };
 
             Panel rightHeader = new Panel { Dock = DockStyle.Top, Height = 44, BackColor = Color.Transparent };
-            Label lblRightTitle = new Label { Text = "새로 만들어질 진급반", Font = new Font("Malgun Gothic", 15f, FontStyle.Bold), ForeColor = Color.FromArgb(30, 41, 59), Location = new Point(0, 6), AutoSize = true };
+            Label lblRightTitle = new Label { Text = "새로 만들어질 진급반", Font = AppFont.Get(15f, FontStyle.Bold), ForeColor = Color.FromArgb(30, 41, 59), Location = new Point(0, 6), AutoSize = true };
             Panel rightStepper = new Panel { Dock = DockStyle.Right, Width = 155, Height = 36, BackColor = Color.Transparent };
-            Button3D btnNewMinus = new Button3D { Text = "-", Theme = Button3DTheme.White, Size = new Size(34, 34), Location = new Point(0, 0), Font = new Font("Malgun Gothic", 13.5f, FontStyle.Bold), CornerRadius = 8 };
+            Button3D btnNewMinus = new Button3D { Text = "-", Theme = Button3DTheme.White, Size = new Size(34, 34), Location = new Point(0, 0), Font = AppFont.Get(13.5f, FontStyle.Bold), CornerRadius = 8 };
             btnNewMinus.Click += (s, e) => HandleNewCountChange(newClasses.Count - 1);
-            lblNewCount = new Label { Text = newClasses.Count + "개 반", Font = new Font("Malgun Gothic", 13.5f, FontStyle.Bold), ForeColor = Color.FromArgb(4, 120, 87), Location = new Point(36, 0), Size = new Size(78, 34), TextAlign = ContentAlignment.MiddleCenter };
-            Button3D btnNewPlus = new Button3D { Text = "+", Theme = Button3DTheme.White, Size = new Size(34, 34), Location = new Point(116, 0), Font = new Font("Malgun Gothic", 13.5f, FontStyle.Bold), CornerRadius = 8 };
+            lblNewCount = new Label { Text = newClasses.Count + "개 반", Font = AppFont.Get(13.5f, FontStyle.Bold), ForeColor = Color.FromArgb(4, 120, 87), Location = new Point(36, 0), Size = new Size(78, 34), TextAlign = ContentAlignment.MiddleCenter };
+            Button3D btnNewPlus = new Button3D { Text = "+", Theme = Button3DTheme.White, Size = new Size(34, 34), Location = new Point(116, 0), Font = AppFont.Get(13.5f, FontStyle.Bold), CornerRadius = 8 };
             btnNewPlus.Click += (s, e) => HandleNewCountChange(newClasses.Count + 1);
             rightStepper.Controls.AddRange(new Control[] { btnNewMinus, lblNewCount, btnNewPlus });
             rightHeader.Controls.AddRange(new Control[] { lblRightTitle, rightStepper });
@@ -2218,7 +2309,7 @@ namespace SmartClassAssigner
             Label tagTitle = new Label
             {
                 Text = "🎨 엑셀 저장 시에도 비고란 특이사항별 셀 배경색이 그대로 유지됩니다:",
-                Font = new Font("Malgun Gothic", 12f, FontStyle.Bold),
+                Font = AppFont.Get(12f, FontStyle.Bold),
                 ForeColor = Color.FromArgb(71, 85, 105),
                 Location = new Point(18, 10),
                 AutoSize = true
@@ -2263,7 +2354,7 @@ namespace SmartClassAssigner
                 Label plbl = new Label
                 {
                     Text = "● " + ptext,
-                    Font = new Font("Malgun Gothic", 10.5f, FontStyle.Bold),
+                    Font = AppFont.Get(10.5f, FontStyle.Bold),
                     ForeColor = pfg,
                     Dock = DockStyle.Fill,
                     TextAlign = ContentAlignment.MiddleCenter,
@@ -2408,7 +2499,7 @@ namespace SmartClassAssigner
             Label title = new Label
             {
                 Text = "배정 완료 대시보드",
-                Font = new Font("Malgun Gothic", 18f, FontStyle.Bold),
+                Font = AppFont.Get(18f, FontStyle.Bold),
                 ForeColor = Color.FromArgb(30, 41, 59),
                 Location = new Point(0, 12),
                 AutoSize = true
@@ -2418,7 +2509,7 @@ namespace SmartClassAssigner
             {
                 Text = "첫 화면으로 돌아가기",
                 Theme = Button3DTheme.White,
-                Font = new Font("Malgun Gothic", 13f, FontStyle.Bold),
+                Font = AppFont.Get(13f, FontStyle.Bold),
                 Location = new Point(480, 8),
                 Size = new Size(230, 48)
             };
@@ -2428,7 +2519,7 @@ namespace SmartClassAssigner
             {
                 Text = "특이사항 컬러 반영 전체 엑셀 다운로드 (.xlsx)",
                 Theme = Button3DTheme.Mint,
-                Font = new Font("Malgun Gothic", 13.5f, FontStyle.Bold),
+                Font = AppFont.Get(13.5f, FontStyle.Bold),
                 Location = new Point(705, 8),
                 Size = new Size(480, 48)
             };
@@ -2469,13 +2560,13 @@ namespace SmartClassAssigner
                 SelectionMode = DataGridViewSelectionMode.FullRowSelect,
                 EnableHeadersVisualStyles = false,
                 RowTemplate = { Height = 42 },
-                Font = new Font("Malgun Gothic", 12f),
+                Font = AppFont.Get(12f),
                 GridColor = Color.FromArgb(226, 232, 240)
             };
 
             gridResult.ColumnHeadersDefaultCellStyle.BackColor = Color.FromArgb(241, 245, 249);
             gridResult.ColumnHeadersDefaultCellStyle.ForeColor = Color.FromArgb(51, 65, 85);
-            gridResult.ColumnHeadersDefaultCellStyle.Font = new Font("Malgun Gothic", 12.5f, FontStyle.Bold);
+            gridResult.ColumnHeadersDefaultCellStyle.Font = AppFont.Get(12.5f, FontStyle.Bold);
             gridResult.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
             gridResult.ColumnHeadersHeight = 46;
 
@@ -2532,7 +2623,7 @@ namespace SmartClassAssigner
                             else if (tag.Contains("분리요청")) { pillBg = Color.FromArgb(233, 213, 255); pillFg = Color.FromArgb(107, 33, 168); pillBorder = Color.FromArgb(216, 180, 254); }
                             else if (tag.Contains("운동부")) { pillBg = Color.FromArgb(187, 247, 208); pillFg = Color.FromArgb(22, 101, 52); pillBorder = Color.FromArgb(134, 239, 172); }
 
-                            using (Font bf = new Font("Malgun Gothic", 11f, FontStyle.Bold))
+                            using (Font bf = AppFont.Get(11f, FontStyle.Bold))
                             {
                                 SizeF sz = g.MeasureString(tag, bf);
                                 int badgeW = (int)sz.Width + 18;
@@ -2930,7 +3021,7 @@ namespace SmartClassAssigner
                 Text = "전체 통합 명단 (" + totalStudents + "명)",
                 Theme = Button3DTheme.SelectedMint,
                 Size = new Size(240, 44),
-                Font = new Font("Malgun Gothic", 12.5f, FontStyle.Bold)
+                Font = AppFont.Get(12.5f, FontStyle.Bold)
             };
             btnTabAll.Click += (s, e) => SwitchClassTab("전체통합", btnTabAll);
             classTabPanel.Controls.Add(btnTabAll);
@@ -2944,7 +3035,7 @@ namespace SmartClassAssigner
                     Text = string.Format("{0} ({1}명)", cName, count),
                     Theme = Button3DTheme.White,
                     Size = new Size(160, 44),
-                    Font = new Font("Malgun Gothic", 12.5f, FontStyle.Bold)
+                    Font = AppFont.Get(12.5f, FontStyle.Bold)
                 };
                 btnTabClass.Click += (s, e) => SwitchClassTab(cName, btnTabClass);
                 classTabPanel.Controls.Add(btnTabClass);
@@ -3000,22 +3091,22 @@ namespace SmartClassAssigner
                 if (s.Gender == "남")
                 {
                     genderCell.Style.ForeColor = Color.FromArgb(37, 99, 235);
-                    genderCell.Style.Font = new Font("Malgun Gothic", 12f, FontStyle.Bold);
+                    genderCell.Style.Font = AppFont.Get(12f, FontStyle.Bold);
                 }
                 else
                 {
                     genderCell.Style.ForeColor = Color.FromArgb(219, 39, 119);
-                    genderCell.Style.Font = new Font("Malgun Gothic", 12f, FontStyle.Bold);
+                    genderCell.Style.Font = AppFont.Get(12f, FontStyle.Bold);
                 }
 
                 // 진급반 및 새번호 강조
                 var clsCell = gridResult.Rows[rIdx].Cells[5];
                 clsCell.Style.ForeColor = Color.FromArgb(5, 150, 105);
-                clsCell.Style.Font = new Font("Malgun Gothic", 12.5f, FontStyle.Bold);
+                clsCell.Style.Font = AppFont.Get(12.5f, FontStyle.Bold);
 
                 var numCell = gridResult.Rows[rIdx].Cells[6];
                 numCell.Style.ForeColor = Color.FromArgb(5, 150, 105);
-                numCell.Style.Font = new Font("Malgun Gothic", 12.5f, FontStyle.Bold);
+                numCell.Style.Font = AppFont.Get(12.5f, FontStyle.Bold);
             }
         }
 

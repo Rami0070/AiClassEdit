@@ -191,7 +191,7 @@ class SimpleExcel:
                 bottom=Side(style='thin', color='D1D5DB')
             )
             header_fill = PatternFill(start_color='E2E8F0', end_color='E2E8F0', fill_type='solid')
-            header_font = Font(name='Malgun Gothic', size=10, bold=True, color='1E293B')
+            header_font = Font(name='Pretendard', size=10, bold=True, color='1E293B')
 
             headers = ['번호', '이름', '성별', '국어', '수학', '합계', '석차', '비고'] if is_template else ['반(이전반)', '번호(이전반 번호)', '이름', '성별', '국어', '수학', '합계', '석차', '진급반', '비고']
 
@@ -245,7 +245,7 @@ class SimpleExcel:
 
                     for col_idx, val in enumerate(row_data, 1):
                         cell = ws.cell(row=row_idx, column=col_idx, value=val)
-                        cell.font = Font(name='Malgun Gothic', size=10)
+                        cell.font = Font(name='Pretendard', size=10)
                         cell.border = thin_border
                         align = 'center' if col_idx != len(row_data) else 'left'
                         cell.alignment = Alignment(horizontal=align, vertical='center')
@@ -253,7 +253,7 @@ class SimpleExcel:
                         # 비고 열(마지막 열) 특이사항 배경색 적용
                         if col_idx == len(row_data) and style_info:
                             cell.fill = PatternFill(start_color=style_info['rgb'], end_color=style_info['rgb'], fill_type='solid')
-                            cell.font = Font(name='Malgun Gothic', size=10, bold=True, color=style_info['fg'].replace('#', ''))
+                            cell.font = Font(name='Pretendard', size=10, bold=True, color=style_info['fg'].replace('#', ''))
 
                 # 열 너비 자동 조정
                 for col in ws.columns:
@@ -509,24 +509,24 @@ class SmartClassApp(tk.Tk):
         style.theme_use('clam')
 
         # 폰트 및 공통 스타일 설정 (+2~3pt 가시성 강화)
-        style.configure('.', font=('Malgun Gothic', 11), background='#F8FAFC')
+        style.configure('.', font=('Pretendard', 11), background='#F8FAFC')
         style.configure('TFrame', background='#F8FAFC')
         style.configure('White.TFrame', background='#FFFFFF')
         
         # 버튼 스타일
-        style.configure('Mint.TButton', font=('Malgun Gothic', 12, 'bold'), background='#10B981', foreground='#FFFFFF', borderwidth=0)
+        style.configure('Mint.TButton', font=('Pretendard', 12, 'bold'), background='#10B981', foreground='#FFFFFF', borderwidth=0)
         style.map('Mint.TButton', background=[('active', '#059669')])
         
-        style.configure('White.TButton', font=('Malgun Gothic', 12, 'bold'), background='#FFFFFF', foreground='#334155', borderwidth=1)
+        style.configure('White.TButton', font=('Pretendard', 12, 'bold'), background='#FFFFFF', foreground='#334155', borderwidth=1)
         style.map('White.TButton', background=[('active', '#F1F5F9')])
 
         # 헤더 라벨
-        style.configure('Header.TLabel', font=('Malgun Gothic', 18, 'bold'), foreground='#1E293B', background='#FFFFFF')
-        style.configure('SubHeader.TLabel', font=('Malgun Gothic', 11), foreground='#64748B', background='#FFFFFF')
+        style.configure('Header.TLabel', font=('Pretendard', 18, 'bold'), foreground='#1E293B', background='#FFFFFF')
+        style.configure('SubHeader.TLabel', font=('Pretendard', 11), foreground='#64748B', background='#FFFFFF')
 
         # 트리뷰(테이블) 스타일
-        style.configure('Treeview', font=('Malgun Gothic', 11), rowheight=36, background='#FFFFFF', fieldbackground='#FFFFFF')
-        style.configure('Treeview.Heading', font=('Malgun Gothic', 12, 'bold'), background='#F1F5F9', foreground='#1E293B')
+        style.configure('Treeview', font=('Pretendard', 11), rowheight=36, background='#FFFFFF', fieldbackground='#FFFFFF')
+        style.configure('Treeview.Heading', font=('Pretendard', 12, 'bold'), background='#F1F5F9', foreground='#1E293B')
 
     def create_widgets(self):
         # 상단 네비게이션 헤더
@@ -538,7 +538,7 @@ class SmartClassApp(tk.Tk):
         title_box = tk.Frame(header_frame, bg='#ECFDF5', bd=1, relief='solid', highlightthickness=1, highlightbackground='#6EE7B7', padx=32, pady=10)
         title_box.place(relx=0.5, rely=0.5, anchor='center')
 
-        title_label = tk.Label(title_box, text="스마트 학급편성 시스템", font=('Malgun Gothic', 24, 'bold'), bg='#ECFDF5', fg='#064E3B')
+        title_label = tk.Label(title_box, text="스마트 학급편성 시스템", font=('Pretendard', 24, 'bold'), bg='#ECFDF5', fg='#064E3B')
         title_label.pack()
 
         # 하단 에메랄드 포인트 라인
@@ -568,32 +568,32 @@ class SmartClassApp(tk.Tk):
         banner_inner = tk.Frame(banner, bg='#ECFDF5', padx=20, pady=18)
         banner_inner.pack(fill='x')
 
-        b_title = tk.Label(banner_inner, text="엑셀 파일 저장 시 비고란 특이사항별 셀 배경색 자동 반영!", font=('Malgun Gothic', 14, 'bold'), bg='#ECFDF5', fg='#065F46')
+        b_title = tk.Label(banner_inner, text="엑셀 파일 저장 시 비고란 특이사항별 셀 배경색 자동 반영!", font=('Pretendard', 14, 'bold'), bg='#ECFDF5', fg='#065F46')
         b_title.pack(anchor='center', pady=(0, 6))
 
-        b_desc = tk.Label(banner_inner, text="생활지도(빨강), 특수아동(파랑), 다문화(노랑), 학습부진(주황), 운동부(초록), 분리요청(보라) 등 배경색이 실제 엑셀 파일에 칠해져 저장됩니다.", font=('Malgun Gothic', 11), bg='#ECFDF5', fg='#047857')
+        b_desc = tk.Label(banner_inner, text="생활지도(빨강), 특수아동(파랑), 다문화(노랑), 학습부진(주황), 운동부(초록), 분리요청(보라) 등 배경색이 실제 엑셀 파일에 칠해져 저장됩니다.", font=('Pretendard', 11), bg='#ECFDF5', fg='#047857')
         b_desc.pack(anchor='center', pady=(0, 12))
 
         btn_box = tk.Frame(banner_inner, bg='#ECFDF5')
         btn_box.pack(anchor='center')
 
-        load_mock_btn = tk.Button(btn_box, text="예시 데이터 불러오기 (80명)", font=('Malgun Gothic', 12, 'bold'), bg='#FFFFFF', fg='#334155', padx=18, pady=8, bd=1, relief='solid', cursor='hand2', command=self.load_mock_data)
+        load_mock_btn = tk.Button(btn_box, text="예시 데이터 불러오기 (80명)", font=('Pretendard', 12, 'bold'), bg='#FFFFFF', fg='#334155', padx=18, pady=8, bd=1, relief='solid', cursor='hand2', command=self.load_mock_data)
         load_mock_btn.pack(side='left', padx=6)
 
-        download_template_btn = tk.Button(btn_box, text="표준 엑셀 양식 다운로드 (.xlsx)", font=('Malgun Gothic', 12, 'bold'), bg='#10B981', fg='#FFFFFF', padx=18, pady=8, bd=0, cursor='hand2', command=self.download_sample_excel)
+        download_template_btn = tk.Button(btn_box, text="표준 엑셀 양식 다운로드 (.xlsx)", font=('Pretendard', 12, 'bold'), bg='#10B981', fg='#FFFFFF', padx=18, pady=8, bd=0, cursor='hand2', command=self.download_sample_excel)
         download_template_btn.pack(side='left', padx=6)
 
         # 파일 업로드 드롭 박스
         upload_card = tk.Frame(self.main_container, bg='#FFFFFF', bd=1, relief='solid', highlightbackground='#E2E8F0', padx=25, pady=24)
         upload_card.pack(fill='x', pady=(0, 18))
 
-        self.file_label = tk.Label(upload_card, text="엑셀 파일 (.xlsx, .xls)을 선택해주세요", font=('Malgun Gothic', 13, 'bold'), bg='#FFFFFF', fg='#334155')
+        self.file_label = tk.Label(upload_card, text="엑셀 파일 (.xlsx, .xls)을 선택해주세요", font=('Pretendard', 13, 'bold'), bg='#FFFFFF', fg='#334155')
         self.file_label.pack(pady=(6, 4))
 
-        u_hint = tk.Label(upload_card, text="필수 항목: [번호, 이름, 성별, 국어, 수학, 합계, 석차, 비고] (모든 학급 시트 자동 취합)", font=('Malgun Gothic', 11), bg='#FFFFFF', fg='#64748B')
+        u_hint = tk.Label(upload_card, text="필수 항목: [번호, 이름, 성별, 국어, 수학, 합계, 석차, 비고] (모든 학급 시트 자동 취합)", font=('Pretendard', 11), bg='#FFFFFF', fg='#64748B')
         u_hint.pack(pady=(2, 12))
 
-        choose_file_btn = tk.Button(upload_card, text="컴퓨터에서 파일 찾기", font=('Malgun Gothic', 12, 'bold'), bg='#F1F5F9', fg='#1E293B', padx=22, pady=8, bd=1, relief='solid', cursor='hand2', command=self.choose_file)
+        choose_file_btn = tk.Button(upload_card, text="컴퓨터에서 파일 찾기", font=('Pretendard', 12, 'bold'), bg='#F1F5F9', fg='#1E293B', padx=22, pady=8, bd=1, relief='solid', cursor='hand2', command=self.choose_file)
         choose_file_btn.pack()
 
         # 하단 2분할 설정 영역 (배정 성적 기준 & 진급반 번호 부여 방식)
@@ -604,16 +604,16 @@ class SmartClassApp(tk.Tk):
         card_score = tk.Frame(settings_frame, bg='#FFFFFF', bd=1, relief='solid', highlightbackground='#E2E8F0', padx=22, pady=18)
         card_score.pack(side='left', fill='both', expand=True, padx=(0, 10))
 
-        score_title = tk.Label(card_score, text="배정 성적 기준", font=('Malgun Gothic', 14, 'bold'), bg='#FFFFFF', fg='#1E293B')
+        score_title = tk.Label(card_score, text="배정 성적 기준", font=('Pretendard', 14, 'bold'), bg='#FFFFFF', fg='#1E293B')
         score_title.pack(anchor='w', pady=(0, 12))
 
         score_btn_box = tk.Frame(card_score, bg='#FFFFFF')
         score_btn_box.pack(fill='x')
 
-        self.btn_score_rank = tk.Button(score_btn_box, text="석차 기준\n(1등이 우수)", font=('Malgun Gothic', 12, 'bold'), padx=12, pady=12, bd=1, relief='solid', cursor='hand2', command=lambda: self.set_score_type('rank'))
+        self.btn_score_rank = tk.Button(score_btn_box, text="석차 기준\n(1등이 우수)", font=('Pretendard', 12, 'bold'), padx=12, pady=12, bd=1, relief='solid', cursor='hand2', command=lambda: self.set_score_type('rank'))
         self.btn_score_rank.pack(side='left', fill='both', expand=True, padx=4)
 
-        self.btn_score_total = tk.Button(score_btn_box, text="합계 점수 기준\n(총점 높은 순)", font=('Malgun Gothic', 12, 'bold'), padx=12, pady=12, bd=1, relief='solid', cursor='hand2', command=lambda: self.set_score_type('score'))
+        self.btn_score_total = tk.Button(score_btn_box, text="합계 점수 기준\n(총점 높은 순)", font=('Pretendard', 12, 'bold'), padx=12, pady=12, bd=1, relief='solid', cursor='hand2', command=lambda: self.set_score_type('score'))
         self.btn_score_total.pack(side='left', fill='both', expand=True, padx=4)
 
         # 2. 진급반 번호 부여 방식 카드
@@ -623,10 +623,10 @@ class SmartClassApp(tk.Tk):
         num_header = tk.Frame(card_num, bg='#FFFFFF')
         num_header.pack(fill='x', pady=(0, 12))
 
-        num_title = tk.Label(num_header, text="진급반 번호 부여 방식", font=('Malgun Gothic', 14, 'bold'), bg='#FFFFFF', fg='#1E293B')
+        num_title = tk.Label(num_header, text="진급반 번호 부여 방식", font=('Pretendard', 14, 'bold'), bg='#FFFFFF', fg='#1E293B')
         num_title.pack(side='left')
 
-        num_badge = tk.Label(num_header, text="새 학급 번호 규칙", font=('Malgun Gothic', 10, 'bold'), bg='#ECFDF5', fg='#065F46', padx=8, pady=2)
+        num_badge = tk.Label(num_header, text="새 학급 번호 규칙", font=('Pretendard', 10, 'bold'), bg='#ECFDF5', fg='#065F46', padx=8, pady=2)
         num_badge.pack(side='right')
 
         num_btn_box = tk.Frame(card_num, bg='#FFFFFF')
@@ -642,7 +642,7 @@ class SmartClassApp(tk.Tk):
         for idx, (m_val, m_text) in enumerate(modes):
             row = idx // 2
             col = idx % 2
-            btn = tk.Button(num_btn_box, text=m_text, font=('Malgun Gothic', 11, 'bold'), padx=10, pady=8, bd=1, relief='solid', cursor='hand2', command=lambda v=m_val: self.set_numbering_mode(v))
+            btn = tk.Button(num_btn_box, text=m_text, font=('Pretendard', 11, 'bold'), padx=10, pady=8, bd=1, relief='solid', cursor='hand2', command=lambda v=m_val: self.set_numbering_mode(v))
             btn.grid(row=row, column=col, sticky='nsew', padx=3, pady=3)
             num_btn_box.grid_columnconfigure(col, weight=1)
             self.num_buttons[m_val] = btn
@@ -653,7 +653,7 @@ class SmartClassApp(tk.Tk):
         action_bar = tk.Frame(self.main_container, bg='#F8FAFC')
         action_bar.pack(fill='x', pady=12)
 
-        self.next_btn = tk.Button(action_bar, text="다음 단계: 반 설정 및 배정 실행 →", font=('Malgun Gothic', 13, 'bold'), bg='#10B981', fg='#FFFFFF', padx=28, pady=12, bd=0, cursor='hand2', command=self.show_step2)
+        self.next_btn = tk.Button(action_bar, text="다음 단계: 반 설정 및 배정 실행 →", font=('Pretendard', 13, 'bold'), bg='#10B981', fg='#FFFFFF', padx=28, pady=12, bd=0, cursor='hand2', command=self.show_step2)
         self.next_btn.pack(side='right')
 
     def set_score_type(self, val):
@@ -860,18 +860,18 @@ class SmartClassApp(tk.Tk):
         title_box = tk.Frame(top_bar, bg='#F8FAFC')
         title_box.pack(side='left')
 
-        t = tk.Label(title_box, text="반 편성 및 번호 배정 상세", font=('Malgun Gothic', 16, 'bold'), bg='#F8FAFC', fg='#1E293B')
+        t = tk.Label(title_box, text="반 편성 및 번호 배정 상세", font=('Pretendard', 16, 'bold'), bg='#F8FAFC', fg='#1E293B')
         t.pack(anchor='w')
-        sub = tk.Label(title_box, text="기존 반 수와 새로 진급할 반 수 및 명칭을 설정하세요.", font=('Malgun Gothic', 11), bg='#F8FAFC', fg='#64748B')
+        sub = tk.Label(title_box, text="기존 반 수와 새로 진급할 반 수 및 명칭을 설정하세요.", font=('Pretendard', 11), bg='#F8FAFC', fg='#64748B')
         sub.pack(anchor='w')
 
         btn_box = tk.Frame(top_bar, bg='#F8FAFC')
         btn_box.pack(side='right')
 
-        back_btn = tk.Button(btn_box, text="← 명단 다시 올리기", font=('Malgun Gothic', 11, 'bold'), bg='#FFFFFF', fg='#334155', padx=16, pady=8, bd=1, relief='solid', cursor='hand2', command=self.show_step1)
+        back_btn = tk.Button(btn_box, text="← 명단 다시 올리기", font=('Pretendard', 11, 'bold'), bg='#FFFFFF', fg='#334155', padx=16, pady=8, bd=1, relief='solid', cursor='hand2', command=self.show_step1)
         back_btn.pack(side='left', padx=6)
 
-        start_btn = tk.Button(btn_box, text="스마트 학급 배정 실행하기", font=('Malgun Gothic', 12, 'bold'), bg='#10B981', fg='#FFFFFF', padx=22, pady=8, bd=0, cursor='hand2', command=self.run_assignment)
+        start_btn = tk.Button(btn_box, text="스마트 학급 배정 실행하기", font=('Pretendard', 12, 'bold'), bg='#10B981', fg='#FFFFFF', padx=22, pady=8, bd=0, cursor='hand2', command=self.run_assignment)
         start_btn.pack(side='left', padx=6)
 
         # 2. 2열 반 설정 카드 (좌: 기존반, 우: 새로 만들어질 진급반)
@@ -884,16 +884,16 @@ class SmartClassApp(tk.Tk):
 
         left_header = tk.Frame(left_card, bg='#FFFFFF')
         left_header.pack(fill='x', pady=(0, 15))
-        lbl_left = tk.Label(left_header, text="기존 반 명칭 (현재 반)", font=('Malgun Gothic', 13, 'bold'), bg='#FFFFFF', fg='#1E293B')
+        lbl_left = tk.Label(left_header, text="기존 반 명칭 (현재 반)", font=('Pretendard', 13, 'bold'), bg='#FFFFFF', fg='#1E293B')
         lbl_left.pack(side='left')
 
         left_stepper = tk.Frame(left_header, bg='#FFFFFF')
         left_stepper.pack(side='right')
-        btn_prev_minus = tk.Button(left_stepper, text="-", font=('Malgun Gothic', 12, 'bold'), width=3, bg='#F1F5F9', bd=1, relief='solid', command=lambda: self.change_prev_count(-1))
+        btn_prev_minus = tk.Button(left_stepper, text="-", font=('Pretendard', 12, 'bold'), width=3, bg='#F1F5F9', bd=1, relief='solid', command=lambda: self.change_prev_count(-1))
         btn_prev_minus.pack(side='left')
-        self.lbl_prev_count = tk.Label(left_stepper, text=f"{len(self.prev_classes)}개 반", font=('Malgun Gothic', 12, 'bold'), fg='#047857', bg='#FFFFFF', padx=8)
+        self.lbl_prev_count = tk.Label(left_stepper, text=f"{len(self.prev_classes)}개 반", font=('Pretendard', 12, 'bold'), fg='#047857', bg='#FFFFFF', padx=8)
         self.lbl_prev_count.pack(side='left')
-        btn_prev_plus = tk.Button(left_stepper, text="+", font=('Malgun Gothic', 12, 'bold'), width=3, bg='#F1F5F9', bd=1, relief='solid', command=lambda: self.change_prev_count(1))
+        btn_prev_plus = tk.Button(left_stepper, text="+", font=('Pretendard', 12, 'bold'), width=3, bg='#F1F5F9', bd=1, relief='solid', command=lambda: self.change_prev_count(1))
         btn_prev_plus.pack(side='left')
 
         self.pnl_prev_inputs = tk.Frame(left_card, bg='#FFFFFF')
@@ -905,16 +905,16 @@ class SmartClassApp(tk.Tk):
 
         right_header = tk.Frame(right_card, bg='#F0FDF4')
         right_header.pack(fill='x', pady=(0, 15))
-        lbl_right = tk.Label(right_header, text="새로 만들어질 진급반", font=('Malgun Gothic', 13, 'bold'), bg='#F0FDF4', fg='#1E293B')
+        lbl_right = tk.Label(right_header, text="새로 만들어질 진급반", font=('Pretendard', 13, 'bold'), bg='#F0FDF4', fg='#1E293B')
         lbl_right.pack(side='left')
 
         right_stepper = tk.Frame(right_header, bg='#F0FDF4')
         right_stepper.pack(side='right')
-        btn_new_minus = tk.Button(right_stepper, text="-", font=('Malgun Gothic', 12, 'bold'), width=3, bg='#FFFFFF', bd=1, relief='solid', highlightbackground='#A7F3D0', command=lambda: self.change_new_count(-1))
+        btn_new_minus = tk.Button(right_stepper, text="-", font=('Pretendard', 12, 'bold'), width=3, bg='#FFFFFF', bd=1, relief='solid', highlightbackground='#A7F3D0', command=lambda: self.change_new_count(-1))
         btn_new_minus.pack(side='left')
-        self.lbl_new_count = tk.Label(right_stepper, text=f"{len(self.new_classes)}개 반", font=('Malgun Gothic', 12, 'bold'), fg='#047857', bg='#F0FDF4', padx=8)
+        self.lbl_new_count = tk.Label(right_stepper, text=f"{len(self.new_classes)}개 반", font=('Pretendard', 12, 'bold'), fg='#047857', bg='#F0FDF4', padx=8)
         self.lbl_new_count.pack(side='left')
-        btn_new_plus = tk.Button(right_stepper, text="+", font=('Malgun Gothic', 12, 'bold'), width=3, bg='#FFFFFF', bd=1, relief='solid', highlightbackground='#A7F3D0', command=lambda: self.change_new_count(1))
+        btn_new_plus = tk.Button(right_stepper, text="+", font=('Pretendard', 12, 'bold'), width=3, bg='#FFFFFF', bd=1, relief='solid', highlightbackground='#A7F3D0', command=lambda: self.change_new_count(1))
         btn_new_plus.pack(side='left')
 
         self.pnl_new_inputs = tk.Frame(right_card, bg='#F0FDF4')
@@ -967,14 +967,14 @@ class SmartClassApp(tk.Tk):
 
         self.prev_entries = []
         for name in self.prev_classes:
-            ent = tk.Entry(self.pnl_prev_inputs, font=('Malgun Gothic', 12), bd=1, relief='solid', bg='#FFFFFF')
+            ent = tk.Entry(self.pnl_prev_inputs, font=('Pretendard', 12), bd=1, relief='solid', bg='#FFFFFF')
             ent.insert(0, name)
             ent.pack(fill='x', ipady=6, pady=4)
             self.prev_entries.append(ent)
 
         self.new_entries = []
         for name in self.new_classes:
-            ent = tk.Entry(self.pnl_new_inputs, font=('Malgun Gothic', 12, 'bold'), bd=1, relief='solid', highlightthickness=1, highlightbackground='#10B981', bg='#FFFFFF')
+            ent = tk.Entry(self.pnl_new_inputs, font=('Pretendard', 12, 'bold'), bd=1, relief='solid', highlightthickness=1, highlightbackground='#10B981', bg='#FFFFFF')
             ent.insert(0, name)
             ent.pack(fill='x', ipady=6, pady=4)
             self.new_entries.append(ent)
@@ -1011,16 +1011,16 @@ class SmartClassApp(tk.Tk):
         top_bar = tk.Frame(self.main_container, bg='#F8FAFC')
         top_bar.pack(fill='x', pady=(0, 16))
 
-        t_title = tk.Label(top_bar, text="배정 완료 대시보드", font=('Malgun Gothic', 16, 'bold'), bg='#F8FAFC', fg='#1E293B')
+        t_title = tk.Label(top_bar, text="배정 완료 대시보드", font=('Pretendard', 16, 'bold'), bg='#F8FAFC', fg='#1E293B')
         t_title.pack(side='left')
 
         btn_box = tk.Frame(top_bar, bg='#F8FAFC')
         btn_box.pack(side='right')
 
-        home_btn = tk.Button(btn_box, text="첫 화면으로 돌아가기", font=('Malgun Gothic', 11, 'bold'), bg='#FFFFFF', fg='#334155', padx=15, pady=8, bd=1, relief='solid', cursor='hand2', command=self.show_step1)
+        home_btn = tk.Button(btn_box, text="첫 화면으로 돌아가기", font=('Pretendard', 11, 'bold'), bg='#FFFFFF', fg='#334155', padx=15, pady=8, bd=1, relief='solid', cursor='hand2', command=self.show_step1)
         home_btn.pack(side='left', padx=6)
 
-        export_btn = tk.Button(btn_box, text="특이사항 컬러 반영 전체 엑셀 다운로드 (.xlsx)", font=('Malgun Gothic', 12, 'bold'), bg='#10B981', fg='#FFFFFF', padx=18, pady=8, bd=0, cursor='hand2', command=self.export_to_excel)
+        export_btn = tk.Button(btn_box, text="특이사항 컬러 반영 전체 엑셀 다운로드 (.xlsx)", font=('Pretendard', 12, 'bold'), bg='#10B981', fg='#FFFFFF', padx=18, pady=8, bd=0, cursor='hand2', command=self.export_to_excel)
         export_btn.pack(side='left', padx=6)
 
         # 5개 핵심 지표 통계 카드 영역 (HTML 버전 100% 매칭)
@@ -1053,11 +1053,11 @@ class SmartClassApp(tk.Tk):
             card = tk.Frame(stats_frame, bg=bg_col, bd=1, relief='solid', highlightbackground=b_col, padx=14, pady=12)
             card.pack(side='left', fill='both', expand=True, padx=4)
 
-            lbl_t = tk.Label(card, text=t, font=('Malgun Gothic', 10, 'bold'), bg=bg_col, fg='#64748B')
+            lbl_t = tk.Label(card, text=t, font=('Pretendard', 10, 'bold'), bg=bg_col, fg='#64748B')
             lbl_t.pack(anchor='w')
-            lbl_v = tk.Label(card, text=v, font=('Malgun Gothic', 15, 'bold'), bg=bg_col, fg=v_col)
+            lbl_v = tk.Label(card, text=v, font=('Pretendard', 15, 'bold'), bg=bg_col, fg=v_col)
             lbl_v.pack(anchor='w', pady=2)
-            lbl_s = tk.Label(card, text=sub, font=('Malgun Gothic', 10), bg=bg_col, fg='#475569')
+            lbl_s = tk.Label(card, text=sub, font=('Pretendard', 10), bg=bg_col, fg='#475569')
             lbl_s.pack(anchor='w')
 
         # 반별 탭 노트북
@@ -1089,7 +1089,7 @@ class SmartClassApp(tk.Tk):
     def build_class_tree(self, parent_frame, stds, stat_text):
         summary_bar = tk.Frame(parent_frame, bg='#F8FAFC', bd=1, relief='solid', highlightbackground='#E2E8F0', padx=14, pady=10)
         summary_bar.pack(fill='x', pady=(0, 12))
-        lbl_stat = tk.Label(summary_bar, text=stat_text, font=('Malgun Gothic', 12, 'bold'), bg='#F8FAFC', fg='#1E293B')
+        lbl_stat = tk.Label(summary_bar, text=stat_text, font=('Pretendard', 12, 'bold'), bg='#F8FAFC', fg='#1E293B')
         lbl_stat.pack(side='left')
 
         cols = ('prevClass', 'prevNumber', 'name', 'gender', 'rank', 'assignedClass', 'assignedNumber', 'remarks')
