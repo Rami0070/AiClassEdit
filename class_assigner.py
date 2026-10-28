@@ -518,14 +518,8 @@ class SmartClassApp(tk.Tk):
         header_frame.pack(fill='x', side='top')
         header_frame.pack_propagate(False)
 
-        title_box = tk.Frame(header_frame, bg='#FFFFFF')
-        title_box.pack(side='left', padx=28, pady=16)
-
-        title_label = tk.Label(title_box, text="스마트 학급편성 시스템", font=('Malgun Gothic', 18, 'bold'), bg='#FFFFFF', fg='#1E293B')
-        title_label.pack(side='left')
-
-        badge = tk.Label(title_box, text="완전 오프라인 Standalone Edition", font=('Malgun Gothic', 10, 'bold'), bg='#D1FAE5', fg='#065F46', padx=10, pady=4)
-        badge.pack(side='left', padx=12)
+        title_label = tk.Label(header_frame, text="스마트 학급편성 시스템", font=('Malgun Gothic', 19, 'bold'), bg='#FFFFFF', fg='#1E293B')
+        title_label.place(relx=0.5, rely=0.5, anchor='center')
 
         # 메인 컨테이너 (단계별 뷰 전환)
         self.main_container = tk.Frame(self, bg='#F8FAFC')
@@ -811,48 +805,140 @@ class SmartClassApp(tk.Tk):
 
         self.clear_container()
 
-        title_box = tk.Frame(self.main_container, bg='#F8FAFC')
-        title_box.pack(fill='x', pady=(0, 15))
+        # 1. 상단 바 (사진 100% 매칭)
+        top_bar = tk.Frame(self.main_container, bg='#F8FAFC')
+        top_bar.pack(fill='x', pady=(0, 20))
 
-        t = tk.Label(title_box, text="새로운 반 편성 명칭 설정", font=('Malgun Gothic', 14, 'bold'), bg='#F8FAFC', fg='#1E293B')
-        t.pack(side='left')
+        title_box = tk.Frame(top_bar, bg='#F8FAFC')
+        title_box.pack(side='left')
 
-        # 반 설정 카드
-        card = tk.Frame(self.main_container, bg='#FFFFFF', bd=1, relief='solid', highlightbackground='#E2E8F0', padx=28, pady=22)
-        card.pack(fill='x', pady=(0, 20))
+        t = tk.Label(title_box, text="반 편성 및 번호 배정 상세", font=('Malgun Gothic', 16, 'bold'), bg='#F8FAFC', fg='#1E293B')
+        t.pack(anchor='w')
+        sub = tk.Label(title_box, text="기존 반 수와 새로 진급할 반 수 및 명칭을 설정하세요.", font=('Malgun Gothic', 11), bg='#F8FAFC', fg='#64748B')
+        sub.pack(anchor='w')
 
-        desc = tk.Label(card, text="편성될 새로운 반의 명칭을 입력하세요 (쉼표로 구분):", font=('Malgun Gothic', 12, 'bold'), bg='#FFFFFF', fg='#334155')
-        desc.pack(anchor='w', pady=(0, 10))
+        btn_box = tk.Frame(top_bar, bg='#F8FAFC')
+        btn_box.pack(side='right')
 
-        self.new_classes_entry = tk.Entry(card, font=('Malgun Gothic', 13), bd=1, relief='solid')
-        self.new_classes_entry.insert(0, ", ".join(self.new_classes))
-        self.new_classes_entry.pack(fill='x', ipady=8, pady=(0, 16))
+        back_btn = tk.Button(btn_box, text="← 명단 다시 올리기", font=('Malgun Gothic', 11, 'bold'), bg='#FFFFFF', fg='#334155', padx=16, pady=8, bd=1, relief='solid', cursor='hand2', command=self.show_step1)
+        back_btn.pack(side='left', padx=6)
 
-        info_box = tk.Frame(card, bg='#F8FAFC', bd=1, relief='solid', highlightbackground='#E2E8F0', padx=18, pady=12)
-        info_box.pack(fill='x')
+        start_btn = tk.Button(btn_box, text="스마트 학급 배정 실행하기", font=('Malgun Gothic', 12, 'bold'), bg='#10B981', fg='#FFFFFF', padx=22, pady=8, bd=0, cursor='hand2', command=self.run_assignment)
+        start_btn.pack(side='left', padx=6)
 
-        info_text = f"현재 총 {len(self.raw_records)}명 학생 | 기존 반: {', '.join(self.prev_classes)} | 선택된 번호방식: {self.numbering_mode.get()}"
-        lbl_info = tk.Label(info_box, text=info_text, font=('Malgun Gothic', 11), bg='#F8FAFC', fg='#475569')
-        lbl_info.pack(anchor='w')
+        # 2. 2열 반 설정 카드 (좌: 기존반, 우: 새로 만들어질 진급반)
+        cards_frame = tk.Frame(self.main_container, bg='#F8FAFC')
+        cards_frame.pack(fill='both', expand=True, pady=(0, 15))
 
-        # 실행 버튼 바
-        action_bar = tk.Frame(self.main_container, bg='#F8FAFC')
-        action_bar.pack(fill='x', pady=16)
+        # 왼쪽 카드: 기존 반 명칭
+        left_card = tk.Frame(cards_frame, bg='#FFFFFF', bd=1, relief='solid', highlightbackground='#E2E8F0', padx=24, pady=20)
+        left_card.pack(side='left', fill='both', expand=True, padx=(0, 12))
 
-        back_btn = tk.Button(action_bar, text="← 이전 화면 (설정 수정)", font=('Malgun Gothic', 12, 'bold'), bg='#FFFFFF', fg='#334155', padx=20, pady=10, bd=1, relief='solid', cursor='hand2', command=self.show_step1)
-        back_btn.pack(side='left')
+        left_header = tk.Frame(left_card, bg='#FFFFFF')
+        left_header.pack(fill='x', pady=(0, 15))
+        lbl_left = tk.Label(left_header, text="기존 반 명칭 (현재 반)", font=('Malgun Gothic', 13, 'bold'), bg='#FFFFFF', fg='#1E293B')
+        lbl_left.pack(side='left')
 
-        start_btn = tk.Button(action_bar, text="스마트 학급 배정 실행하기", font=('Malgun Gothic', 13, 'bold'), bg='#10B981', fg='#FFFFFF', padx=28, pady=12, bd=0, cursor='hand2', command=self.run_assignment)
-        start_btn.pack(side='right')
+        left_stepper = tk.Frame(left_header, bg='#FFFFFF')
+        left_stepper.pack(side='right')
+        btn_prev_minus = tk.Button(left_stepper, text="-", font=('Malgun Gothic', 12, 'bold'), width=3, bg='#F1F5F9', bd=1, relief='solid', command=lambda: self.change_prev_count(-1))
+        btn_prev_minus.pack(side='left')
+        self.lbl_prev_count = tk.Label(left_stepper, text=f"{len(self.prev_classes)}개 반", font=('Malgun Gothic', 12, 'bold'), fg='#047857', bg='#FFFFFF', padx=8)
+        self.lbl_prev_count.pack(side='left')
+        btn_prev_plus = tk.Button(left_stepper, text="+", font=('Malgun Gothic', 12, 'bold'), width=3, bg='#F1F5F9', bd=1, relief='solid', command=lambda: self.change_prev_count(1))
+        btn_prev_plus.pack(side='left')
+
+        self.pnl_prev_inputs = tk.Frame(left_card, bg='#FFFFFF')
+        self.pnl_prev_inputs.pack(fill='both', expand=True)
+
+        # 오른쪽 카드: 새로 만들어질 진급반
+        right_card = tk.Frame(cards_frame, bg='#F0FDF4', bd=1, relief='solid', highlightbackground='#A7F3D0', padx=24, pady=20)
+        right_card.pack(side='left', fill='both', expand=True, padx=(12, 0))
+
+        right_header = tk.Frame(right_card, bg='#F0FDF4')
+        right_header.pack(fill='x', pady=(0, 15))
+        lbl_right = tk.Label(right_header, text="새로 만들어질 진급반", font=('Malgun Gothic', 13, 'bold'), bg='#F0FDF4', fg='#1E293B')
+        lbl_right.pack(side='left')
+
+        right_stepper = tk.Frame(right_header, bg='#F0FDF4')
+        right_stepper.pack(side='right')
+        btn_new_minus = tk.Button(right_stepper, text="-", font=('Malgun Gothic', 12, 'bold'), width=3, bg='#FFFFFF', bd=1, relief='solid', highlightbackground='#A7F3D0', command=lambda: self.change_new_count(-1))
+        btn_new_minus.pack(side='left')
+        self.lbl_new_count = tk.Label(right_stepper, text=f"{len(self.new_classes)}개 반", font=('Malgun Gothic', 12, 'bold'), fg='#047857', bg='#F0FDF4', padx=8)
+        self.lbl_new_count.pack(side='left')
+        btn_new_plus = tk.Button(right_stepper, text="+", font=('Malgun Gothic', 12, 'bold'), width=3, bg='#FFFFFF', bd=1, relief='solid', highlightbackground='#A7F3D0', command=lambda: self.change_new_count(1))
+        btn_new_plus.pack(side='left')
+
+        self.pnl_new_inputs = tk.Frame(right_card, bg='#F0FDF4')
+        self.pnl_new_inputs.pack(fill='both', expand=True)
+
+        self.render_step2_inputs()
+
+    def change_prev_count(self, delta):
+        self.sync_step2_inputs()
+        new_cnt = max(1, min(20, len(self.prev_classes) + delta))
+        while len(self.prev_classes) < new_cnt:
+            self.prev_classes.append(f"{len(self.prev_classes) + 1}반")
+        while len(self.prev_classes) > new_cnt:
+            self.prev_classes.pop()
+        self.lbl_prev_count.configure(text=f"{len(self.prev_classes)}개 반")
+        self.render_step2_inputs()
+
+    def change_new_count(self, delta):
+        self.sync_step2_inputs()
+        hangul = ["가반", "나반", "다반", "라반", "마반", "바반", "사반", "아반", "자반", "차반", "카반", "타반", "파반", "하반"]
+        new_cnt = max(1, min(20, len(self.new_classes) + delta))
+        while len(self.new_classes) < new_cnt:
+            idx = len(self.new_classes)
+            def_name = hangul[idx] if idx < len(hangul) else f"{idx + 1}반"
+            self.new_classes.append(def_name)
+        while len(self.new_classes) > new_cnt:
+            self.new_classes.pop()
+        self.lbl_new_count.configure(text=f"{len(self.new_classes)}개 반")
+        self.render_step2_inputs()
+
+    def sync_step2_inputs(self):
+        if hasattr(self, 'prev_entries'):
+            for idx, ent in enumerate(self.prev_entries):
+                if idx < len(self.prev_classes):
+                    t = ent.get().strip()
+                    if t:
+                        self.prev_classes[idx] = t
+        if hasattr(self, 'new_entries'):
+            for idx, ent in enumerate(self.new_entries):
+                if idx < len(self.new_classes):
+                    t = ent.get().strip()
+                    if t:
+                        self.new_classes[idx] = t
+
+    def render_step2_inputs(self):
+        for w in self.pnl_prev_inputs.winfo_children():
+            w.destroy()
+        for w in self.pnl_new_inputs.winfo_children():
+            w.destroy()
+
+        self.prev_entries = []
+        for name in self.prev_classes:
+            ent = tk.Entry(self.pnl_prev_inputs, font=('Malgun Gothic', 12), bd=1, relief='solid', bg='#FFFFFF')
+            ent.insert(0, name)
+            ent.pack(fill='x', ipady=6, pady=4)
+            self.prev_entries.append(ent)
+
+        self.new_entries = []
+        for name in self.new_classes:
+            ent = tk.Entry(self.pnl_new_inputs, font=('Malgun Gothic', 12, 'bold'), bd=1, relief='solid', highlightthickness=1, highlightbackground='#10B981', bg='#FFFFFF')
+            ent.insert(0, name)
+            ent.pack(fill='x', ipady=6, pady=4)
+            self.new_entries.append(ent)
 
     def run_assignment(self):
-        new_class_str = self.new_classes_entry.get().strip()
-        names = [n.strip() for n in new_class_str.split(',') if n.strip()]
-        if not names:
+        self.sync_step2_inputs()
+        valid_new = [c.strip() for c in self.new_classes if c.strip()]
+        if not valid_new:
             messagebox.showwarning("경고", "최소 1개 이상의 새로운 반 명칭을 입력해야 합니다.")
             return
 
-        self.new_classes = names
+        self.new_classes = valid_new
 
         try:
             optimizer = ClassOptimizer(

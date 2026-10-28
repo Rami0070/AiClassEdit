@@ -24,6 +24,8 @@ namespace SmartClassAssigner
         public string Surname { get; set; }
         public string FirstName { get; set; }
         public string Gender { get; set; }
+        public int KoreanScore { get; set; }
+        public int MathScore { get; set; }
         public int Rank { get; set; }
         public double Score { get; set; }
         public string Remarks { get; set; }
@@ -37,6 +39,8 @@ namespace SmartClassAssigner
         {
             Rank = 99;
             Score = 0;
+            KoreanScore = 0;
+            MathScore = 0;
             SeparateFromNames = new List<string>();
         }
     }
@@ -338,7 +342,7 @@ namespace SmartClassAssigner
                     }
                 }
 
-                int colClass = -1, colNum = -1, colName = -1, colGender = -1, colRank = -1, colScore = -1, colRemarks = -1;
+                int colClass = -1, colNum = -1, colName = -1, colGender = -1, colKor = -1, colMath = -1, colRank = -1, colScore = -1, colRemarks = -1;
                 foreach (var kv in colHeaders)
                 {
                     string h = kv.Value.Replace(" ", "");
@@ -346,6 +350,8 @@ namespace SmartClassAssigner
                     else if ((h.Contains("번호") || h.Contains("순번") || h == "번") && colNum == -1) colNum = kv.Key;
                     else if ((h.Contains("이름") || h.Contains("성명") || h.Contains("학생")) && colName == -1) colName = kv.Key;
                     else if ((h.Contains("성별") || h == "성") && colGender == -1) colGender = kv.Key;
+                    else if (h.Contains("국어") && colKor == -1) colKor = kv.Key;
+                    else if (h.Contains("수학") && colMath == -1) colMath = kv.Key;
                     else if ((h.Contains("석차") || h.Contains("등수") || h.Contains("순위")) && colRank == -1) colRank = kv.Key;
                     else if ((h.Contains("합계") || h.Contains("점수") || h.Contains("총점") || h.Contains("성적") || h.Contains("평균")) && colScore == -1) colScore = kv.Key;
                     else if ((h.Contains("비고") || h.Contains("특기") || h.Contains("참고") || h.Contains("메모")) && colRemarks == -1) colRemarks = kv.Key;
@@ -353,9 +359,12 @@ namespace SmartClassAssigner
 
                 if (colClass == -1)
                 {
+                    // 업로드용 표준 양식: [번호, 이름, 성별, 국어, 수학, 합계, 석차, 비고] 8개 컬럼
                     if (colNum == -1) colNum = 0;
                     if (colName == -1) colName = 1;
                     if (colGender == -1) colGender = 2;
+                    if (colKor == -1) colKor = 3;
+                    if (colMath == -1) colMath = 4;
                     if (colScore == -1) colScore = 5;
                     if (colRank == -1) colRank = 6;
                     if (colRemarks == -1) colRemarks = 7;
@@ -395,12 +404,18 @@ namespace SmartClassAssigner
 
                     string rankStr = (colRank != -1 && rowValues.ContainsKey(colRank)) ? rowValues[colRank].Trim() : "99";
                     string scoreStr = (colScore != -1 && rowValues.ContainsKey(colScore)) ? rowValues[colScore].Trim() : "0";
+                    string korStr = (colKor != -1 && rowValues.ContainsKey(colKor)) ? rowValues[colKor].Trim() : "0";
+                    string mathStr = (colMath != -1 && rowValues.ContainsKey(colMath)) ? rowValues[colMath].Trim() : "0";
                     string remarks = (colRemarks != -1 && rowValues.ContainsKey(colRemarks)) ? rowValues[colRemarks].Trim() : "";
 
                     int rank = 99;
                     int.TryParse(rankStr, out rank);
                     double score = 0;
                     double.TryParse(scoreStr, out score);
+                    int kor = 0, math = 0;
+                    int.TryParse(korStr, out kor);
+                    int.TryParse(mathStr, out math);
+                    if (score <= 0 && (kor > 0 || math > 0)) score = kor + math;
 
                     StudentRecord std = new StudentRecord
                     {
@@ -408,6 +423,8 @@ namespace SmartClassAssigner
                         PrevClass = prevClass,
                         PrevNumber = prevNum,
                         Name = name,
+                        KoreanScore = kor,
+                        MathScore = math,
                         Gender = gender,
                         Rank = rank,
                         Score = score,
@@ -529,7 +546,7 @@ namespace SmartClassAssigner
             if (lines == null || lines.Length < 2) return result;
 
             string[] headers = lines[0].Split(new char[] { ',', '\t' });
-            int colClass = -1, colNum = -1, colName = -1, colGender = -1, colRank = -1, colScore = -1, colRemarks = -1;
+            int colClass = -1, colNum = -1, colName = -1, colGender = -1, colKor = -1, colMath = -1, colRank = -1, colScore = -1, colRemarks = -1;
             for (int i = 0; i < headers.Length; i++)
             {
                 string h = headers[i].Trim().Replace(" ", "");
@@ -537,6 +554,8 @@ namespace SmartClassAssigner
                 else if ((h.Contains("번호") || h.Contains("순번") || h == "번") && colNum == -1) colNum = i;
                 else if ((h.Contains("이름") || h.Contains("성명") || h.Contains("학생")) && colName == -1) colName = i;
                 else if ((h.Contains("성별") || h == "성") && colGender == -1) colGender = i;
+                else if (h.Contains("국어") && colKor == -1) colKor = i;
+                else if (h.Contains("수학") && colMath == -1) colMath = i;
                 else if ((h.Contains("석차") || h.Contains("등수") || h.Contains("순위")) && colRank == -1) colRank = i;
                 else if ((h.Contains("합계") || h.Contains("점수") || h.Contains("총점") || h.Contains("성적")) && colScore == -1) colScore = i;
                 else if ((h.Contains("비고") || h.Contains("특기") || h.Contains("참고")) && colRemarks == -1) colRemarks = i;
@@ -544,9 +563,12 @@ namespace SmartClassAssigner
 
             if (colClass == -1)
             {
+                // 업로드용 표준 양식: [번호, 이름, 성별, 국어, 수학, 합계, 석차, 비고] 8개 컬럼
                 if (colNum == -1) colNum = 0;
                 if (colName == -1) colName = 1;
                 if (colGender == -1) colGender = 2;
+                if (colKor == -1) colKor = 3;
+                if (colMath == -1) colMath = 4;
                 if (colScore == -1) colScore = 5;
                 if (colRank == -1) colRank = 6;
                 if (colRemarks == -1) colRemarks = 7;
@@ -579,12 +601,18 @@ namespace SmartClassAssigner
 
                 string rankStr = (colRank != -1 && parts.Length > colRank) ? parts[colRank].Trim() : "99";
                 string scoreStr = (colScore != -1 && parts.Length > colScore) ? parts[colScore].Trim() : "0";
+                string korStr = (colKor != -1 && parts.Length > colKor) ? parts[colKor].Trim() : "0";
+                string mathStr = (colMath != -1 && parts.Length > colMath) ? parts[colMath].Trim() : "0";
                 string remarks = (colRemarks != -1 && parts.Length > colRemarks) ? parts[colRemarks].Trim() : "";
 
                 int rank = 99;
                 int.TryParse(rankStr, out rank);
                 double score = 0;
                 double.TryParse(scoreStr, out score);
+                int kor = 0, math = 0;
+                int.TryParse(korStr, out kor);
+                int.TryParse(mathStr, out math);
+                if (score <= 0 && (kor > 0 || math > 0)) score = kor + math;
 
                 StudentRecord std = new StudentRecord
                 {
@@ -592,6 +620,8 @@ namespace SmartClassAssigner
                     PrevClass = prevClass,
                     PrevNumber = prevNum,
                     Name = name,
+                    KoreanScore = kor,
+                    MathScore = math,
                     Gender = gender,
                     Rank = rank,
                     Score = score,
@@ -811,8 +841,8 @@ namespace SmartClassAssigner
                 string[] vals;
                 if (isTemplate)
                 {
-                    int kor = s.Score > 0 ? (int)(s.Score * 0.52) : 90;
-                    int math = s.Score > 0 ? (int)(s.Score * 0.48) : 88;
+                    int kor = s.KoreanScore > 0 ? s.KoreanScore : (s.Score > 0 ? (int)(s.Score * 0.52) : 90);
+                    int math = s.MathScore > 0 ? s.MathScore : (s.Score > 0 ? (int)(s.Score * 0.48) : 88);
                     int total = s.Score > 0 ? (int)s.Score : (kor + math);
                     vals = new string[]
                     {
@@ -1171,6 +1201,7 @@ namespace SmartClassAssigner
             this.FlatAppearance.MouseDownBackColor = Color.Transparent;
             this.FlatAppearance.MouseOverBackColor = Color.Transparent;
             this.BackColor = Color.Transparent;
+            this.TabStop = false;
             this.Cursor = Cursors.Hand;
             this.Font = new Font("Malgun Gothic", 12.5f, FontStyle.Bold);
         }
@@ -1187,8 +1218,18 @@ namespace SmartClassAssigner
             g.PixelOffsetMode = PixelOffsetMode.HighQuality;
             g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
 
-            // 부모 배경색으로 외곽 완전히 지우기 (검은 점 및 테두리 잔여선 원천 방지)
-            Color parentBg = (Parent != null) ? Parent.BackColor : Color.FromArgb(248, 250, 252);
+            // 부모 배경색으로 외곽 완전히 지우기 (검은 박스 및 테두리 잔여선 원천 방지)
+            Color parentBg = Color.FromArgb(248, 250, 252);
+            Control cur = this.Parent;
+            while (cur != null)
+            {
+                if (cur.BackColor != Color.Transparent && cur.BackColor.A == 255)
+                {
+                    parentBg = cur.BackColor;
+                    break;
+                }
+                cur = cur.Parent;
+            }
             using (SolidBrush pb = new SolidBrush(parentBg))
             {
                 g.FillRectangle(pb, ClientRectangle);
@@ -1381,6 +1422,103 @@ namespace SmartClassAssigner
         }
     }
 
+    public class RoundedTextBox : Panel
+    {
+        private TextBox innerBox;
+        public int Radius { get; set; }
+        public Color BorderColor { get; set; }
+        public Color FocusBorderColor { get; set; }
+        private bool isFocused = false;
+
+        public event EventHandler ValueChanged;
+
+        public override string Text
+        {
+            get { return innerBox != null ? innerBox.Text : base.Text; }
+            set { if (innerBox != null) innerBox.Text = value; base.Text = value; }
+        }
+
+        public TextBox InnerTextBox { get { return innerBox; } }
+
+        public RoundedTextBox(string initialText = "", bool isGreenTheme = false)
+        {
+            SetStyle(ControlStyles.UserPaint | ControlStyles.AllPaintingInWmPaint |
+                     ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw, true);
+
+            Radius = 12;
+            BackColor = Color.White;
+            BorderColor = isGreenTheme ? Color.FromArgb(110, 231, 183) : Color.FromArgb(226, 232, 240);
+            FocusBorderColor = isGreenTheme ? Color.FromArgb(16, 185, 129) : Color.FromArgb(16, 185, 129);
+            Height = 44;
+            Cursor = Cursors.IBeam;
+
+            innerBox = new TextBox
+            {
+                BorderStyle = BorderStyle.None,
+                BackColor = Color.White,
+                ForeColor = Color.FromArgb(30, 41, 59),
+                Font = new Font("Malgun Gothic", 13f, isGreenTheme ? FontStyle.Bold : FontStyle.Regular),
+                Text = initialText
+            };
+
+            innerBox.TextChanged += (s, e) =>
+            {
+                if (ValueChanged != null) ValueChanged(this, EventArgs.Empty);
+            };
+            innerBox.Enter += (s, e) => { isFocused = true; Invalidate(); };
+            innerBox.Leave += (s, e) => { isFocused = false; Invalidate(); };
+
+            this.Click += (s, e) => innerBox.Focus();
+            this.Controls.Add(innerBox);
+
+            Action updateInnerLayout = () =>
+            {
+                innerBox.Location = new Point(14, (this.Height - innerBox.PreferredHeight) / 2);
+                innerBox.Width = Math.Max(50, this.Width - 28);
+            };
+            this.Resize += (s, e) => updateInnerLayout();
+            updateInnerLayout();
+        }
+
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            Graphics g = e.Graphics;
+            g.SmoothingMode = SmoothingMode.AntiAlias;
+
+            Color parentBg = Color.FromArgb(248, 250, 252);
+            Control p = this.Parent;
+            while (p != null)
+            {
+                if (p.BackColor != Color.Transparent && p.BackColor.A == 255)
+                {
+                    parentBg = p.BackColor;
+                    break;
+                }
+                p = p.Parent;
+            }
+
+            using (SolidBrush pb = new SolidBrush(parentBg))
+            {
+                g.FillRectangle(pb, ClientRectangle);
+            }
+
+            Rectangle r = new Rectangle(1, 1, Width - 3, Height - 3);
+            using (GraphicsPath path = GraphicsHelper.GetRoundedPath(r, Radius))
+            {
+                using (SolidBrush bg = new SolidBrush(BackColor))
+                {
+                    g.FillPath(bg, path);
+                }
+                Color bc = isFocused ? FocusBorderColor : BorderColor;
+                float bw = isFocused ? 2.0f : 1.4f;
+                using (Pen pen = new Pen(bc, bw))
+                {
+                    g.DrawPath(pen, path);
+                }
+            }
+        }
+    }
+
     // =========================================================
     // 6. 네이티브 GUI 메인 윈도우 (WinForms)
     // =========================================================
@@ -1420,8 +1558,26 @@ namespace SmartClassAssigner
         private Button3D btnNumContinuousFemale;
 
         // Step 2 컨트롤
-        private TextBox txtNewClasses;
-        private Label lblStep2Info;
+        private static readonly string[] DefaultHangulClasses = new string[]
+        {
+            "가반", "나반", "다반", "라반", "마반", "바반", "사반", "아반", "자반", "차반",
+            "카반", "타반", "파반", "하반", "거반", "너반", "더반", "러반", "머반", "버반"
+        };
+        private Panel step2Container;
+        private Label lblStep2Title;
+        private Label lblStep2Subtitle;
+        private Button3D btnStep2Back;
+        private Button3D btnStep2Run;
+        private TableLayoutPanel cardsTable;
+        private ModernCard leftCard;
+        private ModernCard rightCard;
+        private Label lblPrevCount;
+        private Label lblNewCount;
+        private FlowLayoutPanel pnlPrevInputs;
+        private FlowLayoutPanel pnlNewInputs;
+        private ModernCard step2TagBanner;
+        private List<RoundedTextBox> prevClassInputs = new List<RoundedTextBox>();
+        private List<RoundedTextBox> newClassInputs = new List<RoundedTextBox>();
 
         // Step 3 컨트롤
         private Panel statCardsPanel;
@@ -1536,41 +1692,21 @@ namespace SmartClassAssigner
             Label lblTitle = new Label
             {
                 Text = "스마트 학급편성 시스템",
-                Font = new Font("Malgun Gothic", 18f, FontStyle.Bold),
+                Font = new Font("Malgun Gothic", 19f, FontStyle.Bold),
                 ForeColor = Color.FromArgb(30, 41, 59),
-                Location = new Point(28, 22),
                 AutoSize = true
             };
 
-            // 커스텀 둥근 뱃지
-            Panel pnlBadge = new Panel
+            Action centerHeaderTitle = () =>
             {
-                Location = new Point(340, 24),
-                Size = new Size(290, 32),
-                BackColor = Color.FromArgb(209, 250, 229)
+                lblTitle.Location = new Point(
+                    Math.Max(20, (headerPanel.ClientSize.Width - lblTitle.PreferredWidth) / 2),
+                    (headerPanel.ClientSize.Height - lblTitle.PreferredHeight) / 2
+                );
             };
-            pnlBadge.Paint += (s, e) =>
-            {
-                e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
-                Rectangle r = new Rectangle(0, 0, pnlBadge.Width - 1, pnlBadge.Height - 1);
-                using (GraphicsPath p = GraphicsHelper.GetRoundedPath(r, 14))
-                using (Pen pen = new Pen(Color.FromArgb(167, 243, 208), 1.2f))
-                {
-                    e.Graphics.DrawPath(pen, p);
-                }
-            };
-            Label lblBadge = new Label
-            {
-                Text = "완전 오프라인 네이티브 데스크톱 에디션",
-                Font = new Font("Malgun Gothic", 11.5f, FontStyle.Bold),
-                ForeColor = Color.FromArgb(6, 95, 70),
-                BackColor = Color.Transparent,
-                Dock = DockStyle.Fill,
-                TextAlign = ContentAlignment.MiddleCenter
-            };
-            pnlBadge.Controls.Add(lblBadge);
-
-            headerPanel.Controls.AddRange(new Control[] { lblTitle, pnlBadge });
+            headerPanel.Resize += (s, e) => centerHeaderTitle();
+            headerPanel.Controls.Add(lblTitle);
+            centerHeaderTitle();
 
             // 2. 메인 컨텐츠 영역 (헤더 바 아래 도킹)
             contentPanel = new Panel
@@ -1608,7 +1744,7 @@ namespace SmartClassAssigner
             {
                 Width = 1080,
                 Height = 720,
-                BackColor = Color.Transparent
+                BackColor = Color.FromArgb(248, 250, 252)
             };
 
             // 1. 상단 안내 배너 카드
@@ -1806,7 +1942,12 @@ namespace SmartClassAssigner
             settingsTable.Controls.Add(cardNum, 1, 0);
 
             // 4. 하단 이동 버튼
-            Panel bottomBar = new Panel { Location = new Point(0, 625), Size = new Size(1080, 65), BackColor = Color.Transparent };
+            Panel bottomBar = new Panel
+            {
+                Location = new Point(0, 625),
+                Size = new Size(1080, 65),
+                BackColor = Color.FromArgb(248, 250, 252)
+            };
             Button3D btnNext = new Button3D
             {
                 Text = "다음 단계: 반 설정 및 배정 실행 →",
@@ -1840,141 +1981,332 @@ namespace SmartClassAssigner
                 Visible = false
             };
 
-            Panel centerContainer = new Panel
+            step2Container = new Panel
             {
-                Width = 1080,
-                Height = 730,
-                BackColor = Color.Transparent
+                Width = 1100,
+                Height = 620,
+                BackColor = Color.FromArgb(248, 250, 252)
             };
 
-            ModernCard card = new ModernCard
+            // 1. 상단 액션 바 (사진 100% 매칭)
+            Panel topBar = new Panel
             {
                 Location = new Point(0, 0),
-                Size = new Size(1080, 620),
-                Radius = 16
+                Size = new Size(1100, 60),
+                BackColor = Color.FromArgb(248, 250, 252)
             };
 
-            Label title = new Label
+            lblStep2Title = new Label
             {
-                Text = "진급 학급 및 배정 규칙 설정",
-                Font = new Font("Malgun Gothic", 18.5f, FontStyle.Bold),
+                Text = "반 편성 및 번호 배정 상세",
+                Font = new Font("Malgun Gothic", 19f, FontStyle.Bold),
                 ForeColor = Color.FromArgb(30, 41, 59),
-                Location = new Point(26, 24),
-                AutoSize = true,
-                BackColor = Color.Transparent
+                Location = new Point(0, 0),
+                AutoSize = true
             };
 
-            lblStep2Info = new Label
+            lblStep2Subtitle = new Label
             {
-                Text = "업로드된 학생 명단 정보를 기반으로 진급반을 설정합니다.",
-                Font = new Font("Malgun Gothic", 13.5f),
-                ForeColor = Color.FromArgb(71, 85, 105),
-                Location = new Point(26, 64),
-                AutoSize = true,
-                BackColor = Color.Transparent
+                Text = "기존 반 수와 새로 진급할 반 수 및 명칭을 설정하세요.",
+                Font = new Font("Malgun Gothic", 12f, FontStyle.Regular),
+                ForeColor = Color.FromArgb(100, 116, 139),
+                Location = new Point(2, 34),
+                AutoSize = true
             };
 
-            Label lblNewClass = new Label
+            btnStep2Back = new Button3D
             {
-                Text = "새로운 반 명칭 (쉼표로 구분하여 입력):",
-                Font = new Font("Malgun Gothic", 14.5f, FontStyle.Bold),
-                ForeColor = Color.FromArgb(30, 41, 59),
-                Location = new Point(26, 108),
-                AutoSize = true,
-                BackColor = Color.Transparent
-            };
-
-            txtNewClasses = new TextBox
-            {
-                Text = "가반, 나반, 다반, 라반",
-                Font = new Font("Malgun Gothic", 15f, FontStyle.Bold),
-                Location = new Point(26, 142),
-                Width = 560
-            };
-
-            // 7대 배정 황금률 안내 박스
-            ModernCard ruleBox = new ModernCard
-            {
-                Location = new Point(26, 200),
-                Size = new Size(1028, 380),
-                Radius = 14,
-                BackColor = Color.FromArgb(240, 253, 244),
-                BorderColor = Color.FromArgb(167, 243, 208)
-            };
-
-            Label rbTitle = new Label
-            {
-                Text = "7대 스마트 학급편성 제약 조건 자동 적용:",
-                Font = new Font("Malgun Gothic", 14.5f, FontStyle.Bold),
-                ForeColor = Color.FromArgb(6, 95, 70),
-                Location = new Point(22, 20),
-                AutoSize = true,
-                BackColor = Color.Transparent
-            };
-
-            string[] ruleTexts = new string[]
-            {
-                "1. 지그재그 스네이크 성적 균등 분산 (석차 또는 합계 점수 순위 기반)",
-                "2. 남녀 성비 균등 배분 (각 학급별 남녀 학생수 편차 최소화)",
-                "3. 동명이인 및 이름(First Name) 일치 동일 반 배정 절대 방지 (하드 제약)",
-                "4. 비고란 특이사항(생활지도, 다문화, 학습부진 등) 표준편차 최소화 균등 분산",
-                "5. 특수아동 2명 가중치 적용 (특수아동 배정 반은 일반 학생 정원 1명 적게 배정)",
-                "6. 분리요청(이름) 무조건 다른 반 배정 (하드 제약 절대 준수)",
-                "7. 선택한 번호 체계 자동 부여 (남녀무관 이름순, 남1~/여21~, 여1~/남21~, 남1~/여1~)"
-            };
-
-            int yOffset = 58;
-            foreach (var rText in ruleTexts)
-            {
-                Label lblR = new Label
-                {
-                    Text = rText,
-                    Font = new Font("Malgun Gothic", 12.5f),
-                    ForeColor = Color.FromArgb(4, 120, 87),
-                    Location = new Point(24, yOffset),
-                    AutoSize = true,
-                    BackColor = Color.Transparent
-                };
-                ruleBox.Controls.Add(lblR);
-                yOffset += 42;
-            }
-
-            ruleBox.Controls.Add(rbTitle);
-            card.Controls.AddRange(new Control[] { title, lblStep2Info, lblNewClass, txtNewClasses, ruleBox });
-
-            Panel bottomBar = new Panel { Location = new Point(0, 635), Size = new Size(1080, 65), BackColor = Color.Transparent };
-            Button3D btnBack = new Button3D
-            {
-                Text = "← 이전 화면 (설정 수정)",
+                Text = "← 명단 다시 올리기",
                 Theme = Button3DTheme.White,
-                Font = new Font("Malgun Gothic", 13.5f, FontStyle.Bold),
-                Location = new Point(0, 6),
-                Size = new Size(270, 54)
+                Font = new Font("Malgun Gothic", 12.5f, FontStyle.Bold),
+                Size = new Size(170, 44),
+                Location = new Point(1100 - 170 - 14 - 240, 6)
             };
-            btnBack.Click += (s, e) => ShowStep1();
+            btnStep2Back.Click += (s, e) => ShowStep1();
 
-            Button3D btnRun = new Button3D
+            btnStep2Run = new Button3D
             {
                 Text = "스마트 학급 배정 실행하기",
                 Theme = Button3DTheme.Mint,
-                Font = new Font("Malgun Gothic", 14.5f, FontStyle.Bold),
-                Location = new Point(1080 - 360, 6),
-                Size = new Size(360, 54)
+                Font = new Font("Malgun Gothic", 13.5f, FontStyle.Bold),
+                Size = new Size(240, 44),
+                Location = new Point(1100 - 240, 6)
             };
-            btnRun.Click += (s, e) => RunAssignment();
+            btnStep2Run.Click += (s, e) => RunAssignment();
 
-            bottomBar.Controls.AddRange(new Control[] { btnBack, btnRun });
+            topBar.Controls.AddRange(new Control[] { lblStep2Title, lblStep2Subtitle, btnStep2Back, btnStep2Run });
 
-            centerContainer.Controls.AddRange(new Control[] { card, bottomBar });
+            // 2. 2열 반 설정 카드 영역 (좌: 기존반, 우: 새로 만들어질 진급반)
+            cardsTable = new TableLayoutPanel
+            {
+                Location = new Point(0, 75),
+                Size = new Size(1100, 360),
+                ColumnCount = 2,
+                RowCount = 1,
+                BackColor = Color.FromArgb(248, 250, 252)
+            };
+            cardsTable.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
+            cardsTable.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
+
+            // 왼쪽 카드: 기존 반 명칭 (현재 반)
+            leftCard = new ModernCard
+            {
+                Dock = DockStyle.Fill,
+                Radius = 16,
+                BackColor = Color.White,
+                BorderColor = Color.FromArgb(226, 232, 240),
+                ShadowColor = Color.FromArgb(241, 245, 249),
+                Margin = new Padding(0, 0, 12, 0),
+                Padding = new Padding(22, 18, 22, 18)
+            };
+
+            Panel leftHeader = new Panel { Dock = DockStyle.Top, Height = 44, BackColor = Color.Transparent };
+            Label lblLeftTitle = new Label { Text = "기존 반 명칭 (현재 반)", Font = new Font("Malgun Gothic", 15f, FontStyle.Bold), ForeColor = Color.FromArgb(30, 41, 59), Location = new Point(0, 6), AutoSize = true };
+            Panel leftStepper = new Panel { Dock = DockStyle.Right, Width = 155, Height = 36, BackColor = Color.Transparent };
+            Button3D btnPrevMinus = new Button3D { Text = "-", Theme = Button3DTheme.White, Size = new Size(34, 34), Location = new Point(0, 0), Font = new Font("Malgun Gothic", 13.5f, FontStyle.Bold), CornerRadius = 8 };
+            btnPrevMinus.Click += (s, e) => HandlePrevCountChange(prevClasses.Count - 1);
+            lblPrevCount = new Label { Text = prevClasses.Count + "개 반", Font = new Font("Malgun Gothic", 13.5f, FontStyle.Bold), ForeColor = Color.FromArgb(4, 120, 87), Location = new Point(36, 0), Size = new Size(78, 34), TextAlign = ContentAlignment.MiddleCenter };
+            Button3D btnPrevPlus = new Button3D { Text = "+", Theme = Button3DTheme.White, Size = new Size(34, 34), Location = new Point(116, 0), Font = new Font("Malgun Gothic", 13.5f, FontStyle.Bold), CornerRadius = 8 };
+            btnPrevPlus.Click += (s, e) => HandlePrevCountChange(prevClasses.Count + 1);
+            leftStepper.Controls.AddRange(new Control[] { btnPrevMinus, lblPrevCount, btnPrevPlus });
+            leftHeader.Controls.AddRange(new Control[] { lblLeftTitle, leftStepper });
+
+            pnlPrevInputs = new FlowLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                FlowDirection = FlowDirection.TopDown,
+                WrapContents = false,
+                AutoScroll = false,
+                BackColor = Color.Transparent,
+                Padding = new Padding(0, 12, 0, 0)
+            };
+            leftCard.Controls.Add(pnlPrevInputs);
+            leftCard.Controls.Add(leftHeader);
+
+            // 오른쪽 카드: 새로 만들어질 진급반 (사진 100% 매칭: 에메랄드 테두리 및 은은한 배경)
+            rightCard = new ModernCard
+            {
+                Dock = DockStyle.Fill,
+                Radius = 16,
+                BackColor = Color.FromArgb(240, 253, 244),
+                BorderColor = Color.FromArgb(110, 231, 183),
+                ShadowColor = Color.FromArgb(220, 252, 231),
+                Margin = new Padding(12, 0, 0, 0),
+                Padding = new Padding(22, 18, 22, 18)
+            };
+
+            Panel rightHeader = new Panel { Dock = DockStyle.Top, Height = 44, BackColor = Color.Transparent };
+            Label lblRightTitle = new Label { Text = "새로 만들어질 진급반", Font = new Font("Malgun Gothic", 15f, FontStyle.Bold), ForeColor = Color.FromArgb(30, 41, 59), Location = new Point(0, 6), AutoSize = true };
+            Panel rightStepper = new Panel { Dock = DockStyle.Right, Width = 155, Height = 36, BackColor = Color.Transparent };
+            Button3D btnNewMinus = new Button3D { Text = "-", Theme = Button3DTheme.White, Size = new Size(34, 34), Location = new Point(0, 0), Font = new Font("Malgun Gothic", 13.5f, FontStyle.Bold), CornerRadius = 8 };
+            btnNewMinus.Click += (s, e) => HandleNewCountChange(newClasses.Count - 1);
+            lblNewCount = new Label { Text = newClasses.Count + "개 반", Font = new Font("Malgun Gothic", 13.5f, FontStyle.Bold), ForeColor = Color.FromArgb(4, 120, 87), Location = new Point(36, 0), Size = new Size(78, 34), TextAlign = ContentAlignment.MiddleCenter };
+            Button3D btnNewPlus = new Button3D { Text = "+", Theme = Button3DTheme.White, Size = new Size(34, 34), Location = new Point(116, 0), Font = new Font("Malgun Gothic", 13.5f, FontStyle.Bold), CornerRadius = 8 };
+            btnNewPlus.Click += (s, e) => HandleNewCountChange(newClasses.Count + 1);
+            rightStepper.Controls.AddRange(new Control[] { btnNewMinus, lblNewCount, btnNewPlus });
+            rightHeader.Controls.AddRange(new Control[] { lblRightTitle, rightStepper });
+
+            pnlNewInputs = new FlowLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                FlowDirection = FlowDirection.TopDown,
+                WrapContents = false,
+                AutoScroll = false,
+                BackColor = Color.Transparent,
+                Padding = new Padding(0, 12, 0, 0)
+            };
+            rightCard.Controls.Add(pnlNewInputs);
+            rightCard.Controls.Add(rightHeader);
+
+            cardsTable.Controls.Add(leftCard, 0, 0);
+            cardsTable.Controls.Add(rightCard, 1, 0);
+
+            // 3. 하단 비고 컬러 안내 바
+            step2TagBanner = new ModernCard
+            {
+                Location = new Point(0, 455),
+                Size = new Size(1100, 75),
+                Radius = 14,
+                BackColor = Color.White,
+                BorderColor = Color.FromArgb(226, 232, 240)
+            };
+
+            Label tagTitle = new Label
+            {
+                Text = "🎨 엑셀 저장 시에도 비고란 특이사항별 셀 배경색이 그대로 유지됩니다:",
+                Font = new Font("Malgun Gothic", 12f, FontStyle.Bold),
+                ForeColor = Color.FromArgb(71, 85, 105),
+                Location = new Point(18, 10),
+                AutoSize = true
+            };
+
+            FlowLayoutPanel tagFlow = new FlowLayoutPanel
+            {
+                Location = new Point(16, 36),
+                Size = new Size(1060, 32),
+                BackColor = Color.Transparent
+            };
+
+            string[,] tagPills = new string[,]
+            {
+                { "생활지도 (빨강 셀 배경)", "#FFD1D5", "#9F1239", "#FDA4AF" },
+                { "특수아동 (파랑 셀 배경)", "#BFDBFE", "#1E40AF", "#93C5FD" },
+                { "다문화 (노랑 셀 배경)", "#FEF08A", "#854D0E", "#FDE047" },
+                { "학습부진 (주황 셀 배경)", "#FED7AA", "#9A3412", "#FDBA74" },
+                { "분리요청 (보라 셀 배경)", "#E9D5FF", "#6B21A8", "#D8B4FE" },
+                { "운동부 (초록 셀 배경)", "#BBF7D0", "#166534", "#86EFAC" }
+            };
+
+            for (int i = 0; i < tagPills.GetLength(0); i++)
+            {
+                Panel pill = new Panel { Size = new Size(165, 26), Margin = new Padding(0, 0, 8, 0) };
+                Color pbg = ColorTranslator.FromHtml(tagPills[i, 1]);
+                Color pfg = ColorTranslator.FromHtml(tagPills[i, 2]);
+                Color pbd = ColorTranslator.FromHtml(tagPills[i, 3]);
+                string ptext = tagPills[i, 0];
+
+                pill.Paint += (s, e) =>
+                {
+                    e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+                    Rectangle pr = new Rectangle(0, 0, pill.Width - 1, pill.Height - 1);
+                    using (GraphicsPath pp = GraphicsHelper.GetRoundedPath(pr, 8))
+                    {
+                        using (SolidBrush pbb = new SolidBrush(pbg)) e.Graphics.FillPath(pbb, pp);
+                        using (Pen pbp = new Pen(pbd, 1.2f)) e.Graphics.DrawPath(pbp, pp);
+                    }
+                };
+
+                Label plbl = new Label
+                {
+                    Text = "● " + ptext,
+                    Font = new Font("Malgun Gothic", 10.5f, FontStyle.Bold),
+                    ForeColor = pfg,
+                    Dock = DockStyle.Fill,
+                    TextAlign = ContentAlignment.MiddleCenter,
+                    BackColor = Color.Transparent
+                };
+                pill.Controls.Add(plbl);
+                tagFlow.Controls.Add(pill);
+            }
+
+            step2TagBanner.Controls.AddRange(new Control[] { tagTitle, tagFlow });
+
+            step2Container.Controls.AddRange(new Control[] { topBar, cardsTable, step2TagBanner });
 
             Action centerLayout = () =>
             {
-                int left = Math.Max(20, (step2Panel.ClientSize.Width - centerContainer.Width) / 2);
-                centerContainer.Location = new Point(left, 50);
+                int left = Math.Max(20, (step2Panel.ClientSize.Width - step2Container.Width) / 2);
+                step2Container.Location = new Point(left, 45);
             };
             step2Panel.Resize += (s, e) => centerLayout();
-            step2Panel.Controls.Add(centerContainer);
+            step2Panel.Controls.Add(step2Container);
             centerLayout();
+        }
+
+        private void RefreshStep2Cards()
+        {
+            lblPrevCount.Text = prevClasses.Count + "개 반";
+            lblNewCount.Text = newClasses.Count + "개 반";
+
+            pnlPrevInputs.SuspendLayout();
+            pnlPrevInputs.Controls.Clear();
+            prevClassInputs.Clear();
+
+            int cardInnerW = (1100 - 24) / 2 - 44;
+
+            for (int i = 0; i < prevClasses.Count; i++)
+            {
+                int idx = i;
+                RoundedTextBox rtb = new RoundedTextBox(prevClasses[i], false)
+                {
+                    Width = cardInnerW,
+                    Height = 44,
+                    Margin = new Padding(0, 0, 0, 10)
+                };
+                rtb.ValueChanged += (s, e) =>
+                {
+                    if (idx < prevClasses.Count) prevClasses[idx] = rtb.Text;
+                };
+                prevClassInputs.Add(rtb);
+                pnlPrevInputs.Controls.Add(rtb);
+            }
+            pnlPrevInputs.ResumeLayout();
+
+            pnlNewInputs.SuspendLayout();
+            pnlNewInputs.Controls.Clear();
+            newClassInputs.Clear();
+
+            for (int i = 0; i < newClasses.Count; i++)
+            {
+                int idx = i;
+                RoundedTextBox rtb = new RoundedTextBox(newClasses[i], true)
+                {
+                    Width = cardInnerW,
+                    Height = 44,
+                    Margin = new Padding(0, 0, 0, 10)
+                };
+                rtb.ValueChanged += (s, e) =>
+                {
+                    if (idx < newClasses.Count) newClasses[idx] = rtb.Text;
+                };
+                newClassInputs.Add(rtb);
+                pnlNewInputs.Controls.Add(rtb);
+            }
+            pnlNewInputs.ResumeLayout();
+
+            int maxCount = Math.Max(prevClasses.Count, newClasses.Count);
+            int cardH = Math.Max(320, 44 + 12 + maxCount * 54 + 36);
+            cardsTable.Height = cardH;
+
+            if (step2TagBanner != null)
+            {
+                step2TagBanner.Location = new Point(0, cardsTable.Bottom + 20);
+                step2Container.Height = step2TagBanner.Bottom + 40;
+            }
+            else
+            {
+                step2Container.Height = cardsTable.Bottom + 40;
+            }
+        }
+
+        private void HandlePrevCountChange(int count)
+        {
+            for (int i = 0; i < prevClassInputs.Count && i < prevClasses.Count; i++)
+            {
+                prevClasses[i] = prevClassInputs[i].Text;
+            }
+
+            count = Math.Max(1, Math.Min(20, count));
+            while (prevClasses.Count < count)
+            {
+                prevClasses.Add((prevClasses.Count + 1) + "반");
+            }
+            while (prevClasses.Count > count)
+            {
+                prevClasses.RemoveAt(prevClasses.Count - 1);
+            }
+            RefreshStep2Cards();
+        }
+
+        private void HandleNewCountChange(int count)
+        {
+            for (int i = 0; i < newClassInputs.Count && i < newClasses.Count; i++)
+            {
+                newClasses[i] = newClassInputs[i].Text;
+            }
+
+            count = Math.Max(1, Math.Min(20, count));
+            while (newClasses.Count < count)
+            {
+                int idx = newClasses.Count;
+                string def = idx < DefaultHangulClasses.Length ? DefaultHangulClasses[idx] : (idx + 1) + "반";
+                newClasses.Add(def);
+            }
+            while (newClasses.Count > count)
+            {
+                newClasses.RemoveAt(newClasses.Count - 1);
+            }
+            RefreshStep2Cards();
         }
 
         private void CreateStep3Panel()
@@ -2164,8 +2496,7 @@ namespace SmartClassAssigner
                 return;
             }
 
-            lblStep2Info.Text = string.Format("현재 총 {0}명 학생 로드됨 | 감지된 기존 반: {1} | 번호 부여 체계: {2}",
-                rawRecords.Count, string.Join(", ", prevClasses), GetNumberingModeDisplay(numberingMode));
+            RefreshStep2Cards();
 
             step1Panel.Visible = false;
             step2Panel.Visible = true;
@@ -2248,12 +2579,10 @@ namespace SmartClassAssigner
                 lblFileStatus.ForeColor = Color.FromArgb(5, 150, 105);
 
                 newClasses.Clear();
-                string[] hangulClasses = new string[] { "가반", "나반", "다반", "라반", "마반", "바반", "사반", "아반", "자반", "차반" };
                 for (int i = 0; i < prevClasses.Count; i++)
                 {
-                    newClasses.Add(i < hangulClasses.Length ? hangulClasses[i] : (i + 1) + "반");
+                    newClasses.Add(i < DefaultHangulClasses.Length ? DefaultHangulClasses[i] : (i + 1) + "반");
                 }
-                txtNewClasses.Text = string.Join(", ", newClasses);
 
                 MessageBox.Show(string.Format("총 {0}명의 학생 데이터를 성공적으로 읽어왔습니다.", rawRecords.Count), "로드 성공", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
@@ -2336,31 +2665,31 @@ namespace SmartClassAssigner
                 var sample = new Dictionary<string, List<StudentRecord>>();
                 sample.Add("1반", new List<StudentRecord>
                 {
-                    new StudentRecord { PrevClass = "1반", PrevNumber = "1", Name = "김민준", Gender = "남", Score = 187, Rank = 1, Remarks = "생활지도, 분리요청(이도윤)" },
-                    new StudentRecord { PrevClass = "1반", PrevNumber = "2", Name = "이서아", Gender = "여", Score = 186, Rank = 2, Remarks = "특수아동" },
-                    new StudentRecord { PrevClass = "1반", PrevNumber = "3", Name = "박서준", Gender = "남", Score = 173, Rank = 3, Remarks = "다문화" },
-                    new StudentRecord { PrevClass = "1반", PrevNumber = "4", Name = "김서윤", Gender = "여", Score = 162, Rank = 4, Remarks = "학습부진" }
+                    new StudentRecord { PrevNumber = "1", Name = "김민준", Gender = "남", KoreanScore = 95, MathScore = 92, Score = 187, Rank = 1, Remarks = "생활지도, 분리요청(이도윤)" },
+                    new StudentRecord { PrevNumber = "2", Name = "이서아", Gender = "여", KoreanScore = 92, MathScore = 94, Score = 186, Rank = 2, Remarks = "특수아동" },
+                    new StudentRecord { PrevNumber = "3", Name = "박서준", Gender = "남", KoreanScore = 88, MathScore = 85, Score = 173, Rank = 3, Remarks = "다문화" },
+                    new StudentRecord { PrevNumber = "4", Name = "김서윤", Gender = "여", KoreanScore = 82, MathScore = 80, Score = 162, Rank = 4, Remarks = "학습부진" }
                 });
                 sample.Add("2반", new List<StudentRecord>
                 {
-                    new StudentRecord { PrevClass = "2반", PrevNumber = "1", Name = "이도윤", Gender = "남", Score = 188, Rank = 1, Remarks = "분리요청(김민준)" },
-                    new StudentRecord { PrevClass = "2반", PrevNumber = "2", Name = "박지우", Gender = "여", Score = 180, Rank = 2, Remarks = "운동부" },
-                    new StudentRecord { PrevClass = "2반", PrevNumber = "3", Name = "정예준", Gender = "남", Score = 172, Rank = 3, Remarks = "" },
-                    new StudentRecord { PrevClass = "2반", PrevNumber = "4", Name = "최하은", Gender = "여", Score = 158, Rank = 4, Remarks = "" }
+                    new StudentRecord { PrevNumber = "1", Name = "이도윤", Gender = "남", KoreanScore = 96, MathScore = 92, Score = 188, Rank = 1, Remarks = "분리요청(김민준)" },
+                    new StudentRecord { PrevNumber = "2", Name = "박지우", Gender = "여", KoreanScore = 91, MathScore = 89, Score = 180, Rank = 2, Remarks = "운동부" },
+                    new StudentRecord { PrevNumber = "3", Name = "정예준", Gender = "남", KoreanScore = 85, MathScore = 87, Score = 172, Rank = 3, Remarks = "" },
+                    new StudentRecord { PrevNumber = "4", Name = "최하은", Gender = "여", KoreanScore = 80, MathScore = 78, Score = 158, Rank = 4, Remarks = "" }
                 });
                 sample.Add("3반", new List<StudentRecord>
                 {
-                    new StudentRecord { PrevClass = "3반", PrevNumber = "1", Name = "정시우", Gender = "남", Score = 193, Rank = 1, Remarks = "" },
-                    new StudentRecord { PrevClass = "3반", PrevNumber = "2", Name = "윤지호", Gender = "여", Score = 179, Rank = 2, Remarks = "" },
-                    new StudentRecord { PrevClass = "3반", PrevNumber = "3", Name = "임도현", Gender = "남", Score = 166, Rank = 3, Remarks = "" },
-                    new StudentRecord { PrevClass = "3반", PrevNumber = "4", Name = "송서현", Gender = "여", Score = 160, Rank = 4, Remarks = "" }
+                    new StudentRecord { PrevNumber = "1", Name = "정시우", Gender = "남", KoreanScore = 98, MathScore = 95, Score = 193, Rank = 1, Remarks = "" },
+                    new StudentRecord { PrevNumber = "2", Name = "윤지호", Gender = "여", KoreanScore = 89, MathScore = 90, Score = 179, Rank = 2, Remarks = "" },
+                    new StudentRecord { PrevNumber = "3", Name = "임도현", Gender = "남", KoreanScore = 84, MathScore = 82, Score = 166, Rank = 3, Remarks = "" },
+                    new StudentRecord { PrevNumber = "4", Name = "송서현", Gender = "여", KoreanScore = 81, MathScore = 79, Score = 160, Rank = 4, Remarks = "" }
                 });
                 sample.Add("4반", new List<StudentRecord>
                 {
-                    new StudentRecord { PrevClass = "4반", PrevNumber = "1", Name = "강건우", Gender = "남", Score = 185, Rank = 1, Remarks = "" },
-                    new StudentRecord { PrevClass = "4반", PrevNumber = "2", Name = "한수아", Gender = "여", Score = 173, Rank = 2, Remarks = "" },
-                    new StudentRecord { PrevClass = "4반", PrevNumber = "3", Name = "배준서", Gender = "남", Score = 168, Rank = 3, Remarks = "" },
-                    new StudentRecord { PrevClass = "4반", PrevNumber = "4", Name = "신예은", Gender = "여", Score = 157, Rank = 4, Remarks = "" }
+                    new StudentRecord { PrevNumber = "1", Name = "강건우", Gender = "남", KoreanScore = 94, MathScore = 91, Score = 185, Rank = 1, Remarks = "" },
+                    new StudentRecord { PrevNumber = "2", Name = "한수아", Gender = "여", KoreanScore = 87, MathScore = 86, Score = 173, Rank = 2, Remarks = "" },
+                    new StudentRecord { PrevNumber = "3", Name = "배준서", Gender = "남", KoreanScore = 85, MathScore = 83, Score = 168, Rank = 3, Remarks = "" },
+                    new StudentRecord { PrevNumber = "4", Name = "신예은", Gender = "여", KoreanScore = 79, MathScore = 78, Score = 157, Rank = 4, Remarks = "" }
                 });
 
                 ExcelManager.WriteStyledXlsx(sfd.FileName, sample, isTemplate: true);
@@ -2370,20 +2699,30 @@ namespace SmartClassAssigner
 
         private void RunAssignment()
         {
-            string input = txtNewClasses.Text.Trim();
-            string[] tokens = input.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
-            newClasses.Clear();
-            foreach (var t in tokens)
+            for (int i = 0; i < prevClassInputs.Count && i < prevClasses.Count; i++)
             {
-                string c = t.Trim();
-                if (!string.IsNullOrEmpty(c) && !newClasses.Contains(c)) newClasses.Add(c);
+                string t = prevClassInputs[i].Text.Trim();
+                if (!string.IsNullOrEmpty(t)) prevClasses[i] = t;
+            }
+            for (int i = 0; i < newClassInputs.Count && i < newClasses.Count; i++)
+            {
+                string t = newClassInputs[i].Text.Trim();
+                if (!string.IsNullOrEmpty(t)) newClasses[i] = t;
             }
 
-            if (newClasses.Count == 0)
+            List<string> validNew = new List<string>();
+            foreach (var c in newClasses)
             {
-                MessageBox.Show("최소 1개 이상의 새로운 반 명칭을 입력해야 합니다.", "경고", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                string t = c.Trim();
+                if (!string.IsNullOrEmpty(t) && !validNew.Contains(t)) validNew.Add(t);
+            }
+
+            if (validNew.Count == 0)
+            {
+                MessageBox.Show("최소 1개 이상의 새로운 진급반 명칭을 입력해야 합니다.", "경고", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
+            newClasses = validNew;
 
             try
             {
