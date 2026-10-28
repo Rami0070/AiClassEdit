@@ -1634,9 +1634,9 @@ namespace SmartClassAssigner
                      ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw, true);
             BackColor = Color.White;
             TitleText = "스마트 학급편성 시스템";
-            Font = AppFont.Get(24f, FontStyle.Bold);
-            Height = 64;
-            Width = 470;
+            Font = AppFont.Get(28.5f, FontStyle.Bold);
+            Height = 78;
+            Width = 560;
         }
 
         protected override void OnPaint(PaintEventArgs pevent)
@@ -1653,17 +1653,21 @@ namespace SmartClassAssigner
                 g.FillRectangle(pb, ClientRectangle);
             }
 
-            // 1. 은은한 입체 그림자 (소프트 파스텔 그림자)
-            Rectangle shadowRect = new Rectangle(1, 2, Width - 3, Height - 3);
-            using (GraphicsPath sp = GraphicsHelper.GetRoundedPath(shadowRect, 16))
-            using (SolidBrush sb = new SolidBrush(Color.FromArgb(220, 238, 230)))
+            // 1. 깊이감 있는 멀티레이어 소프트 드롭 섀도우 (Soft Elevation Shadow)
+            for (int s = 5; s >= 1; s--)
             {
-                g.FillPath(sb, sp);
+                int alpha = 8 + (6 - s) * 7; // 부드럽게 퍼지는 입체 그림자
+                Rectangle sRect = new Rectangle(6, 4 + s * 2, Width - 12, Height - 16);
+                using (GraphicsPath sp = GraphicsHelper.GetRoundedPath(sRect, 20))
+                using (SolidBrush sb = new SolidBrush(Color.FromArgb(alpha, 15, 23, 42)))
+                {
+                    g.FillPath(sb, sp);
+                }
             }
 
             // 2. 메인 카드 본체: 고급 파스텔 민트 그라데이션
-            Rectangle mainRect = new Rectangle(1, 1, Width - 3, Height - 4);
-            using (GraphicsPath mp = GraphicsHelper.GetRoundedPath(mainRect, 16))
+            Rectangle mainRect = new Rectangle(6, 3, Width - 12, Height - 14);
+            using (GraphicsPath mp = GraphicsHelper.GetRoundedPath(mainRect, 20))
             {
                 using (LinearGradientBrush lgb = new LinearGradientBrush(mainRect,
                     Color.FromArgb(236, 253, 245),
@@ -1678,24 +1682,17 @@ namespace SmartClassAssigner
                 {
                     g.DrawPath(bp, mp);
                 }
-
-                // 하단 에메랄드 시그니처 포인트 라인
-                using (Pen ep = new Pen(Color.FromArgb(16, 185, 129), 2.5f))
-                {
-                    g.DrawLine(ep, 32, Height - 4, Width - 32, Height - 4);
-                }
             }
 
-            // 3. 타이틀 텍스트 렌더링 (24pt 굵은 글씨, 선명하고 고급스러운 딥 에메랄드 그린)
+            // 3. 타이틀 텍스트 렌더링 (28.5pt 볼드, 딥 에메랄드 그린 컬러로 정교한 중앙 배치)
             StringFormat sf = new StringFormat
             {
                 Alignment = StringAlignment.Center,
                 LineAlignment = StringAlignment.Center
             };
-            Rectangle textRect = new Rectangle(0, 0, Width, Height - 4);
             using (SolidBrush tb = new SolidBrush(Color.FromArgb(6, 78, 59)))
             {
-                g.DrawString(TitleText, Font, tb, textRect, sf);
+                g.DrawString(TitleText, Font, tb, mainRect, sf);
             }
         }
     }
@@ -1859,7 +1856,7 @@ namespace SmartClassAssigner
             headerPanel = new Panel
             {
                 Dock = DockStyle.Top,
-                Height = 88,
+                Height = 104,
                 BackColor = Color.White
             };
             headerPanel.Paint += (s, e) =>
@@ -2139,7 +2136,8 @@ namespace SmartClassAssigner
             Action centerLayout = () =>
             {
                 int left = Math.Max(20, (step1Panel.ClientSize.Width - centerContainer.Width) / 2);
-                centerContainer.Location = new Point(left, 50);
+                int top = Math.Max(75, (step1Panel.ClientSize.Height - centerContainer.Height) / 2 + 25);
+                centerContainer.Location = new Point(left, top);
             };
             step1Panel.Resize += (s, e) => centerLayout();
             step1Panel.Controls.Add(centerContainer);
@@ -2371,7 +2369,8 @@ namespace SmartClassAssigner
             Action centerLayout = () =>
             {
                 int left = Math.Max(20, (step2Panel.ClientSize.Width - step2Container.Width) / 2);
-                step2Container.Location = new Point(left, 45);
+                int top = Math.Max(75, (step2Panel.ClientSize.Height - step2Container.Height) / 2 + 25);
+                step2Container.Location = new Point(left, top);
             };
             step2Panel.Resize += (s, e) => centerLayout();
             step2Panel.Controls.Add(step2Container);
@@ -2489,7 +2488,7 @@ namespace SmartClassAssigner
             step3Panel = new Panel
             {
                 Dock = DockStyle.Fill,
-                Padding = new Padding(28, 30, 28, 25),
+                Padding = new Padding(28, 55, 28, 28),
                 BackColor = Color.FromArgb(248, 250, 252),
                 Visible = false
             };

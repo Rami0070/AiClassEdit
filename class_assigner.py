@@ -530,24 +530,24 @@ class SmartClassApp(tk.Tk):
 
     def create_widgets(self):
         # 상단 네비게이션 헤더
-        header_frame = tk.Frame(self, bg='#FFFFFF', height=88, bd=1, relief='solid', highlightthickness=0)
+        header_frame = tk.Frame(self, bg='#FFFFFF', height=104, bd=1, relief='solid', highlightthickness=0)
         header_frame.pack(fill='x', side='top')
         header_frame.pack_propagate(False)
 
-        # 타이틀 박스 (파스텔 톤 배경 및 24pt 굵은 글씨)
-        title_box = tk.Frame(header_frame, bg='#ECFDF5', bd=1, relief='solid', highlightthickness=1, highlightbackground='#6EE7B7', padx=32, pady=10)
+        # 타이틀 그림자 효과 (소프트 드롭 섀도우)
+        shadow_box = tk.Frame(header_frame, bg='#CBD5E1', bd=0)
+        shadow_box.place(relx=0.5, rely=0.5, anchor='center', x=3, y=4)
+
+        # 타이틀 박스 (파스텔 톤 배경, 28pt 굵은 글씨, 밑줄 제거)
+        title_box = tk.Frame(header_frame, bg='#ECFDF5', bd=1, relief='solid', highlightthickness=1.5, highlightbackground='#6EE7B7', padx=42, pady=12)
         title_box.place(relx=0.5, rely=0.5, anchor='center')
 
-        title_label = tk.Label(title_box, text="스마트 학급편성 시스템", font=('Pretendard', 24, 'bold'), bg='#ECFDF5', fg='#064E3B')
+        title_label = tk.Label(title_box, text="스마트 학급편성 시스템", font=('Pretendard', 28, 'bold'), bg='#ECFDF5', fg='#064E3B')
         title_label.pack()
 
-        # 하단 에메랄드 포인트 라인
-        accent_bar = tk.Frame(title_box, bg='#10B981', height=3)
-        accent_bar.pack(fill='x', pady=(4, 0))
-
-        # 메인 컨테이너 (단계별 뷰 전환)
+        # 메인 컨테이너 (전체화면 및 일반 창에서도 아래쪽으로 균형감 있게 여백 배치)
         self.main_container = tk.Frame(self, bg='#F8FAFC')
-        self.main_container.pack(fill='both', expand=True, padx=28, pady=25)
+        self.main_container.pack(fill='both', expand=True, padx=28, pady=(55, 30))
 
         self.show_step1()
 
