@@ -1895,7 +1895,33 @@ namespace SmartClassAssigner
             headerPanel.Controls.Add(titleBox);
             centerHeaderTitle();
 
-            // 2. 메인 컨텐츠 영역 (헤더 바 아래 도킹)
+            // 2. 하단 워터마크 푸터 (우측 하단 빈 공간: "Designed by Rami Since 2026")
+            Panel footerPanel = new Panel
+            {
+                Dock = DockStyle.Bottom,
+                Height = 28,
+                BackColor = Color.FromArgb(248, 250, 252)
+            };
+            Label lblFooterCredit = new Label
+            {
+                Text = "Designed by Rami Since 2026",
+                Font = AppFont.Get(9.5f, FontStyle.Regular),
+                ForeColor = Color.FromArgb(148, 163, 184), // 작고 흐리게 (Slate-400)
+                AutoSize = true,
+                BackColor = Color.Transparent
+            };
+            Action updateFooterLayout = () =>
+            {
+                lblFooterCredit.Location = new Point(
+                    Math.Max(10, footerPanel.ClientSize.Width - lblFooterCredit.PreferredWidth - 28),
+                    Math.Max(2, (footerPanel.ClientSize.Height - lblFooterCredit.PreferredHeight) / 2)
+                );
+            };
+            footerPanel.Resize += (s, e) => updateFooterLayout();
+            footerPanel.Controls.Add(lblFooterCredit);
+            updateFooterLayout();
+
+            // 3. 메인 컨텐츠 영역 (헤더 바와 푸터 사이 도킹)
             contentPanel = new Panel
             {
                 Dock = DockStyle.Fill,
@@ -1903,8 +1929,10 @@ namespace SmartClassAssigner
             };
 
             this.Controls.Add(contentPanel);
+            this.Controls.Add(footerPanel);
             this.Controls.Add(headerPanel);
             headerPanel.SendToBack();
+            footerPanel.SendToBack();
             contentPanel.BringToFront();
 
             // Step 패널 초기화 및 contentPanel에 등록

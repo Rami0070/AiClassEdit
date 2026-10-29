@@ -555,9 +555,17 @@ class SmartClassApp(tk.Tk):
         title_label = tk.Label(title_box, text="스마트 학급편성 시스템", font=('Pretendard', 28, 'bold'), bg='#ECFDF5', fg='#064E3B')
         title_label.pack()
 
+        # 우측 하단 워터마크 푸터 ("Designed by Rami Since 2026")
+        footer_frame = tk.Frame(self, bg='#F8FAFC', height=28)
+        footer_frame.pack(side='bottom', fill='x')
+        footer_frame.pack_propagate(False)
+
+        lbl_watermark = tk.Label(footer_frame, text="Designed by Rami Since 2026", font=('Pretendard', 9), fg='#94A3B8', bg='#F8FAFC')
+        lbl_watermark.pack(side='right', padx=28, pady=4)
+
         # 메인 컨테이너 (전체화면 및 일반 창에서도 아래쪽으로 균형감 있게 여백 배치)
         self.main_container = tk.Frame(self, bg='#F8FAFC')
-        self.main_container.pack(fill='both', expand=True, padx=28, pady=(55, 30))
+        self.main_container.pack(fill='both', expand=True, padx=28, pady=(45, 10))
 
         self.show_step1()
 
