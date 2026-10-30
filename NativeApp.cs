@@ -34,6 +34,7 @@ namespace SmartClassAssigner
         public int AssignedNumber { get; set; }
         public bool IsSpecial { get; set; }
         public List<string> SeparateFromNames { get; set; }
+        public List<string> TwinNames { get; set; }
 
         public StudentRecord()
         {
@@ -42,6 +43,7 @@ namespace SmartClassAssigner
             KoreanScore = 0;
             MathScore = 0;
             SeparateFromNames = new List<string>();
+            TwinNames = new List<string>();
         }
     }
 
@@ -91,6 +93,32 @@ namespace SmartClassAssigner
             {
                 @"분리요청\s*[\(\:\-]?\s*([가-힣a-zA-Z]{2,10})\s*[\)]?",
                 @"분리\s*[\(\:\-]?\s*([가-힣a-zA-Z]{2,10})\s*[\)]?"
+            };
+
+            foreach (var pat in patterns)
+            {
+                var matches = Regex.Matches(remarks, pat);
+                foreach (Match m in matches)
+                {
+                    string name = m.Groups[1].Value.Trim();
+                    if (!string.IsNullOrEmpty(name) && !result.Contains(name))
+                    {
+                        result.Add(name);
+                    }
+                }
+            }
+            return result;
+        }
+
+        public static List<string> ParseTwinRequests(string remarks)
+        {
+            List<string> result = new List<string>();
+            if (string.IsNullOrEmpty(remarks)) return result;
+
+            string[] patterns = new string[]
+            {
+                @"(?:쌍생아|쌍둥이|쌍동이)\s*[\(\:\-]?\s*([가-힣a-zA-Z]{2,10})\s*[\)]?",
+                @"(?:쌍생아|쌍둥이|쌍동이)\s+([가-힣a-zA-Z]{2,10})"
             };
 
             foreach (var pat in patterns)
@@ -433,7 +461,8 @@ namespace SmartClassAssigner
                         Score = score,
                         Remarks = remarks,
                         IsSpecial = remarks.Contains("특수"),
-                        SeparateFromNames = NameParser.ParseSeparationRequests(remarks)
+                        SeparateFromNames = NameParser.ParseSeparationRequests(remarks),
+                        TwinNames = NameParser.ParseTwinRequests(remarks)
                     };
 
                     string sur, first;
@@ -633,7 +662,8 @@ namespace SmartClassAssigner
                     Score = score,
                     Remarks = remarks,
                     IsSpecial = remarks.Contains("특수"),
-                    SeparateFromNames = NameParser.ParseSeparationRequests(remarks)
+                    SeparateFromNames = NameParser.ParseSeparationRequests(remarks),
+                    TwinNames = NameParser.ParseTwinRequests(remarks)
                 };
                 string sur, first;
                 NameParser.ParseName(name, out sur, out first);
@@ -752,6 +782,7 @@ namespace SmartClassAssigner
             // 6: 학습부진 주황 (#FED7AA)
             // 7: 분리요청 보라 (#E9D5FF)
             // 8: 운동부 초록 (#BBF7D0)
+            // 9: 쌍생아 청록 (#CCFBF1)
             return
                 "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n" +
                 "<styleSheet xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\">\n" +
@@ -760,7 +791,7 @@ namespace SmartClassAssigner
                 "    <font><name val=\"Pretendard\"/><sz val=\"10\"/><b/></font>\n" +
                 "    <font><name val=\"Pretendard\"/><sz val=\"10\"/><b/><color rgb=\"FF9F1239\"/></font>\n" +
                 "  </fonts>\n" +
-                "  <fills count=\"9\">\n" +
+                "  <fills count=\"10\">\n" +
                 "    <fill><patternFill patternType=\"none\"/></fill>\n" +
                 "    <fill><patternFill patternType=\"gray125\"/></fill>\n" +
                 "    <fill><patternFill patternType=\"solid\"><fgColor rgb=\"FFE2E8F0\"/></patternFill></fill>\n" +
@@ -770,6 +801,7 @@ namespace SmartClassAssigner
                 "    <fill><patternFill patternType=\"solid\"><fgColor rgb=\"FFFED7AA\"/></patternFill></fill>\n" +
                 "    <fill><patternFill patternType=\"solid\"><fgColor rgb=\"FFE9D5FF\"/></patternFill></fill>\n" +
                 "    <fill><patternFill patternType=\"solid\"><fgColor rgb=\"FFBBF7D0\"/></patternFill></fill>\n" +
+                "    <fill><patternFill patternType=\"solid\"><fgColor rgb=\"FFCCFBF1\"/></patternFill></fill>\n" +
                 "  </fills>\n" +
                 "  <borders count=\"2\">\n" +
                 "    <border><left/><right/><top/><bottom/></border>\n" +
@@ -780,7 +812,7 @@ namespace SmartClassAssigner
                 "      <bottom style=\"thin\"><color rgb=\"FFCBD5E1\"/></bottom>\n" +
                 "    </border>\n" +
                 "  </borders>\n" +
-                "  <cellXfs count=\"9\">\n" +
+                "  <cellXfs count=\"10\">\n" +
                 "    <xf numFmtId=\"0\" fontId=\"0\" fillId=\"0\" borderId=\"0\" xfId=\"0\"/>\n" +
                 "    <xf numFmtId=\"0\" fontId=\"1\" fillId=\"2\" borderId=\"1\" xfId=\"0\" applyFont=\"1\" applyFill=\"1\" applyBorder=\"1\" applyAlignment=\"1\"><alignment horizontal=\"center\" vertical=\"center\"/></xf>\n" +
                 "    <xf numFmtId=\"0\" fontId=\"0\" fillId=\"0\" borderId=\"1\" xfId=\"0\" applyBorder=\"1\" applyAlignment=\"1\"><alignment horizontal=\"center\" vertical=\"center\"/></xf>\n" +
@@ -790,6 +822,7 @@ namespace SmartClassAssigner
                 "    <xf numFmtId=\"0\" fontId=\"1\" fillId=\"6\" borderId=\"1\" xfId=\"0\" applyFont=\"1\" applyFill=\"1\" applyBorder=\"1\" applyAlignment=\"1\"><alignment horizontal=\"left\" vertical=\"center\"/></xf>\n" +
                 "    <xf numFmtId=\"0\" fontId=\"1\" fillId=\"7\" borderId=\"1\" xfId=\"0\" applyFont=\"1\" applyFill=\"1\" applyBorder=\"1\" applyAlignment=\"1\"><alignment horizontal=\"left\" vertical=\"center\"/></xf>\n" +
                 "    <xf numFmtId=\"0\" fontId=\"1\" fillId=\"8\" borderId=\"1\" xfId=\"0\" applyFont=\"1\" applyFill=\"1\" applyBorder=\"1\" applyAlignment=\"1\"><alignment horizontal=\"left\" vertical=\"center\"/></xf>\n" +
+                "    <xf numFmtId=\"0\" fontId=\"1\" fillId=\"9\" borderId=\"1\" xfId=\"0\" applyFont=\"1\" applyFill=\"1\" applyBorder=\"1\" applyAlignment=\"1\"><alignment horizontal=\"left\" vertical=\"center\"/></xf>\n" +
                 "  </cellXfs>\n" +
                 "</styleSheet>";
         }
@@ -842,35 +875,49 @@ namespace SmartClassAssigner
             sb.Append("    </row>\n");
 
             // 데이터 행
+            int maxRow = Math.Max(25, students.Count + 1);
             int rowIdx = 2;
             foreach (var s in students)
             {
                 sb.AppendFormat("    <row r=\"{0}\">\n", rowIdx);
 
-                string[] vals;
                 if (isTemplate)
                 {
                     int kor = s.KoreanScore > 0 ? s.KoreanScore : (s.Score > 0 ? (int)(s.Score * 0.52) : 90);
                     int math = s.MathScore > 0 ? s.MathScore : (s.Score > 0 ? (int)(s.Score * 0.48) : 88);
                     int total = s.Score > 0 ? (int)s.Score : (kor + math);
-                    vals = new string[]
-                    {
-                        s.PrevNumber ?? "",
-                        s.Name ?? "",
-                        s.Gender ?? "",
-                        kor.ToString(),
-                        math.ToString(),
-                        total.ToString(),
-                        s.Rank > 0 ? s.Rank.ToString() : "",
-                        s.Remarks ?? ""
-                    };
+                    int rank = s.Rank > 0 ? s.Rank : (rowIdx - 1);
+
+                    int remarkStyle = 2;
+                    string rem = s.Remarks ?? "";
+                    if (rem.Contains("생활지도")) remarkStyle = 3;
+                    else if (rem.Contains("특수")) remarkStyle = 4;
+                    else if (rem.Contains("다문화")) remarkStyle = 5;
+                    else if (rem.Contains("학습부진")) remarkStyle = 6;
+                    else if (rem.Contains("분리요청")) remarkStyle = 7;
+                    else if (rem.Contains("운동부")) remarkStyle = 8;
+                    else if (rem.Contains("쌍생아") || rem.Contains("쌍둥이") || rem.Contains("쌍동이")) remarkStyle = 9;
+
+                    // 번호, 이름, 성별
+                    sb.AppendFormat("      <c r=\"A{0}\" t=\"inlineStr\" s=\"2\"><is><t>{1}</t></is></c>\n", rowIdx, EscapeXml(s.PrevNumber ?? ""));
+                    sb.AppendFormat("      <c r=\"B{0}\" t=\"inlineStr\" s=\"2\"><is><t>{1}</t></is></c>\n", rowIdx, EscapeXml(s.Name ?? ""));
+                    sb.AppendFormat("      <c r=\"C{0}\" t=\"inlineStr\" s=\"2\"><is><t>{1}</t></is></c>\n", rowIdx, EscapeXml(s.Gender ?? ""));
+                    // 국어, 수학
+                    sb.AppendFormat("      <c r=\"D{0}\" s=\"2\"><v>{1}</v></c>\n", rowIdx, kor);
+                    sb.AppendFormat("      <c r=\"E{0}\" s=\"2\"><v>{1}</v></c>\n", rowIdx, math);
+                    // 합계 수식 (=D{rowIdx}+E{rowIdx})
+                    sb.AppendFormat("      <c r=\"F{0}\" s=\"2\"><f>D{0}+E{0}</f><v>{1}</v></c>\n", rowIdx, total);
+                    // 석차 수식 (=RANK(F{rowIdx}, $F$2:$F${maxRow}))
+                    sb.AppendFormat("      <c r=\"G{0}\" s=\"2\"><f>RANK(F{0},$F$2:$F${1})</f><v>{2}</v></c>\n", rowIdx, maxRow, rank);
+                    // 비고
+                    sb.AppendFormat("      <c r=\"H{0}\" t=\"inlineStr\" s=\"{1}\"><is><t>{2}</t></is></c>\n", rowIdx, remarkStyle, EscapeXml(s.Remarks ?? ""));
                 }
                 else
                 {
                     int kor = s.KoreanScore > 0 ? s.KoreanScore : (s.Score > 0 ? (int)(s.Score * 0.52) : 0);
                     int math = s.MathScore > 0 ? s.MathScore : (s.Score > 0 ? (int)(s.Score - kor) : 0);
                     int total = s.Score > 0 ? (int)s.Score : (kor + math);
-                    vals = new string[]
+                    string[] vals = new string[]
                     {
                         s.PrevClass ?? "",
                         s.PrevNumber ?? "",
@@ -883,27 +930,45 @@ namespace SmartClassAssigner
                         s.AssignedClass ?? "",
                         s.Remarks ?? ""
                     };
-                }
 
-                // 비고 스타일 식별
-                int remarkStyle = 2; // 기본 테두리+가운데정렬
-                string rem = s.Remarks ?? "";
-                if (rem.Contains("생활지도")) remarkStyle = 3;
-                else if (rem.Contains("특수")) remarkStyle = 4;
-                else if (rem.Contains("다문화")) remarkStyle = 5;
-                else if (rem.Contains("학습부진")) remarkStyle = 6;
-                else if (rem.Contains("분리요청")) remarkStyle = 7;
-                else if (rem.Contains("운동부")) remarkStyle = 8;
+                    int remarkStyle = 2;
+                    string rem = s.Remarks ?? "";
+                    if (rem.Contains("생활지도")) remarkStyle = 3;
+                    else if (rem.Contains("특수")) remarkStyle = 4;
+                    else if (rem.Contains("다문화")) remarkStyle = 5;
+                    else if (rem.Contains("학습부진")) remarkStyle = 6;
+                    else if (rem.Contains("분리요청")) remarkStyle = 7;
+                    else if (rem.Contains("운동부")) remarkStyle = 8;
+                    else if (rem.Contains("쌍생아") || rem.Contains("쌍둥이") || rem.Contains("쌍동이")) remarkStyle = 9;
 
-                for (int c = 0; c < vals.Length; c++)
-                {
-                    string colLetter = ((char)('A' + c)).ToString();
-                    int styleId = (c == vals.Length - 1) ? remarkStyle : 2;
-                    sb.AppendFormat("      <c r=\"{0}{1}\" t=\"inlineStr\" s=\"{2}\"><is><t>{3}</t></is></c>\n",
-                        colLetter, rowIdx, styleId, EscapeXml(vals[c]));
+                    for (int c = 0; c < vals.Length; c++)
+                    {
+                        string colLetter = ((char)('A' + c)).ToString();
+                        int styleId = (c == vals.Length - 1) ? remarkStyle : 2;
+                        sb.AppendFormat("      <c r=\"{0}{1}\" t=\"inlineStr\" s=\"{2}\"><is><t>{3}</t></is></c>\n",
+                            colLetter, rowIdx, styleId, EscapeXml(vals[c]));
+                    }
                 }
                 sb.Append("    </row>\n");
                 rowIdx++;
+            }
+
+            // 템플릿인 경우 사용자가 바로 입력할 수 있도록 합계/석차 자동 수식이 들어간 빈 행들을 미리 배치
+            if (isTemplate && rowIdx <= maxRow)
+            {
+                for (int er = rowIdx; er <= maxRow; er++)
+                {
+                    sb.AppendFormat("    <row r=\"{0}\">\n", er);
+                    sb.AppendFormat("      <c r=\"A{0}\" t=\"inlineStr\" s=\"2\"><is><t>{1}</t></is></c>\n", er, er - 1);
+                    sb.AppendFormat("      <c r=\"B{0}\" t=\"inlineStr\" s=\"2\"><is><t></t></is></c>\n", er);
+                    sb.AppendFormat("      <c r=\"C{0}\" t=\"inlineStr\" s=\"2\"><is><t></t></is></c>\n", er);
+                    sb.AppendFormat("      <c r=\"D{0}\" s=\"2\"><v></v></c>\n", er);
+                    sb.AppendFormat("      <c r=\"E{0}\" s=\"2\"><v></v></c>\n", er);
+                    sb.AppendFormat("      <c r=\"F{0}\" s=\"2\"><f>IF(OR(D{0}&lt;&gt;&quot;&quot;,E{0}&lt;&gt;&quot;&quot;),D{0}+E{0},&quot;&quot;)</f></c>\n", er);
+                    sb.AppendFormat("      <c r=\"G{0}\" s=\"2\"><f>IF(ISNUMBER(F{0}),RANK(F{0},$F$2:$F${1}),&quot;&quot;)</f></c>\n", er, maxRow);
+                    sb.AppendFormat("      <c r=\"H{0}\" t=\"inlineStr\" s=\"2\"><is><t></t></is></c>\n", er);
+                    sb.Append("    </row>\n");
+                }
             }
 
             sb.Append("  </sheetData>\n");
@@ -999,6 +1064,69 @@ namespace SmartClassAssigner
                 nameToIds[s.Name].Add(s.Id);
             }
 
+            // 쌍생아(쌍둥이, 쌍동이) 관계 그룹 식별 및 가나다순 선순위(Leader) 지정
+            List<List<StudentRecord>> twinGroups = new List<List<StudentRecord>>();
+            HashSet<string> processedTwinIds = new HashSet<string>();
+
+            foreach (var s in students)
+            {
+                if (processedTwinIds.Contains(s.Id)) continue;
+                bool isTwinCandidate = (s.TwinNames != null && s.TwinNames.Count > 0);
+                if (!isTwinCandidate)
+                {
+                    foreach (var other in students)
+                    {
+                        if (other.Id != s.Id && other.TwinNames != null && other.TwinNames.Contains(s.Name))
+                        {
+                            isTwinCandidate = true;
+                            break;
+                        }
+                    }
+                }
+                if (!isTwinCandidate) continue;
+
+                List<StudentRecord> group = new List<StudentRecord>();
+                Queue<StudentRecord> q = new Queue<StudentRecord>();
+                q.Enqueue(s);
+                processedTwinIds.Add(s.Id);
+
+                while (q.Count > 0)
+                {
+                    var curr = q.Dequeue();
+                    group.Add(curr);
+
+                    if (curr.TwinNames != null)
+                    {
+                        foreach (var targetName in curr.TwinNames)
+                        {
+                            foreach (var target in students)
+                            {
+                                if (!processedTwinIds.Contains(target.Id) && target.Name == targetName)
+                                {
+                                    processedTwinIds.Add(target.Id);
+                                    q.Enqueue(target);
+                                }
+                            }
+                        }
+                    }
+                    foreach (var other in students)
+                    {
+                        if (!processedTwinIds.Contains(other.Id) && other.TwinNames != null && other.TwinNames.Contains(curr.Name))
+                        {
+                            processedTwinIds.Add(other.Id);
+                            q.Enqueue(other);
+                        }
+                    }
+                }
+
+                if (group.Count > 1)
+                {
+                    // "이 때, 가나다 순으로 더 빠른 이름인 사람 반으로 모이게 해줘."
+                    group.Sort((a, b) => string.Compare(a.Name, b.Name, StringComparison.CurrentCulture));
+                    twinGroups.Add(group);
+                }
+            }
+
             Func<double> calcEnergy = () =>
             {
                 double penalty = 0;
@@ -1043,6 +1171,48 @@ namespace SmartClassAssigner
                     int weighted = ids.Count + specCount;
                     penalty += Math.Abs(weighted - ((double)students.Count / K)) * 5000;
                 }
+
+                // 쌍생아 배정 규칙 (비고란 균형 분배 제외, 전용 법칙 적용)
+                // 1) 각 쌍생아는 가나다순으로 가장 빠른 리더 반으로 모임
+                foreach (var tg in twinGroups)
+                {
+                    var leader = tg[0];
+                    string leaderClass = null;
+                    foreach (var cl in newClasses)
+                    {
+                        if (assignment[cl].Contains(leader.Id)) { leaderClass = cl; break; }
+                    }
+                    for (int ti = 1; ti < tg.Count; ti++)
+                    {
+                        var fol = tg[ti];
+                        if (leaderClass != null && !assignment[leaderClass].Contains(fol.Id))
+                        {
+                            penalty += 3000000;
+                        }
+                    }
+                }
+
+                // 2) 한 반에 쌍생아는 최대 한 쌍만 배정 (고루 분산)
+                foreach (var cl in newClasses)
+                {
+                    int twinsInClass = 0;
+                    foreach (var tg in twinGroups)
+                    {
+                        foreach (var tm in tg)
+                        {
+                            if (assignment[cl].Contains(tm.Id))
+                            {
+                                twinsInClass++;
+                                break;
+                            }
+                        }
+                    }
+                    if (twinsInClass > 1)
+                    {
+                        penalty += (twinsInClass - 1) * 3000000;
+                    }
+                }
+
                 return penalty;
             };
 
@@ -1091,6 +1261,131 @@ namespace SmartClassAssigner
                 }
                 temp *= cooling;
             }
+
+            // 쌍생아 배정 규칙 확정 강제 (100% 무조건 보장)
+            Action enforceTwinRules = () =>
+            {
+                if (twinGroups.Count == 0) return;
+
+                Func<string, string> getClassOf = (sid) =>
+                {
+                    foreach (var cl in newClasses)
+                    {
+                        if (assignment[cl].Contains(sid)) return cl;
+                    }
+                    return null;
+                };
+
+                HashSet<string> allTwinIds = new HashSet<string>();
+                foreach (var tg in twinGroups)
+                {
+                    foreach (var tm in tg) allTwinIds.Add(tm.Id);
+                }
+
+                // 1단계: 각 쌍생아 리더가 서로 다른 반에 고루 배정되도록 보장 (한 반에 한 쌍만)
+                HashSet<string> usedLeaderClasses = new HashSet<string>();
+                for (int gi = 0; gi < twinGroups.Count; gi++)
+                {
+                    var leader = twinGroups[gi][0];
+                    string curClass = getClassOf(leader.Id);
+
+                    if (usedLeaderClasses.Contains(curClass) && usedLeaderClasses.Count < K)
+                    {
+                        string freeClass = null;
+                        foreach (var cl in newClasses)
+                        {
+                            if (!usedLeaderClasses.Contains(cl))
+                            {
+                                freeClass = cl;
+                                break;
+                            }
+                        }
+
+                        if (freeClass != null)
+                        {
+                            string swapTargetId = null;
+                            double bestDiff = double.MaxValue;
+                            foreach (var sid in assignment[freeClass])
+                            {
+                                if (allTwinIds.Contains(sid)) continue;
+                                var cand = idMap[sid];
+                                if (cand.Gender == leader.Gender)
+                                {
+                                    double diff = Math.Abs(cand.Score - leader.Score);
+                                    if (diff < bestDiff)
+                                    {
+                                        bestDiff = diff;
+                                        swapTargetId = sid;
+                                    }
+                                }
+                            }
+
+                            if (swapTargetId != null)
+                            {
+                                assignment[curClass].Remove(leader.Id);
+                                assignment[freeClass].Remove(swapTargetId);
+                                assignment[curClass].Add(swapTargetId);
+                                assignment[freeClass].Add(leader.Id);
+                                curClass = freeClass;
+                            }
+                        }
+                    }
+                    usedLeaderClasses.Add(curClass);
+                }
+
+                // 2단계: 각 쌍생아의 모든 형제자매를 가나다순 리더의 반으로 모이게 이동 (동일 성별 맞교환으로 정원/성비 불변)
+                foreach (var tg in twinGroups)
+                {
+                    var leader = tg[0];
+                    string leaderClass = getClassOf(leader.Id);
+                    if (leaderClass == null) continue;
+
+                    for (int ti = 1; ti < tg.Count; ti++)
+                    {
+                        var follower = tg[ti];
+                        string folClass = getClassOf(follower.Id);
+                        if (folClass == leaderClass) continue;
+
+                        string swapTargetId = null;
+                        double bestDiff = double.MaxValue;
+                        foreach (var sid in assignment[leaderClass])
+                        {
+                            if (allTwinIds.Contains(sid)) continue;
+                            var cand = idMap[sid];
+                            if (cand.Gender == follower.Gender)
+                            {
+                                bool hasSepConflict = false;
+                                foreach (var sepName in cand.SeparateFromNames)
+                                {
+                                    if (nameToIds.ContainsKey(sepName))
+                                    {
+                                        foreach (var tid in nameToIds[sepName])
+                                        {
+                                            if (assignment[folClass].Contains(tid)) { hasSepConflict = true; break; }
+                                        }
+                                    }
+                                }
+                                double diff = Math.Abs(cand.Score - follower.Score) + (hasSepConflict ? 100000 : 0);
+                                if (diff < bestDiff)
+                                {
+                                    bestDiff = diff;
+                                    swapTargetId = sid;
+                                }
+                            }
+                        }
+
+                        if (swapTargetId != null)
+                        {
+                            assignment[folClass].Remove(follower.Id);
+                            assignment[leaderClass].Remove(swapTargetId);
+                            assignment[folClass].Add(swapTargetId);
+                            assignment[leaderClass].Add(follower.Id);
+                        }
+                    }
+                }
+            };
+
+            enforceTwinRules();
 
             // 3. 번호 부여
             var finalResult = new Dictionary<string, List<StudentRecord>>();
@@ -2365,17 +2660,18 @@ namespace SmartClassAssigner
 
             string[,] tagPills = new string[,]
             {
-                { "생활지도 (빨강 셀 배경)", "#FFD1D5", "#9F1239", "#FDA4AF" },
-                { "특수아동 (파랑 셀 배경)", "#BFDBFE", "#1E40AF", "#93C5FD" },
-                { "다문화 (노랑 셀 배경)", "#FEF08A", "#854D0E", "#FDE047" },
-                { "학습부진 (주황 셀 배경)", "#FED7AA", "#9A3412", "#FDBA74" },
-                { "분리요청 (보라 셀 배경)", "#E9D5FF", "#6B21A8", "#D8B4FE" },
-                { "운동부 (초록 셀 배경)", "#BBF7D0", "#166534", "#86EFAC" }
+                { "생활지도 (빨강)", "#FFD1D5", "#9F1239", "#FDA4AF" },
+                { "특수아동 (파랑)", "#BFDBFE", "#1E40AF", "#93C5FD" },
+                { "다문화 (노랑)", "#FEF08A", "#854D0E", "#FDE047" },
+                { "학습부진 (주황)", "#FED7AA", "#9A3412", "#FDBA74" },
+                { "분리요청 (보라)", "#E9D5FF", "#6B21A8", "#D8B4FE" },
+                { "운동부 (초록)", "#BBF7D0", "#166534", "#86EFAC" },
+                { "쌍생아 (청록)", "#CCFBF1", "#0F766E", "#99F6E4" }
             };
 
             for (int i = 0; i < tagPills.GetLength(0); i++)
             {
-                Panel pill = new Panel { Size = new Size(165, 26), Margin = new Padding(0, 0, 8, 0) };
+                Panel pill = new Panel { Size = new Size(142, 26), Margin = new Padding(0, 0, 6, 0) };
                 Color pbg = ColorTranslator.FromHtml(tagPills[i, 1]);
                 Color pfg = ColorTranslator.FromHtml(tagPills[i, 2]);
                 Color pbd = ColorTranslator.FromHtml(tagPills[i, 3]);
@@ -2664,6 +2960,7 @@ namespace SmartClassAssigner
                             else if (tag.Contains("학습부진")) { pillBg = Color.FromArgb(254, 215, 170); pillFg = Color.FromArgb(154, 52, 18); pillBorder = Color.FromArgb(253, 186, 116); }
                             else if (tag.Contains("분리요청")) { pillBg = Color.FromArgb(233, 213, 255); pillFg = Color.FromArgb(107, 33, 168); pillBorder = Color.FromArgb(216, 180, 254); }
                             else if (tag.Contains("운동부")) { pillBg = Color.FromArgb(187, 247, 208); pillFg = Color.FromArgb(22, 101, 52); pillBorder = Color.FromArgb(134, 239, 172); }
+                            else if (tag.Contains("쌍생아") || tag.Contains("쌍둥이") || tag.Contains("쌍동이")) { pillBg = Color.FromArgb(204, 251, 241); pillFg = Color.FromArgb(15, 118, 110); pillBorder = Color.FromArgb(153, 246, 228); }
 
                             using (Font bf = AppFont.Get(11f, FontStyle.Bold))
                             {
@@ -2844,6 +3141,12 @@ namespace SmartClassAssigner
                     string surM, fM;
                     NameParser.ParseName(sM.Name, out surM, out fM);
                     sM.Surname = surM; sM.FirstName = fM;
+                    if (sM.Name == "최시우" && c == 2)
+                    {
+                        sM.Remarks = "쌍생아 (최하은)";
+                    }
+                    sM.SeparateFromNames = NameParser.ParseSeparationRequests(sM.Remarks);
+                    sM.TwinNames = NameParser.ParseTwinRequests(sM.Remarks);
                     rawRecords.Add(sM);
                     idCounter++;
 
@@ -2869,6 +3172,12 @@ namespace SmartClassAssigner
                     string surF, fF;
                     NameParser.ParseName(sF.Name, out surF, out fF);
                     sF.Surname = surF; sF.FirstName = fF;
+                    if (sF.Name == "최하은" && c == 1)
+                    {
+                        sF.Remarks = "쌍생아 (최시우)";
+                    }
+                    sF.SeparateFromNames = NameParser.ParseSeparationRequests(sF.Remarks);
+                    sF.TwinNames = NameParser.ParseTwinRequests(sF.Remarks);
                     rawRecords.Add(sF);
                     idCounter++;
                 }
@@ -2877,7 +3186,7 @@ namespace SmartClassAssigner
             prevClasses = new List<string> { "1반", "2반", "3반", "4반" };
             lblFileStatus.Text = string.Format("[완료] 예시_학생명단_80명.xlsx (총 {0}명 로드됨)", rawRecords.Count);
             lblFileStatus.ForeColor = Color.FromArgb(5, 150, 105);
-            MessageBox.Show("분리요청 및 특이사항이 포함된 80명의 예시 학생 데이터가 정상 로드되었습니다.", "예시 로드 완료", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MessageBox.Show("분리요청, 쌍생아(최시우·최하은) 및 특이사항이 포함된 80명의 예시 학생 데이터가 정상 로드되었습니다.", "예시 로드 완료", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         private void DownloadSampleExcel()
@@ -2902,11 +3211,11 @@ namespace SmartClassAssigner
                     new StudentRecord { PrevNumber = "1", Name = "이도윤", Gender = "남", KoreanScore = 96, MathScore = 92, Score = 188, Rank = 1, Remarks = "분리요청(김민준)" },
                     new StudentRecord { PrevNumber = "2", Name = "박지우", Gender = "여", KoreanScore = 91, MathScore = 89, Score = 180, Rank = 2, Remarks = "운동부" },
                     new StudentRecord { PrevNumber = "3", Name = "정예준", Gender = "남", KoreanScore = 85, MathScore = 87, Score = 172, Rank = 3, Remarks = "" },
-                    new StudentRecord { PrevNumber = "4", Name = "최하은", Gender = "여", KoreanScore = 80, MathScore = 78, Score = 158, Rank = 4, Remarks = "" }
+                    new StudentRecord { PrevNumber = "4", Name = "최하은", Gender = "여", KoreanScore = 80, MathScore = 78, Score = 158, Rank = 4, Remarks = "쌍생아(최시우)" }
                 });
                 sample.Add("3반", new List<StudentRecord>
                 {
-                    new StudentRecord { PrevNumber = "1", Name = "정시우", Gender = "남", KoreanScore = 98, MathScore = 95, Score = 193, Rank = 1, Remarks = "" },
+                    new StudentRecord { PrevNumber = "1", Name = "최시우", Gender = "남", KoreanScore = 98, MathScore = 95, Score = 193, Rank = 1, Remarks = "쌍생아(최하은)" },
                     new StudentRecord { PrevNumber = "2", Name = "윤지호", Gender = "여", KoreanScore = 89, MathScore = 90, Score = 179, Rank = 2, Remarks = "" },
                     new StudentRecord { PrevNumber = "3", Name = "임도현", Gender = "남", KoreanScore = 84, MathScore = 82, Score = 166, Rank = 3, Remarks = "" },
                     new StudentRecord { PrevNumber = "4", Name = "송서현", Gender = "여", KoreanScore = 81, MathScore = 79, Score = 160, Rank = 4, Remarks = "" }
@@ -2920,7 +3229,7 @@ namespace SmartClassAssigner
                 });
 
                 ExcelManager.WriteStyledXlsx(sfd.FileName, sample, isTemplate: true);
-                MessageBox.Show("표준 엑셀 양식이 저장되었습니다:\n" + sfd.FileName + "\n\n각 학급 시트(1반, 2반, 3반, 4반)에 '반' 항목 없이 [번호, 이름, 성별, 국어, 수학, 합계, 석차, 비고] 8개 컬럼으로 구성되어 있습니다.", "저장 성공", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show("표준 엑셀 양식이 저장되었습니다:\n" + sfd.FileName + "\n\n각 학급 시트에 [번호, 이름, 성별, 국어, 수학, 합계, 석차, 비고] 8개 컬럼으로 구성되어 있으며,\n국어·수학 자동 합산 수식(=D+E)과 합계 기준 석차 자동 계산 수식(=RANK)이 포함되어 있습니다.", "저장 성공", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
         }
 

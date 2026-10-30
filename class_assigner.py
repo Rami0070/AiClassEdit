@@ -80,6 +80,21 @@ def parse_separation_requests(remark_text):
                 names.append(name)
     return names
 
+def parse_twin_requests(remark_text):
+    if not remark_text:
+        return []
+    names = []
+    patterns = [
+        r'(?:쌍생아|쌍둥이|쌍동이)\s*[\(\:\-]?\s*([가-힣a-zA-Z]{2,10})\s*[\)]?',
+        r'(?:쌍생아|쌍둥이|쌍동이)\s+([가-힣a-zA-Z]{2,10})'
+    ]
+    for pat in patterns:
+        for match in re.finditer(pat, str(remark_text)):
+            name = match.group(1).strip()
+            if name and name not in names:
+                names.append(name)
+    return names
+
 def parse_remark_tags(remark_text):
     if not remark_text:
         return []
@@ -89,11 +104,11 @@ def parse_remark_tags(remark_text):
     for kw in keywords:
         if kw in text and kw not in tags:
             tags.append(kw)
-    # 쉼표 구분 단어 추출
+    # 쉼표 구분 단어 추출 (분리 및 쌍생아 제외)
     tokens = re.split(r'[,/;\s]+', text)
     for token in tokens:
         t = token.strip()
-        if t and not t.startswith('분리') and len(t) >= 2 and t not in tags:
+        if t and not t.startswith('분리') and not any(k in t for k in ['쌍생아', '쌍둥이', '쌍동이']) and len(t) >= 2 and t not in tags:
             tags.append(t)
     return tags
 
@@ -206,19 +221,19 @@ class SimpleExcel:
                     cell.border = thin_border
 
                 # 데이터 작성
+                max_row = max(25, len(records) + 1)
                 for row_idx, r in enumerate(records, 2):
                     if is_template:
                         kor = r.get('kor', 90)
                         math = r.get('math', 88)
-                        total = r.get('score', kor + math)
                         row_data = [
                             r.get('prevNumber', ''),
                             r.get('name', ''),
                             r.get('gender', ''),
                             kor,
                             math,
-                            total,
-                            r.get('rank', ''),
+                            f"=D{row_idx}+E{row_idx}",
+                            f"=RANK(F{row_idx}, $F$2:$F${max_row})",
                             r.get('remarks', '')
                         ]
                     else:
@@ -254,6 +269,26 @@ class SimpleExcel:
                         if col_idx == len(row_data) and style_info:
                             cell.fill = PatternFill(start_color=style_info['rgb'], end_color=style_info['rgb'], fill_type='solid')
                             cell.font = Font(name='Pretendard', size=10, bold=True, color=style_info['fg'].replace('#', ''))
+
+                # 템플릿인 경우 빈 행 자동 수식 배치
+                if is_template and len(records) + 1 < max_row:
+                    for empty_r in range(len(records) + 2, max_row + 1):
+                        empty_row_data = [
+                            empty_r - 1,
+                            '',
+                            '',
+                            '',
+                            '',
+                            f'=IF(OR(D{empty_r}<>"",E{empty_r}<>""),D{empty_r}+E{empty_r},"")',
+                            f'=IF(ISNUMBER(F{empty_r}),RANK(F{empty_r},$F$2:$F${max_row}),"")',
+                            ''
+                        ]
+                        for col_idx, val in enumerate(empty_row_data, 1):
+                            cell = ws.cell(row=empty_r, column=col_idx, value=val)
+                            cell.font = Font(name='Pretendard', size=10)
+                            cell.border = thin_border
+                            align = 'center' if col_idx != len(empty_row_data) else 'left'
+                            cell.alignment = Alignment(horizontal=align, vertical='center')
 
                 # 열 너비 자동 조정
                 for col in ws.columns:
@@ -321,6 +356,7 @@ class ClassOptimizer:
             s['surname'], s['firstName'] = parse_korean_name(s.get('name', ''))
             s['tags'] = parse_remark_tags(s.get('remarks', ''))
             s['separateFrom'] = parse_separation_requests(s.get('remarks', ''))
+            s['twinNames'] = parse_twin_requests(s.get('remarks', ''))
             s['isSpecial'] = any(k in str(s.get('remarks', '')) for k in ['특수', '특수아동', '특수반'])
 
         self.name_to_ids = defaultdict(list)
@@ -366,6 +402,41 @@ class ClassOptimizer:
             for sid in s_ids:
                 student_to_class[sid] = c
 
+        # 쌍생아 관계 그룹 식별 및 가나다순 선순위(Leader) 지정
+        twin_groups = []
+        processed_twin_ids = set()
+        for s in self.students:
+            if s['id'] in processed_twin_ids:
+                continue
+            is_twin = bool(s.get('twinNames'))
+            if not is_twin:
+                for other in self.students:
+                    if other['id'] != s['id'] and s.get('name') in other.get('twinNames', []):
+                        is_twin = True
+                        break
+            if not is_twin:
+                continue
+
+            group = []
+            queue = [s]
+            processed_twin_ids.add(s['id'])
+            while queue:
+                curr = queue.pop(0)
+                group.append(curr)
+                for target_name in curr.get('twinNames', []):
+                    for target in self.students:
+                        if target['id'] not in processed_twin_ids and target.get('name') == target_name:
+                            processed_twin_ids.add(target['id'])
+                            queue.append(target)
+                for other in self.students:
+                    if other['id'] not in processed_twin_ids and curr.get('name') in other.get('twinNames', []):
+                        processed_twin_ids.add(other['id'])
+                        queue.append(other)
+
+            if len(group) > 1:
+                group.sort(key=lambda x: x['name'])
+                twin_groups.append(group)
+
         def calculate_energy():
             total_penalty = 0
             class_students = {c: [id_to_student[sid] for sid in assignment[c]] for c in self.new_classes}
@@ -393,6 +464,26 @@ class ClassOptimizer:
                 special_count = sum(1 for s in stds if s['isSpecial'])
                 weighted_count = len(stds) + special_count
                 total_penalty += abs(weighted_count - (len(self.students) / self.K)) * 5000
+
+            # 쌍생아 배정 규칙 (비고란 균형 분배 제외, 전용 법칙 적용)
+            for tg in twin_groups:
+                leader = tg[0]
+                leader_class = None
+                for cl in self.new_classes:
+                    if leader['id'] in assignment[cl]:
+                        leader_class = cl
+                        break
+                for fol in tg[1:]:
+                    if leader_class and fol['id'] not in assignment[leader_class]:
+                        total_penalty += 3000000
+
+            for cl in self.new_classes:
+                twins_in_class = 0
+                for tg in twin_groups:
+                    if any(tm['id'] in assignment[cl] for tm in tg):
+                        twins_in_class += 1
+                if twins_in_class > 1:
+                    total_penalty += (twins_in_class - 1) * 3000000
 
             return total_penalty
 
@@ -434,6 +525,55 @@ class ClassOptimizer:
                 assignment[c2].append(sid2)
 
             temp *= cooling_rate
+
+        # 쌍생아 배정 규칙 확정 강제 (100% 무조건 보장)
+        if twin_groups:
+            def get_class_of(sid):
+                for cl in self.new_classes:
+                    if sid in assignment[cl]:
+                        return cl
+                return None
+
+            all_twin_ids = {tm['id'] for tg in twin_groups for tm in tg}
+
+            # 1단계: 각 쌍생아 리더가 서로 다른 반에 고루 배정되도록 보장 (한 반에 한 쌍만)
+            used_leader_classes = set()
+            for tg in twin_groups:
+                leader = tg[0]
+                cur_class = get_class_of(leader['id'])
+                if cur_class in used_leader_classes and len(used_leader_classes) < self.K:
+                    free_classes = [cl for cl in self.new_classes if cl not in used_leader_classes]
+                    if free_classes:
+                        free_class = free_classes[0]
+                        cands = [sid for sid in assignment[free_class] if sid not in all_twin_ids and id_to_student[sid]['gender'] == leader['gender']]
+                        if cands:
+                            cands.sort(key=lambda sid: abs(id_to_student[sid].get('score', 0) - leader.get('score', 0)))
+                            swap_id = cands[0]
+                            assignment[cur_class].remove(leader['id'])
+                            assignment[free_class].remove(swap_id)
+                            assignment[cur_class].append(swap_id)
+                            assignment[free_class].append(leader['id'])
+                            cur_class = free_class
+                used_leader_classes.add(cur_class)
+
+            # 2단계: 각 쌍생아의 형제자매를 가나다순 리더 반으로 모이게 이동 (동일 성별 맞교환)
+            for tg in twin_groups:
+                leader = tg[0]
+                leader_class = get_class_of(leader['id'])
+                if not leader_class:
+                    continue
+                for follower in tg[1:]:
+                    fol_class = get_class_of(follower['id'])
+                    if fol_class == leader_class:
+                        continue
+                    cands = [sid for sid in assignment[leader_class] if sid not in all_twin_ids and id_to_student[sid]['gender'] == follower['gender']]
+                    if cands:
+                        cands.sort(key=lambda sid: abs(id_to_student[sid].get('score', 0) - follower.get('score', 0)))
+                        swap_id = cands[0]
+                        assignment[fol_class].remove(follower['id'])
+                        assignment[leader_class].remove(swap_id)
+                        assignment[fol_class].append(swap_id)
+                        assignment[leader_class].append(follower['id'])
 
         # 3. 진급반 번호 부여
         result_classes = {}
@@ -795,6 +935,9 @@ class SmartClassApp(tk.Tk):
                 m_name = names_male[(c_idx - 1) * 5 + (s_idx % 5)]
                 sc_m = 100 - s_idx * 3
                 kor_m = int(sc_m * 0.52)
+                rem_m = remarks_samples[(curr_id) % len(remarks_samples)]
+                if m_name == '최시우' and c_idx == 2:
+                    rem_m = '쌍생아 (최하은)'
                 self.raw_records.append({
                     'id': f"std_{curr_id}",
                     'prevClass': c_name,
@@ -805,13 +948,16 @@ class SmartClassApp(tk.Tk):
                     'math': sc_m - kor_m,
                     'rank': s_idx * 2 + 1,
                     'score': sc_m,
-                    'remarks': remarks_samples[(curr_id) % len(remarks_samples)]
+                    'remarks': rem_m
                 })
                 curr_id += 1
                 # 여학생
                 f_name = names_female[(c_idx - 1) * 5 + (s_idx % 5)]
                 sc_f = 99 - s_idx * 3
                 kor_f = int(sc_f * 0.51)
+                rem_f = remarks_samples[(curr_id + 3) % len(remarks_samples)]
+                if f_name == '최하은' and c_idx == 1:
+                    rem_f = '쌍생아 (최시우)'
                 self.raw_records.append({
                     'id': f"std_{curr_id}",
                     'prevClass': c_name,
@@ -822,14 +968,14 @@ class SmartClassApp(tk.Tk):
                     'math': sc_f - kor_f,
                     'rank': s_idx * 2 + 2,
                     'score': sc_f,
-                    'remarks': remarks_samples[(curr_id + 3) % len(remarks_samples)]
+                    'remarks': rem_f
                 })
                 curr_id += 1
 
         self.prev_classes = ["1반", "2반", "3반", "4반"]
         self.file_name = "예시_학생명단_80명.xlsx"
         self.file_label.configure(text=f"[완료] {self.file_name} (총 {len(self.raw_records)}명 로드됨)", fg='#059669')
-        messagebox.showinfo("예시 데이터 로드", "분리요청 및 특이사항이 포함된 80명의 예시 학생 데이터가 정상 로드되었습니다.")
+        messagebox.showinfo("예시 데이터 로드", "분리요청, 쌍생아(최시우·최하은) 및 특이사항이 포함된 80명의 예시 학생 데이터가 정상 로드되었습니다.")
 
     def download_sample_excel(self):
         path = filedialog.asksaveasfilename(defaultextension=".xlsx", filetypes=[("Excel Files", "*.xlsx")], initialfile="학급편성_업로드용_표준양식.xlsx")
@@ -847,10 +993,10 @@ class SmartClassApp(tk.Tk):
                 {'prevClass': '2반', 'prevNumber': 1, 'name': '이도윤', 'gender': '남', 'kor': 96, 'math': 92, 'score': 188, 'rank': 1, 'remarks': '분리요청(김민준)'},
                 {'prevClass': '2반', 'prevNumber': 2, 'name': '박지우', 'gender': '여', 'kor': 91, 'math': 89, 'score': 180, 'rank': 2, 'remarks': '운동부'},
                 {'prevClass': '2반', 'prevNumber': 3, 'name': '정예준', 'gender': '남', 'kor': 85, 'math': 87, 'score': 172, 'rank': 3, 'remarks': ''},
-                {'prevClass': '2반', 'prevNumber': 4, 'name': '최하은', 'gender': '여', 'kor': 80, 'math': 78, 'score': 158, 'rank': 4, 'remarks': ''},
+                {'prevClass': '2반', 'prevNumber': 4, 'name': '최하은', 'gender': '여', 'kor': 80, 'math': 78, 'score': 158, 'rank': 4, 'remarks': '쌍생아(최시우)'},
             ],
             '3반': [
-                {'prevClass': '3반', 'prevNumber': 1, 'name': '정시우', 'gender': '남', 'kor': 98, 'math': 95, 'score': 193, 'rank': 1, 'remarks': ''},
+                {'prevClass': '3반', 'prevNumber': 1, 'name': '최시우', 'gender': '남', 'kor': 98, 'math': 95, 'score': 193, 'rank': 1, 'remarks': '쌍생아(최하은)'},
                 {'prevClass': '3반', 'prevNumber': 2, 'name': '윤지호', 'gender': '여', 'kor': 89, 'math': 90, 'score': 179, 'rank': 2, 'remarks': ''},
             ],
             '4반': [
@@ -859,7 +1005,7 @@ class SmartClassApp(tk.Tk):
             ]
         }
         SimpleExcel.write_styled_xlsx(path, mock_sheets, is_template=True)
-        messagebox.showinfo("저장 완료", f"표준 엑셀 양식이 저장되었습니다:\n{path}\n\n각 학급 시트(1반, 2반 등)에 '반' 항목 없이 [번호, 이름, 성별, 국어, 수학, 합계, 석차, 비고] 8개 항목으로 구성되어 있습니다.")
+        messagebox.showinfo("저장 완료", f"표준 엑셀 양식이 저장되었습니다:\n{path}\n\n각 학급 시트에 [번호, 이름, 성별, 국어, 수학, 합계, 석차, 비고] 8개 항목으로 구성되어 있으며,\n국어·수학 자동 합산 수식(=D+E)과 합계 기준 석차 자동 계산 수식(=RANK)이 포함되어 있습니다.")
 
     # ---------------------------------------------------------
     # STEP 2: 반 명칭 및 배정 실행 화면
